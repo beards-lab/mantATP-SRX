@@ -1,0 +1,8 @@
+/*.asv
+/*.mat
+/.github
+dymparams.txt
+buildlog.txt
+ds*.txt
+dsmodel.c
+*.exe
