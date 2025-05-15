@@ -1,8 +1,11 @@
-/*.asv
-/*.mat
 /.github
 dymparams.txt
 buildlog.txt
 ds*.txt
 dsmodel.c
 *.exe
+*.asv
+*.mat
+/Modelica/*.csv
+/Modelica/*.txt
+/Modelica/*.log
