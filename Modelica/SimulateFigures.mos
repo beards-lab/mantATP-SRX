@@ -1,8 +1,8 @@
 ﻿// Dymola Script (.mos) to run simulations with different ageTime values  
 // cd("c:\home\git\mantATP-SRX\ModelResults")
 pop_start = 1e-3;
-// pop_start = .8;
-modelName = "mantATP.LabelLib.Figures.Default";
+pop_start = .8;
+modelName = "mantATP.LabelLib.Figures.DefaultH";
 
 // Loop over the desired ageTime values  
 for i in {.2, .5, 1, 2, 5, 10, 30, 60, 120, 300, 600, 900, 1200, 3600} loop  

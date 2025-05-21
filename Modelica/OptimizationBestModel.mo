@@ -1,18 +1,18 @@
-model OptimizationBestModel "Optimized model parameters of mantATP.LabelLib.XBCycling_Hooijman_5m"
-  extends mantATP.LabelLib.XBCycling_Hooijman_5m(
-     tune_a=   0.1914931581495058     ,
-     tune_b=   0.0440628005304724     ,
-     tune_c=   0.8754615930889599     
+model OptimizationBestModel "Optimized model parameters of mantATP.LabelLib.XBCycling_Hooijman_A280"
+  extends mantATP.LabelLib.XBCycling_Hooijman_A280(
+     tune_a=   0.4773367979938827     ,
+     tune_b=   0.0878013090369389     ,
+     tune_c=   1.0586467535772848     
   );
 
- /* Automatically generated at Tue May 13 14:45:07 2025 */
+ /* Automatically generated at Mon May 19 22:33:47 2025 */
  /*
     The final optimization result was as follows:
     
-    Evaluation #1
-        0.0801579126773026        min    integratedSquaredDeviation.y1
+    Evaluation #11
+        2.1463412526053363e-3     min    integratedSquaredDeviation.y1
     __________________________________________________
-        0.0801579126773026       Maximum of criteria
+        2.1463412526053363e-3    Maximum of criteria
     
     **************************************************
     
@@ -20,7 +20,7 @@ model OptimizationBestModel "Optimized model parameters of mantATP.LabelLib.XBCy
     
     Optimization.Tasks.ModelOptimization.run22(
         Optimization.Internal.Version.V22.ModelOptimizationSetup(
-            modelName="mantATP.LabelLib.XBCycling_Hooijman_5m",
+            modelName="mantATP.LabelLib.XBCycling_Hooijman_A280",
             plotScript="",
             saveSetup=true,
             saveSetupFilename="OptimizationLastRunModel.mo",
@@ -34,9 +34,9 @@ model OptimizationBestModel "Optimized model parameters of mantATP.LabelLib.XBCy
                             Optimization.Internal.Version.V22.TunerParameter(
                                 name="tune_a",
                                 active=true,
-                                Value=0.1914931581495058,
+                                Value=0.5894473135397434,
                                 min=0.1,
-                                max=0.3,
+                                max=1,
                                 equidistant=0,
                                 scaleToBounds=false,
                                 discreteValues=fill(0,0),
@@ -44,9 +44,9 @@ model OptimizationBestModel "Optimized model parameters of mantATP.LabelLib.XBCy
                             Optimization.Internal.Version.V22.TunerParameter(
                                 name="tune_b",
                                 active=true,
-                                Value=0.0440628005304724,
-                                min=1e-2,
-                                max=0.1,
+                                Value=0.1151439011328501,
+                                min=0.05,
+                                max=0.5,
                                 equidistant=0,
                                 scaleToBounds=false,
                                 discreteValues=fill(0,0),
@@ -54,9 +54,9 @@ model OptimizationBestModel "Optimized model parameters of mantATP.LabelLib.XBCy
                             Optimization.Internal.Version.V22.TunerParameter(
                                 name="tune_c",
                                 active=true,
-                                Value=0.8754615930889599,
+                                Value=1.1157820921861235,
                                 min=0.5,
-                                max=1.5,
+                                max=2,
                                 equidistant=0,
                                 scaleToBounds=false,
                                 discreteValues=fill(0,0),
@@ -96,7 +96,7 @@ model OptimizationBestModel "Optimized model parameters of mantATP.LabelLib.XBCy
                             GridBlock=50),
                     simulationOptions=
                         Optimization.Internal.Version.V22.SimulationOptions(
-                            startTime=-1.6e+3,
+                            startTime=-1e+3,
                             stopTime=600,
                             outputInterval=0,
                             numberOfIntervals=1500,

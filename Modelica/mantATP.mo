@@ -96,8 +96,11 @@ package mantATP
             coordinateSystem(preserveAspectRatio=false)));
     end ChaseData;
 
-    block TimeTable_ATPChaseControl1 "Chase control 1 from Van Roest"
-      extends Modelica.Blocks.Sources.CombiTimeTable(table=[0,1; 18,0.704575;
+    block ATPChaseData_ATPChaseControl1 "Chase control 1 from Van Roest"
+      extends ATPChaseData;
+
+
+      Modelica.Blocks.Sources.CombiTimeTable timeTable(table=[0,1; 18,0.704575;
             27.994,0.628669; 37.988,0.532319; 47.982,0.519323; 57.976,
             0.463446; 67.97,0.443831; 77.964,0.402628; 87.958,0.347676;
             97.952,0.306668; 107.946,0.254855; 117.94,0.222877; 127.935,
@@ -114,26 +117,13 @@ package mantATP
             0.045534; 487.72,0.03816; 497.714,0.03378; 507.708,0.030129;
             517.703,0.03962; 527.697,0.010416; 537.691,0.034826; 547.685,
             0.028304; 557.679,0.00202; 567.673,0.034802; 577.667,0.017985;
-            587.661,-0.00431; 597.655,0.024556; 607.649,0.021514; 617.643,-0.00358]);
-
-      Real ATPFluorescence = a*exp(-b*x) + c*exp(-d*x);
-      Real x = max(0, time);
-      parameter Real a = 0.70, b = 0.052, c=1-a, d = 0.0061;
-    //   Real cnt(start = 0);
-    //   Integer currentRow( start = 1);
+            587.661,-0.00431; 597.655,0.024556; 607.649,0.021514; 617.643,-0.00358])
+        annotation (Placement(transformation(extent={{-28,-10},{-8,10}})));
     equation
-
-    //   when time > table[1, 1:end] then
-    //     cnt = pre(cnt) + 1;
-    //   end when;
-
-    //   when time > table[pre(currentRow), 1] then
-    //     cnt = pre(cnt) + 1; // Increment the counter
-    //     currentRow = pre(currentRow) + 1; // Move to the next row
-    //   end when;
+      timeTable.y[1] = y;
 
       annotation (experiment(StopTime=100, __Dymola_Algorithm="Dassl"));
-    end TimeTable_ATPChaseControl1;
+    end ATPChaseData_ATPChaseControl1;
 
     block TimeTable_ATPChaseControl2 "Chase control 2 from Van Roest"
      extends Modelica.Blocks.Sources.CombiTimeTable(table=[18,0.626512;
@@ -330,7 +320,45 @@ package mantATP
 
     block TimeTable_ATPChaseHooijman2011
       "Chase control 1 from fig 1 mantATP-ATP chase of Hooijman et al. Biophys J 2011"
-      extends Modelica.Blocks.Interfaces.MO(nout = 1);
+      extends ATPChaseData;
+
+      Real x = max(0, time);
+      parameter Real P1 = 0.66, T1 = 14, P2=0.27, T2 = 144;
+    equation
+
+      y = 1 - P1*(1 - exp(-x/T1)) - P2*(1 - exp(-x/T2));
+
+      annotation (experiment(StopTime=600, __Dymola_Algorithm="Dassl"));
+    end TimeTable_ATPChaseHooijman2011;
+
+    partial block ATPChaseData
+      extends Modelica.Blocks.Interfaces.SO;
+      annotation (Icon(graphics={
+        Polygon(lineColor={192,192,192},
+          fillColor={192,192,192},
+          fillPattern=FillPattern.Solid,
+          points={{-78,100},{-86,78},{-70,78},{-78,100}}),
+        Line(points={{-78,78},{-78,-70}},
+          color={192,192,192}),
+        Line(points={{-88,-60},{84,-60}},
+          color={192,192,192}),
+        Polygon(lineColor={192,192,192},
+          fillColor={192,192,192},
+          fillPattern=FillPattern.Solid,
+          points={{92,-60},{70,-52},{70,-68},{92,-60}}),
+            Line(
+              points={{-70,90},{-60,-22},{-18,-34},{74,-38}},
+              color={28,108,200},
+              smooth=Smooth.Bezier,
+              thickness=0.5),               Text(
+            extent={{-160,-60},{140,-100}},
+            textColor={0,0,255},
+              textString="ATP chase")}));
+    end ATPChaseData;
+
+    block TimeTable_ATPChaseHooijman2011_Fig1
+      extends ATPChaseData;
+
       Modelica.Blocks.Sources.CombiTimeTable combiTimeTable(extrapolation=Modelica.Blocks.Types.Extrapolation.HoldLastPoint,
           table=[0,0.999; 10.556,0.619; 14.778,0.457; 21.112,0.386; 25.757,0.34; 30.401,
             0.306; 34.624,0.281; 40.535,0.259; 46.446,0.242; 50.669,0.225; 56.158,0.21;
@@ -343,36 +371,27 @@ package mantATP
             0.052; 439.55,0.05; 455.172,0.05; 472.906,0.048; 491.907,0.047; 509.641,
             0.046; 525.686,0.045; 543.42,0.043; 561.154,0.042; 578.044,0.041; 594.511,
             0.04])
-        annotation (Placement(transformation(extent={{-84,34},{-64,54}})));
+        annotation (Placement(transformation(extent={{-10,-10},{10,10}})));
 
-      Real ATPFluorescence = 1 - P1*(1 - exp(-x/T1)) - P2*(1 - exp(-x/T2));
-      Real x = max(0, time);
-      parameter Real P1 = 0.66, T1 = 14, P2=0.27, T2 = 144;
-      parameter Boolean usePooledFit=true
-        "When true, uses data from fig 1, otherwise uses the fit from table 1"
-        annotation (Evaluate=false);
-    //   Real cnt(start = 0);
-    //   Integer currentRow( start = 1);
     equation
-      if usePooledFit then
-          ATPFluorescence = y[1];
-      else
+      connect(combiTimeTable.y[1], y) annotation (Line(
+          points={{11,0},{110,0}},
+          color={0,0,127},
+          smooth=Smooth.Bezier));
+    end TimeTable_ATPChaseHooijman2011_Fig1;
 
-      combiTimeTable.y[1] = y[1];
-      end if;
+    block TimeTable_ATPChaseWalklate1A
+      "Chase control from fig 1 A mantATP-ATP from Walklate 2022"
+      extends ATPChaseData;
 
+      Real x = max(0, time);
+      parameter Real P1 = 5.6, T1 = 1/0.027, P2=1.6, T2 = 1/0.0038, scale =1/(P1+P2), offset = 0;
+    equation
 
-    //   when time > table[1, 1:end] then
-    //     cnt = pre(cnt) + 1;
-    //   end when;
-
-    //   when time > table[pre(currentRow), 1] then
-    //     cnt = pre(cnt) + 1; // Increment the counter
-    //     currentRow = pre(currentRow) + 1; // Move to the next row
-    //   end when;
+      y = (P1*(exp(-x/T1)) + P2*exp(-x/T2))*scale + offset;
 
       annotation (experiment(StopTime=600, __Dymola_Algorithm="Dassl"));
-    end TimeTable_ATPChaseHooijman2011;
+    end TimeTable_ATPChaseWalklate1A;
   end Data;
 
   package Simple
@@ -1958,8 +1977,7 @@ post-ratchetted",
       model TestXB_Ctrl1_reparam_optimized
         "Optimized model parameters of CrossBridgeCycling.mantATP.LabelLib.TestXB_Ctrl1_reparam"
         extends mantATP.LabelLib.Obsolete.TestXB_Ctrl1_reparam
-        (
-          tune_a=0.3425014844385265,
+        ( tune_a=0.3425014844385265,
           tune_b=0.3039679462342411,
           tune_c=0.3016761386731495,
           timeTable_ATPChaseControl1(
@@ -2421,17 +2439,14 @@ post-ratchetted",
     model XBCycling
       extends Modelica.Icons.Example;
       parameter Real offset=1e-3 "Offsets of output signals";
-      replaceable Data.TimeTable_ATPChaseControl1 timeTable_ATPChase(
-        smoothness=Modelica.Blocks.Types.Smoothness.LinearSegments,
-        extrapolation=Modelica.Blocks.Types.Extrapolation.HoldLastPoint,
-        offset={offset}) constrainedby Modelica.Blocks.Interfaces.MO
+      replaceable Data.ATPChaseData_ATPChaseControl1 timeTable_ATPChase
+                         constrainedby Data.ATPChaseData
         annotation (Placement(transformation(extent={{-60,80},{-40,100}})));
       Optimization.Criteria.Signals.IntegratedSquaredDeviation
         integratedSquaredDeviation
         annotation (Placement(transformation(extent={{-6,92},{2,84}})));
-      Modelica.Blocks.Sources.RealExpression totalLabelNorm_expr(y=if time >
-            timeTable_ATPChase.t_min then totalLabelNorm else
-            timeTable_ATPChase.y[1])
+      Modelica.Blocks.Sources.RealExpression totalLabelNorm_expr(y=if time > 0
+             then totalLabelNorm else timeTable_ATPChase.y)
         annotation (Placement(transformation(extent={{-40,72},{-20,92}})));
       parameter Real tune_a=0.32245011274220486;
       parameter Real tune_b=0.2882752381092468;
@@ -2439,22 +2454,28 @@ post-ratchetted",
       Bodylight.Population.LabeledPopulation.Components.StateTransition k2(
         k=50,
         useRateInput=true,
-        useDynamicFlowLabeling=true,
-        labelIn=time > -ageTime and time < 0,
-        labelOut=time > 0) annotation (Placement(transformation(
+        useDynamicFlowLabeling=true)
+                           annotation (Placement(transformation(
             extent={{-10,-10},{10,10}},
             rotation=90,
             origin={-32,-66})));
-      Modelica.Blocks.Sources.RealExpression SRXLabel1(y=if time > -ageTime and A2.pop >
+      Modelica.Blocks.Sources.RealExpression rateA2Out(y=if time > -ageTime and A2.pop >
             1e-6 then k2.k else 0)
-        annotation (Placement(transformation(extent={{4,-86},{-16,-66}})));
+        annotation (Placement(transformation(extent={{10,-94},{-10,-74}})));
       Modelica.Blocks.Math.Product product1
-        annotation (Placement(transformation(extent={{60,-76},{80,-56}})));
+        annotation (Placement(transformation(extent={{60,-78},{80,-58}})));
       Bodylight.Population.LabeledPopulation.Components.LabelMeasure
         labelMeasure
         annotation (Placement(transformation(extent={{40,-48},{20,-68}})));
       Modelica.Blocks.Continuous.Integrator integrator
-        annotation (Placement(transformation(extent={{98,-76},{118,-56}})));
+        annotation (Placement(transformation(extent={{98,-78},{118,-58}})));
+      Modelica.Blocks.Sources.RealExpression labelA2Out(y=1)
+        annotation (Placement(transformation(extent={{10,-74},{-10,-58}})));
+      parameter Bodylight.Types.Concentration CmantATP=0.25;
+      parameter Bodylight.Types.Concentration CATP=4 "Unlabeled ATP concentration";
+      Modelica.Blocks.Sources.RealExpression labelDRX_D(y=if time > 0 then CmantATP/
+            CATP elseif time < 0 and time > -ageTime then 1 else 0)
+        annotation (Placement(transformation(extent={{70,-22},{12,-8}})));
     equation
       connect(integratedSquaredDeviation.u1, totalLabelNorm_expr.y) annotation (
           Line(points={{-6.8,85.6},{-19,85.6},{-19,82}}, color={0,0,127}));
@@ -2482,15 +2503,17 @@ post-ratchetted",
             extent={{10,-10},{-10,10}},
             rotation=270,
             origin={-20,10})));
-      Bodylight.Population.LabeledPopulation.Components.StateTransition kH(k=80,
+      Bodylight.Population.LabeledPopulation.Components.StateTransition kH(
+        k=80,
+        allowReverse=true,
           useRateOutput=true)
         annotation (Placement(transformation(extent={{-8,-54},{12,-34}})));
       Bodylight.Population.LabeledPopulation.Components.StateTransition kH_m(
         k=0.066*tune_c,
+        allowReverse=true,
         useRateOutput=false,
-        useDynamicFlowLabeling=true,
-        labelIn=time > -ageTime and time < 0,
-        labelOut=time > 0) annotation (Placement(transformation(
+        useDynamicFlowLabeling=true)
+                           annotation (Placement(transformation(
             extent={{-10,-10},{10,10}},
             rotation=180,
             origin={2,-36})));
@@ -2557,11 +2580,6 @@ post-ratchetted",
           points={{12,-36},{24,-36},{24,-39.35},{40.2,-39.35}},
           color={107,45,134},
           thickness=1));
-      connect(timeTable_ATPChase.y[1], integratedSquaredDeviation.u2)
-        annotation (Line(points={{-39,90},{-12,90},{-12,90.4},{-6.8,90.4}},
-            color={0,0,127}));
-      connect(SRXLabel1.y,k2. rateInput)
-        annotation (Line(points={{-17,-76},{-28,-76}},     color={0,0,127}));
       connect(k2.lpop_a, A2.lpop[1]) annotation (Line(
           points={{-32,-76},{-32,-100},{-40.2,-100},{-40.2,-99.6}},
           color={107,45,134},
@@ -2570,19 +2588,30 @@ post-ratchetted",
           points={{-32,-56},{-32,-40},{-40.2,-40},{-40.2,-39.2}},
           color={107,45,134},
           thickness=1));
-      connect(kH.popChangeOutput, product1.u2) annotation (Line(points={{-8,-48},
-              {-8,-72},{58,-72}}, color={0,0,127}));
+      connect(kH.popChangeOutput, product1.u2) annotation (Line(points={{12,-48},{12,
+              -74},{58,-74}},     color={0,0,127}));
       connect(kH.lpop_b, labelMeasure.lpop_a) annotation (Line(
           points={{12,-44},{30,-44},{30,-48}},
           color={107,45,134},
           thickness=1,
           smooth=Smooth.Bezier));
       connect(labelMeasure.label, product1.u1) annotation (Line(
-          points={{40,-62},{50,-62},{50,-60},{58,-60}},
+          points={{40,-62},{50,-62},{58,-62}},
           color={0,0,127},
           smooth=Smooth.Bezier));
       connect(product1.y, integrator.u) annotation (Line(
-          points={{81,-66},{96,-66}},
+          points={{81,-68},{88,-68},{96,-68}},
+          color={0,0,127},
+          smooth=Smooth.Bezier));
+      connect(labelDRX_D.y, kH_m.labelInput) annotation (Line(points={{9.1,-15},{9.1,
+              -16},{2,-16},{2,-28}}, color={0,0,127}));
+      connect(labelA2Out.y, k2.labelInput)
+        annotation (Line(points={{-11,-66},{-24,-66}}, color={0,0,127}));
+      connect(k2.rateInput, rateA2Out.y)
+        annotation (Line(points={{-28,-76},{-28,-84},{-11,-84}}, color={0,0,127}));
+      connect(timeTable_ATPChase.y, integratedSquaredDeviation.u2) annotation (
+          Line(
+          points={{-39,90},{-40,90},{-40,104},{-12,104},{-12,90.4},{-6.8,90.4}},
           color={0,0,127},
           smooth=Smooth.Bezier));
       annotation (Documentation(info="<html><p>This class was automatically generated by the Optimization Library. It includes an inherited class with optimized tuner values. More information is found in the text layer of the class.</p></html>"),
@@ -2816,10 +2845,9 @@ post-ratchetted",
 
     model XBCycling_Hooijman
       extends XBCycling(
+        offset=0,
         ageTime=120.0,
         redeclare Data.TimeTable_ATPChaseHooijman2011 timeTable_ATPChase,
-        totalLabelNorm_expr(y=if time > 0 then totalLabelNorm else
-              timeTable_ATPChase.y[1]),
         tune_a=0.19519581064922187,
         tune_b=0.08755423725394641,
         tune_c=0.8444796091821606);
@@ -2835,7 +2863,7 @@ post-ratchetted",
       end Default_ageTime;
 
       model DefaultH
-        extends XBCycling_Hooijman(A2(pop_start=0.4));
+        extends XBCycling_Hooijman_A240;
         annotation (experiment(
             StartTime=-1200,
             StopTime=600,
@@ -2860,6 +2888,56 @@ post-ratchetted",
     model XBCycling_Hooijman_5m
       extends XBCycling_Hooijman(ageTime=5*60);
     end XBCycling_Hooijman_5m;
+
+    model XBCycling_Hooijman_A20
+      extends XBCycling_Hooijman(
+        tune_a=0.589447302898601,
+        tune_b=0.11514396902490122,
+        tune_c=1.1157820953373943);
+    end XBCycling_Hooijman_A20;
+
+    model XBCycling_Hooijman_A240
+      extends XBCycling_Hooijman(
+        tune_a=0.5316634445449336,
+        tune_b=0.10021114666398111,
+        tune_c=1.0573706248433254,
+        A2(pop_start=0.4));
+    end XBCycling_Hooijman_A240;
+
+    model XBCycling_Hooijman_A280
+      extends XBCycling_Hooijman(
+        tune_a=0.47733679799388273,
+        tune_b=0.08780130903693892,
+        tune_c=1.0251694037888126,
+        A2(pop_start=0.8));
+    end XBCycling_Hooijman_A280;
+
+    package FMUExport
+      model Default
+        extends Figures.DefaultH;
+        Modelica.Blocks.Interfaces.RealOutput y
+          annotation (Placement(transformation(extent={{58,78},{78,98}})));
+        Modelica.Blocks.Interfaces.RealOutput y1
+          annotation (Placement(transformation(extent={{58,60},{78,80}})));
+      equation
+        connect(integratedSquaredDeviation.y, y)
+          annotation (Line(points={{2.4,88},{68,88}}, color={0,0,127}));
+        connect(totalLabel.y, y1) annotation (Line(points={{-75,88},{-68,88},{
+                -68,70},{68,70}}, color={0,0,127}));
+      end Default;
+    end FMUExport;
+
+    model XBCycling_Walklate2022Fig1A
+      extends XBCycling(
+        CmantATP=0,
+        offset=0,
+        ageTime=60.0,
+        redeclare Data.TimeTable_ATPChaseHooijman2011 timeTable_ATPChase,
+        tune_a=0.19519581064922187,
+        tune_b=0.08755423725394641,
+        tune_c=0.8444796091821606,
+        A2(pop_start=0.4));
+    end XBCycling_Walklate2022Fig1A;
   end LabelLib;
   annotation (uses(
       Modelica(version="4.0.0"),

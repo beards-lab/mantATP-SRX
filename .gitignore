@@ -9,3 +9,5 @@ dsmodel.c
 /Modelica/*.csv
 /Modelica/*.txt
 /Modelica/*.log
+~FMUOutput/
+_fmu/
