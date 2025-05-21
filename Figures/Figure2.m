@@ -5,14 +5,15 @@ t = linspace(-5, 5, 1000);
 cf = figure(1); clf; 
 tiledlayout(1, 5, 'TileSpacing','Tight')
 
-datafile = '../Modelica/DefaultH.mat';
-datafile = '../Modelica/XBCycling_Hooijman_A280.mat'
-datafile = '../Modelica/XBCycling_Hooijman_A240.mat'
+datafile = '../Modelica/DefaultW.mat';
+% datafile = '../Modelica/XBCycling_Hooijman_A280.mat'
+% datafile = '../Modelica/XBCycling_Hooijman_A240.mat'
 dl = dymload(datafile);
 
 time_conv = 1/60;
 time = dymget(dl, 'Time')*time_conv;
 getVals = @(s) dymget(dl, s);
+getVal = @(s) tail(getVals(s), 1);
 getValsToPerc = @(s) getVals(s)*100;
 
 agetime = getVals('ageTime');
@@ -132,12 +133,15 @@ scale = max(dymget(dl, 'totalLabel.y'));
 %     xfit/60, fitResult2(xfit)*100*scale, '--', LineWidth=1.5)
 % timecourse only model 1 - they are the same
 % p4 = plot([0 ; xfit]/60, fitResult1([0 ; xfit])*100*scale, 'k:', LineWidth=lw*1.2, DisplayName="Fit eq. 1")
-
-% plot(xfit/60, fitResult1(xfit)*100*scale, '-.', ...
-%     xfit/60, (fitResult2(xfit))*(yma-ymi) + ymi, '--', LineWidth=2.5)
+% just the fits
+plot(xfit/60, fitResult1(xfit)*100*scale, '-.', ...
+    xfit/60, (fitResult2(xfit))*(yma-ymi) + ymi, '--', LineWidth=2.5)
 % 
 
-p4 = plot(xfit/60, dataResult*scale*100, 'k:', LineWidth=lw*1.2, DisplayName="Fit eq. 1")
+% p4 = plot(xfit/60, dataResult*scale*100, 'k:', LineWidth=lw*1.2, DisplayName="Fit eq. 1")
+tails = sum(time>0);
+p4 = plot(tail(time, tails), tail(getValsToPerc('timeTable_ATPChase.y'), tails)*getVal('normFactor'), 'k:', LineWidth=lw*1.2, DisplayName="Fit eq. 1")
+
 
 legend([p1 p2 p3 p4 m1 m2], ...
     {'$A_{SRX}$', '$A_{DRX}$', '$A_{tot}$', 'Data', ...

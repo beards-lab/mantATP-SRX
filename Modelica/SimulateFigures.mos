@@ -1,26 +1,28 @@
 ﻿// Dymola Script (.mos) to run simulations with different ageTime values  
 // cd("c:\home\git\mantATP-SRX\ModelResults")
 pop_start = 1e-3;
-pop_start = .8;
-modelName = "mantATP.LabelLib.Figures.DefaultH";
+pop_start = .4;
+modelName = "mantATP.LabelLib.Figures.DefaultW";
 
-// Loop over the desired ageTime values  
-for i in {.2, .5, 1, 2, 5, 10, 30, 60, 120, 300, 600, 900, 1200, 3600} loop  
-  // Generate filename suffix  
-  suffix := String(integer(i*1000));  
-  filename := modelName + "_" + suffix + "A2_" + String(floor(pop_start*100));  
-
-  // Build the parameter assignment string  
-  // The exact parameter path depends on your model structure  
-  paramAssign := "mantATP.LabelLib.Figures.Default.ageTime=" + String(i*1000);  
-
-  // Run the simulation with specified parameter and output filename  
-  simulateExtendedModel(  
-    modelName,  
-    startTime=-1200,  
-    stopTime=1000, // or your desired simulation duration  
-    resultFile=filename, 
-    initialNames = {"ageTime", "A2.pop_start"},
-    initialValues={i, pop_start}  
-  );  
+for pop_start in {1e-3, 0.4, 0.6, 0.8, 0.95} loop
+  // Loop over the desired ageTime values  
+  for i in {.2, .5, 1, 2, 5, 10, 30, 60, 120, 300, 600, 900, 1200, 3600} loop  
+    // Generate filename suffix  
+    suffix := String(integer(i*1000));  
+    filename := modelName + "_" + suffix + "A2_" + String(floor(pop_start*100));  
+  
+    // Build the parameter assignment string  
+    // The exact parameter path depends on your model structure  
+    paramAssign := "mantATP.LabelLib.Figures.Default.ageTime=" + String(i*1000);  
+  
+    // Run the simulation with specified parameter and output filename  
+    simulateExtendedModel(  
+      modelName,  
+      startTime=-1200,  
+      stopTime=600, // or your desired simulation duration  
+      resultFile=filename, 
+      initialNames = {"ageTime", "A2.pop_start"},
+      initialValues={i, pop_start}  
+    );  
+  end for;
 end for;
