@@ -2434,6 +2434,97 @@ post-ratchetted",
             color={107,45,134},
             thickness=1));
       end XBCycling_A2_self;
+
+      model XBCycling_Srx2DrxD "alternative configuration"
+        extends XBCycling_Hooijman(DRX_D(nPorts=3), SRX(nPorts=3),
+          k_srx_m(k=kmsr*kmsr_f));
+        Bodylight.Population.LabeledPopulation.Components.StateTransition k_srx_m1(k(
+              displayUnit="s-1") = (1 - kmsr_f)*kmsr)
+                       annotation (Placement(transformation(
+              extent={{-10,-10},{10,10}},
+              rotation=270,
+              origin={26,14})));
+        parameter Bodylight.Types.PopulationChange kmsr=0.014*tune_a;
+        parameter Bodylight.Types.PopulationChange kmsr_f=1;
+      equation
+        connect(k_srx_m1.lpop_b, DRX_D.lpop[3]) annotation (Line(
+            points={{26,4},{26,-6},{40.2,-6},{40.2,-39.6}},
+            color={107,45,134},
+            thickness=1));
+        connect(k_srx_m1.lpop_a, SRX.lpop[3]) annotation (Line(
+            points={{26,24},{24,24},{24,44},{-40.2,44},{-40.2,40.4}},
+            color={107,45,134},
+            thickness=1));
+      end XBCycling_Srx2DrxD;
+
+      model XBCycling_SrxD "alternative configuration"
+        extends XBCycling_Hooijman(
+          DRX_D(nPorts=3),
+          k_srx_m(k=kmsr),
+          SRX(nPorts=3),
+          SRXLabel(y=SRX.labelAmount + SRX_D.labelAmount));
+        Bodylight.Population.LabeledPopulation.Components.StateTransition k_srx_m1(k(
+              displayUnit="s-1") = kmsr)
+                       annotation (Placement(transformation(
+              extent={{-10,-10},{10,10}},
+              rotation=270,
+              origin={32,10})));
+        parameter Bodylight.Types.PopulationChange kmsr=0.014*tune_a;
+        parameter Bodylight.Types.PopulationChange kmsr_f=1;
+        Bodylight.Population.LabeledPopulation.Components.StateCompartment SRX_D(pop_start
+            =1e-6, nPorts=2)
+          annotation (Placement(transformation(extent={{60,40},{40,60}})));
+        Bodylight.Population.LabeledPopulation.Components.StateTransition kH_srx(
+          k=80,
+          allowReverse=true,
+          useRateOutput=true)
+          annotation (Placement(transformation(extent={{-6,30},{14,50}})));
+      equation
+        connect(k_srx_m1.lpop_b, DRX_D.lpop[3]) annotation (Line(
+            points={{32,0},{32,-40},{40.2,-40},{40.2,-39.6}},
+            color={107,45,134},
+            thickness=1));
+        connect(SRX.lpop[3], kH_srx.lpop_a) annotation (Line(
+            points={{-40.2,40.4},{-40.2,40},{-6,40}},
+            color={107,45,134},
+            thickness=1));
+        connect(kH_srx.lpop_b, SRX_D.lpop[1]) annotation (Line(
+            points={{14,40},{36,40},{36,40.15},{40.2,40.15}},
+            color={107,45,134},
+            thickness=1));
+        connect(k_srx_m1.lpop_a, SRX_D.lpop[2]) annotation (Line(
+            points={{32,20},{32,40.65},{40.2,40.65}},
+            color={107,45,134},
+            thickness=1));
+      end XBCycling_SrxD;
+
+      model XBCycling_CalcMantADP "Generating mantADP"
+        extends XBCycling(kH(useRateOutput=true));
+        Modelica.Blocks.Math.Product product1
+          annotation (Placement(transformation(extent={{50,-80},{70,-60}})));
+        Bodylight.Population.LabeledPopulation.Components.LabelMeasure
+          labelMeasure
+          annotation (Placement(transformation(extent={{42,-50},{22,-70}})));
+        Modelica.Blocks.Continuous.Integrator integrator
+          annotation (Placement(transformation(extent={{80,-80},{100,-60}})));
+      equation
+        connect(kH.popChangeOutput,product1. u2) annotation (Line(points={{12,-42},
+                {18,-42},{18,-76},{48,-76}},
+                                    color={0,0,127}));
+        connect(kH.lpop_b,labelMeasure. lpop_a) annotation (Line(
+            points={{12,-46},{32,-46},{32,-50}},
+            color={107,45,134},
+            thickness=1,
+            smooth=Smooth.Bezier));
+        connect(labelMeasure.label,product1. u1) annotation (Line(
+            points={{42,-64},{46,-64},{48,-64}},
+            color={0,0,127},
+            smooth=Smooth.Bezier));
+        connect(product1.y,integrator. u) annotation (Line(
+            points={{71,-70},{71,-70},{78,-70}},
+            color={0,0,127},
+            smooth=Smooth.Bezier));
+      end XBCycling_CalcMantADP;
     end Experiments;
 
     model XBCycling
@@ -2462,20 +2553,13 @@ post-ratchetted",
       Modelica.Blocks.Sources.RealExpression rateA2Out(y=if time > -ageTime and A2.pop >
             1e-6 then k2.k else 0)
         annotation (Placement(transformation(extent={{10,-94},{-10,-74}})));
-      Modelica.Blocks.Math.Product product1
-        annotation (Placement(transformation(extent={{60,-78},{80,-58}})));
-      Bodylight.Population.LabeledPopulation.Components.LabelMeasure
-        labelMeasure
-        annotation (Placement(transformation(extent={{40,-48},{20,-68}})));
-      Modelica.Blocks.Continuous.Integrator integrator
-        annotation (Placement(transformation(extent={{98,-78},{118,-58}})));
       Modelica.Blocks.Sources.RealExpression labelA2Out(y=1)
         annotation (Placement(transformation(extent={{10,-74},{-10,-58}})));
       parameter Bodylight.Types.Concentration CmantATP=0.25;
       parameter Bodylight.Types.Concentration CATP=4 "Unlabeled ATP concentration";
       Modelica.Blocks.Sources.RealExpression labelDRX_D(y=if time > 0 then CmantATP/
             CATP elseif time < 0 and time > -ageTime then 1 else 0)
-        annotation (Placement(transformation(extent={{70,-22},{12,-8}})));
+        annotation (Placement(transformation(extent={{28,-18},{-24,-4}})));
     public
       parameter Real k=0.016666666666666666;
       Bodylight.Population.LabeledPopulation.Components.StateCompartment SRX(pop_start
@@ -2494,17 +2578,17 @@ post-ratchetted",
             *tune_a) annotation (Placement(transformation(
             extent={{-10,-10},{10,10}},
             rotation=270,
-            origin={-30,10})));
+            origin={-30,20})));
       Bodylight.Population.LabeledPopulation.Components.StateTransition k_srx_p(k=48.5
             *tune_b) annotation (Placement(transformation(
             extent={{10,-10},{-10,10}},
             rotation=270,
-            origin={-20,10})));
+            origin={-20,20})));
       Bodylight.Population.LabeledPopulation.Components.StateTransition kH(
         k=80,
         allowReverse=true,
-          useRateOutput=true)
-        annotation (Placement(transformation(extent={{-8,-54},{12,-34}})));
+        useRateOutput=false)
+        annotation (Placement(transformation(extent={{-8,-36},{12,-56}})));
       Bodylight.Population.LabeledPopulation.Components.StateTransition kH_m(
         k=0.066*tune_c,
         allowReverse=true,
@@ -2513,13 +2597,13 @@ post-ratchetted",
                            annotation (Placement(transformation(
             extent={{-10,-10},{10,10}},
             rotation=180,
-            origin={2,-36})));
+            origin={2,-32})));
       Bodylight.Population.LabeledPopulation.Components.StateCompartment A2(
           pop_start = 1e-9, nPorts=1) "Attached state"
         annotation (Placement(transformation(extent={{-60,-100},{-40,-80}})));
       parameter Modelica.Units.SI.Time ageTime=60.0;
-      Modelica.Blocks.Sources.RealExpression totalLabel(y=SRX.labelAmount + DRX_D.labelAmount
-             + DRX_T.labelAmount + A2.labelAmount)
+      Modelica.Blocks.Sources.RealExpression totalLabel(y=SRXLabel.y + DRXLabel.y
+             + A2.labelAmount)
         annotation (Placement(transformation(extent={{-96,78},{-76,98}})));
       Modelica.Blocks.Sources.RealExpression SRXLabel(y=SRX.labelAmount)
         annotation (Placement(transformation(extent={{-96,58},{-76,78}})));
@@ -2546,35 +2630,35 @@ post-ratchetted",
         SRX_fraction = SRXLabel.y/totalLabel.y;
       end when;
       connect(SRX.lpop[1], k_srx_m.lpop_a) annotation (Line(
-          points={{-40.2,40.15},{-30,40.15},{-30,20}},
+          points={{-40.2,40.15},{-30,40.15},{-30,30}},
           color={107,45,134},
           thickness=1));
       connect(k_srx_m.lpop_b, DRX_T.lpop[1]) annotation (Line(
-          points={{-30,0},{-30,-40},{-40.2,-40}},
+          points={{-30,10},{-30,-40},{-40.2,-40}},
           color={107,45,134},
           thickness=1));
       connect(k_srx_p.lpop_b, SRX.lpop[2]) annotation (Line(
-          points={{-20,20},{-20,40},{-40.2,40},{-40.2,40.65}},
+          points={{-20,30},{-20,40},{-40.2,40},{-40.2,40.65}},
           color={107,45,134},
           thickness=1));
       connect(k_srx_p.lpop_a, DRX_T.lpop[2]) annotation (Line(
-          points={{-20,0},{-20,-12},{-30,-12},{-30,-39.8},{-40.2,-39.8}},
+          points={{-20,10},{-20,0},{-30,0},{-30,-39.8},{-40.2,-39.8}},
           color={107,45,134},
           thickness=1));
       connect(DRX_T.lpop[3], kH.lpop_a) annotation (Line(
-          points={{-40.2,-39.6},{-40.2,-40},{-20,-40},{-20,-44},{-8,-44}},
+          points={{-40.2,-39.6},{-40.2,-40},{-20,-40},{-20,-46},{-8,-46}},
           color={107,45,134},
           thickness=1));
       connect(kH.lpop_b, DRX_D.lpop[1]) annotation (Line(
-          points={{12,-44},{24,-44},{24,-39.85},{40.2,-39.85}},
+          points={{12,-46},{24,-46},{24,-39.85},{40.2,-39.85}},
           color={107,45,134},
           thickness=1));
       connect(kH_m.lpop_b, DRX_T.lpop[4]) annotation (Line(
-          points={{-8,-36},{-20,-36},{-20,-39.4},{-40.2,-39.4}},
+          points={{-8,-32},{-20,-32},{-20,-39.4},{-40.2,-39.4}},
           color={107,45,134},
           thickness=1));
       connect(kH_m.lpop_a, DRX_D.lpop[2]) annotation (Line(
-          points={{12,-36},{24,-36},{24,-39.35},{40.2,-39.35}},
+          points={{12,-32},{24,-32},{24,-39.35},{40.2,-39.35}},
           color={107,45,134},
           thickness=1));
       connect(k2.lpop_a, A2.lpop[1]) annotation (Line(
@@ -2585,23 +2669,9 @@ post-ratchetted",
           points={{-32,-56},{-32,-40},{-40.2,-40},{-40.2,-39.2}},
           color={107,45,134},
           thickness=1));
-      connect(kH.popChangeOutput, product1.u2) annotation (Line(points={{12,-48},{12,
-              -74},{58,-74}},     color={0,0,127}));
-      connect(kH.lpop_b, labelMeasure.lpop_a) annotation (Line(
-          points={{12,-44},{30,-44},{30,-48}},
-          color={107,45,134},
-          thickness=1,
-          smooth=Smooth.Bezier));
-      connect(labelMeasure.label, product1.u1) annotation (Line(
-          points={{40,-62},{50,-62},{58,-62}},
-          color={0,0,127},
-          smooth=Smooth.Bezier));
-      connect(product1.y, integrator.u) annotation (Line(
-          points={{81,-68},{88,-68},{96,-68}},
-          color={0,0,127},
-          smooth=Smooth.Bezier));
-      connect(labelDRX_D.y, kH_m.labelInput) annotation (Line(points={{9.1,-15},{9.1,
-              -16},{2,-16},{2,-28}}, color={0,0,127}));
+      connect(labelDRX_D.y, kH_m.labelInput) annotation (Line(points={{-26.6,
+              -11},{-26.6,-18},{2,-18},{2,-24}},
+                                     color={0,0,127}));
       connect(labelA2Out.y, k2.labelInput)
         annotation (Line(points={{-11,-66},{-24,-66}}, color={0,0,127}));
       connect(k2.rateInput, rateA2Out.y)
@@ -2872,9 +2942,9 @@ post-ratchetted",
         offset=0,
         ageTime=120.0,
         redeclare Data.TimeTable_ATPChaseHooijman2011 timeTable_ATPChase,
-        tune_a=0.19519581064922187,
-        tune_b=0.08755423725394641,
-        tune_c=0.8444796091821606);
+        tune_a=0.5914437499637197,
+        tune_b=0.11611068066534437,
+        tune_c=1.1233630941907256);
     end XBCycling_Hooijman;
 
     model XBCycling_Hooijman_PB

@@ -2,12 +2,23 @@
 t = linspace(-5, 5, 1000);
 
 % Generate timecourses
-cf = figure(1); clf; 
+cf = figure(gcf); clf; 
 tiledlayout(1, 5, 'TileSpacing','Tight')
 
-datafile = '../Modelica/DefaultW.mat';
+if exist('modelName', 'var')
+    datafile = ['../Modelica/' modelName '.mat'];
+else
+    % default for figure2
+    datafile = '../Modelica/DefaultH.mat';
+end
+
+% datafile = '../Modelica/DefaultH.mat';
 % datafile = '../Modelica/XBCycling_Hooijman_A280.mat'
 % datafile = '../Modelica/XBCycling_Hooijman_A240.mat'
+% datafile = '../Modelica/DefaultW.mat';
+% datafile = '../Modelica/mantATP.LabelLib.Figures.DefaultW_60000A2_40.mat';
+
+
 dl = dymload(datafile);
 
 time_conv = 1/60;
@@ -109,16 +120,16 @@ model1 = fittype('1 - a*(1 - exp(-t/t1)) - b*(1 - exp(-t/t2))', ...
                 'independent', 't', ...
                 'coefficients', {'a', 'b', 't1', 't2'});
 
-model2 = fittype('a*(exp(-t/t1)) + b*(exp(-t/t2))', ...
+model2 = fittype('a*(exp(-t/t1)) + b*(exp(-t/t2)) + o', ...
                 'independent', 't', ...
-                'coefficients', {'a', 'b', 't1', 't2'});
+                'coefficients', {'a', 'b', 't1', 't2', 'o'});
 
 % Set initial guesses for the parameters
-initialGuess = [0.5, 0.5, 14, 140]; % Adjust these based on your data
-opts = fitoptions('StartPoint', initialGuess, 'Method', 'NonlinearLeastSquares','Lower',[0 0, 0, 0],'Upper',[1, 1, 100, 1000]);
+opts = fitoptions('StartPoint', [0.5, 0.5, 14, 140], 'Method', 'NonlinearLeastSquares','Lower',[0 0, 0, 0],'Upper',[1, 1, 100, 1000]);
+opts2 = fitoptions('StartPoint', [0.5, 0.5, 14, 140, 0], 'Method', 'NonlinearLeastSquares','Lower',[0 0, 0, 0, -1],'Upper',[1, 1, 100, 1000, 1]);
 % Perform the fit
 [fitResult1, gof] = fit(xfit, yfit, model1, opts);
-[fitResult2, gof2] = fit(xfit, yfit_minmax, model2, opts);
+[fitResult2, gof2] = fit(xfit, yfit_minmax, model2, opts2);
 
 dataResult = feval(model1, 0.66, 0.27, 14, 144, xfit);
 
@@ -172,6 +183,11 @@ for i = 1:length(bars)
         'Interpreter', 'latex', ...
         'FontSize', 12);
 end
+
+%% set 12 pts size
+
+fontsize(12, 'points');
+
 
 % Function to generate timecourse
 function y = generate_timecourse(t, start_val, amp, decay_rate, rise_rate)

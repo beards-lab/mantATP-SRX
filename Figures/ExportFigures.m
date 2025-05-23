@@ -2,13 +2,27 @@
 addpath('c:\Program Files\Dymola 2025x\Mfiles\dymtools\')
 
 def_aux;
+saveFigs = false;
 %%
+
+figure(2);
+modelName = 'DefaultH';
 Figure2;
 
-fontsize(12, 'points');
 if saveFigs
-    saveas(cf, "../figures/Figure2.fig")
-    saveas(cf, "../figures/Figure2.png")
+    saveas(gca, "../figures/Figure2.fig")
+    saveas(gca, "../figures/Figure2.png")
+end
+
+figure(3)
+modelName = 'DefaultW';
+Figure2;
+
+if saveFigs
+    saveas(gca, "../figures/Figure3.fig")
+    saveas(gca, "../figures/Figure3.png")
+    % saveas(gca, "../figures/Figure4.fig")
+    % saveas(gca, "../figures/Figure4.png")
 end
 
 %% Output the table of kinetic params
@@ -141,7 +155,7 @@ model1 = fittype('1 - a*(1 - exp(-t/t1)) - b*(1 - exp(-t/t2))', ...
                 'independent', 't', ...
                 'coefficients', {'a', 'b', 't1', 't2'});
 
-model2 = fittype('a*(exp(-t/t1)) + b*(exp(-t/t2)) + o*0', ...
+model2 = fittype('a*(exp(-t/t1)) + b*(exp(-t/t2)) + o', ...
                 'independent', 't', ...
                 'coefficients', {'a', 'b', 't1', 't2', 'o'});
 
@@ -194,19 +208,23 @@ for i = 1:length(ageTimes)
         SRX_pop(i, j) = tail(dymget(dl, 'SRX.pop'), 1);
         maxLabel(i, j) = tail(dymget(dl, 'normFactor'), 1);
         
-        scale = max(label);
+        % scale = max(label);
         bckg = scale*0.05;
         % labelWBckg = (label + bckg)/(scale + bckg);
 
-        label = label/scale;
+        % label = label/scale;
+        yma = max(label);
+        ymi = min(label);
+        yfit_norMax = label/yma;
+        yfit_norMinMax = (label-ymi)/(yma -ymi);
 
         % validTime = sum(time>0);
         % label = label(validTime)/scale;
         % time = time(validTime);
 
         % Perform the fit
-        [fitResult1, gof] = fit(time, label, model1, opts);
-        [fitResult2, gof2] = fit(time, label, model2, opts2);
+        [fitResult1, gof] = fit(time, yfit_norMax, model1, opts);
+        [fitResult2, gof2] = fit(time, yfit_norMinMax, model2, opts2);
         % [fitResultWBckg, gof2_5] = fit(time, labelWBckg, model1, opts);
         %% fit state labels separately
         % opts_single = opts;
@@ -219,7 +237,7 @@ for i = 1:length(ageTimes)
 
         
         
-        plot(time, label, '-', time, fitResult1(time), '--', time, fitResult2(time), ':', LineWidth=2); 
+        plot(time, yfit_norMax, '-', time, yfit_norMinMax, '-',time, fitResult1(time), '--', time, fitResult2(time), ':', LineWidth=2); 
         % plot(time, label, '-', LineWidth=1.5);
         % plot(time, DRX_label, '-', time, fitResult_singleDrx(time), '--', time, SRX_label, '-', time, fitResult_singleSrx(time),'--', LineWidth=1.5);
         % plot(time, labelWBckg, '-', time,fitResultWBckg(time), '--',  LineWidth=1.5);
@@ -235,7 +253,6 @@ for i = 1:length(ageTimes)
         fit2_B(i, j) = fitResult2.b;
         fit2_T1(i, j) = fitResult2.t1;
         fit2_T2(i, j) = fitResult2.t2;
-      
         
         % slowPhase1_background(i, j) = fitResultWBckg.b;
 
@@ -246,6 +263,8 @@ for i = 1:length(ageTimes)
 end
 %%
 figure(2);clf;
+tiledlayout('flow', 'TileSpacing','compact')
+l2 = 1.5;
 nexttile(1, [1 2]);
 % semilogx(fileSuffixes, slowPhase1, 's-', fileSuffixes, slowPhase2, 'd-', fileSuffixes, SRX_labelFraction, 'x-', fileSuffixes, SRX_pop, 'o-',LineWidth=1.5, MarkerSize=8);
 ub_40 = find(rigorFrac == 40, 1);
