@@ -4,7 +4,7 @@ pop_start = 1e-3;
 pop_start = .4;
 modelName = "mantATP.LabelLib.Figures.DefaultW";
 
-for pop_start in {1e-3, 0.4, 0.6, 0.8, 0.95} loop
+for pop_start in {1e-3, 0.2, 0.4, 0.6, 0.8, 0.95} loop  
   // Loop over the desired ageTime values  
   for i in {.2, .5, 1, 2, 5, 10, 30, 60, 120, 300, 600, 900, 1200, 3600} loop  
     // Generate filename suffix  

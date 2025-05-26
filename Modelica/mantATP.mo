@@ -2470,7 +2470,6 @@ post-ratchetted",
               rotation=270,
               origin={32,10})));
         parameter Bodylight.Types.PopulationChange kmsr=0.014*tune_a;
-        parameter Bodylight.Types.PopulationChange kmsr_f=1;
         Bodylight.Population.LabeledPopulation.Components.StateCompartment SRX_D(pop_start
             =1e-6, nPorts=2)
           annotation (Placement(transformation(extent={{60,40},{40,60}})));
@@ -2499,32 +2498,582 @@ post-ratchetted",
       end XBCycling_SrxD;
 
       model XBCycling_CalcMantADP "Generating mantADP"
-        extends XBCycling(kH(useRateOutput=true));
+        extends XBCycling_Walklate2022Fig1A (
+          kH(useRateOutput=true),
+          kH_m(
+            k=0.066*tune_c,
+            useRateInput=true,
+            useRateOutput=true),
+          totalLabel(y=SRXLabel.y + DRXLabel.y + A2.labelAmount + mADPLabel.y));
         Modelica.Blocks.Math.Product product1
-          annotation (Placement(transformation(extent={{50,-80},{70,-60}})));
+          annotation (Placement(transformation(extent={{46,-80},{66,-60}})));
         Bodylight.Population.LabeledPopulation.Components.LabelMeasure
           labelMeasure
-          annotation (Placement(transformation(extent={{42,-50},{22,-70}})));
+          annotation (Placement(transformation(extent={{38,-50},{18,-70}})));
         Modelica.Blocks.Continuous.Integrator integrator
-          annotation (Placement(transformation(extent={{80,-80},{100,-60}})));
+          annotation (Placement(transformation(extent={{74,-80},{94,-60}})));
+        Modelica.Blocks.Sources.Constant const(k=0.066*tune_c)
+          annotation (Placement(transformation(extent={{40,0},{60,20}})));
+        Bodylight.Blocks.Factors.InverseProportionalFactor inverseProportionalFactor(
+            scalingFactor=1,   enabled=true)
+          annotation (Placement(transformation(extent={{90,-18},{70,2}})));
+        parameter Real IfADP=0.1
+          "Intesity of free mADP as a fraction of mATP intensity";
+        Modelica.Blocks.Sources.RealExpression mADPLabel(y=integrator.y*IfADP)
+          annotation (Placement(transformation(extent={{-96,18},{-76,38}})));
       equation
-        connect(kH.popChangeOutput,product1. u2) annotation (Line(points={{12,-42},
-                {18,-42},{18,-76},{48,-76}},
-                                    color={0,0,127}));
         connect(kH.lpop_b,labelMeasure. lpop_a) annotation (Line(
-            points={{12,-46},{32,-46},{32,-50}},
+            points={{12,-46},{28,-46},{28,-50}},
             color={107,45,134},
             thickness=1,
             smooth=Smooth.Bezier));
         connect(labelMeasure.label,product1. u1) annotation (Line(
-            points={{42,-64},{46,-64},{48,-64}},
+            points={{38,-64},{38,-64},{44,-64}},
             color={0,0,127},
             smooth=Smooth.Bezier));
         connect(product1.y,integrator. u) annotation (Line(
-            points={{71,-70},{71,-70},{78,-70}},
+            points={{67,-70},{67,-70},{72,-70}},
             color={0,0,127},
             smooth=Smooth.Bezier));
+        connect(inverseProportionalFactor.y, kH_m.rateInput) annotation (Line(points={
+                {80,-12},{80,-16},{34,-16},{34,-28},{12,-28}}, color={0,0,127}));
+        connect(const.y, inverseProportionalFactor.yBase)
+          annotation (Line(points={{61,10},{80,10},{80,-6}}, color={0,0,127}));
+        connect(kH_m.popChangeOutput, product1.u2) annotation (Line(points={{-8,-28},{
+                -14,-28},{-14,-56},{18,-56},{18,-76},{44,-76}}, color={0,0,127}));
+        connect(integrator.y, inverseProportionalFactor.u) annotation (Line(points={{95,
+                -70},{96,-70},{96,-8},{88,-8}}, color={0,0,127}));
+        annotation (experiment(
+            StartTime=-1500,
+            StopTime=1500,
+            __Dymola_NumberOfIntervals=5000,
+            __Dymola_Algorithm="Dassl"));
       end XBCycling_CalcMantADP;
+
+      model XBCycling_Hooijman_NokHmAtNoATP
+        extends XBCycling_Hooijman(
+          kH_m(k=0.066*tune_c, useRateInput=true),
+          DRX_D(pop_start=max(1e-6, 0.95 - A2.pop_start)),
+          SRX(pop_start=1e-6));
+        Modelica.Blocks.Sources.RealExpression rateA2Out1(y=if time > -ageTime
+               then 0.066*tune_c else 0)
+          annotation (Placement(transformation(extent={{62,-20},{42,0}})));
+      equation
+        connect(rateA2Out1.y, kH_m.rateInput) annotation (Line(points={{41,-10},
+                {30,-10},{30,-28},{12,-28}}, color={0,0,127}));
+      end XBCycling_Hooijman_NokHmAtNoATP;
+
+      model XBCycling_Hooijman_PB
+        extends XBCycling_Hooijman_NokHmAtNoATP (
+          k_pb=0.002);
+        annotation (experiment(
+            StartTime=-1600,
+            StopTime=600,
+            __Dymola_NumberOfIntervals=5000,
+            __Dymola_Algorithm="Dassl"));
+      end XBCycling_Hooijman_PB;
+
+      model XBCycling_Hooijman_NokHmAtNoATP_optimized
+        "Optimized model parameters of mantATP.LabelLib.Experiments.XBCycling_Hooijman_NokHmAtNoATP"
+        extends mantATP.LabelLib.Experiments.XBCycling_Hooijman_NokHmAtNoATP(
+          tune_a=0.457922777524498,
+          tune_b=0.0900915490955254,
+          tune_c=1.0432043186568256);
+
+        /* Automatically generated at Fri May 23 13:18:31 2025 */
+        /*
+    The final optimization result was as follows:
+    
+    Evaluation #15
+        4.3713270788883095e-3     min    integratedSquaredDeviation.y1
+    __________________________________________________
+        4.3713270788883095e-3    Maximum of criteria
+    
+    **************************************************
+    
+    The optimized Modelica parameters were found by running the following optimization setup:
+    
+    Optimization.Tasks.ModelOptimization.run22(
+        Optimization.Internal.Version.V22.ModelOptimizationSetup(
+            modelName="mantATP.LabelLib.Experiments.XBCycling_Hooijman_NokHmAtNoATP",
+            plotScript="",
+            saveSetup=true,
+            saveSetupFilename="OptimizationLastRunModel.mo",
+            convertSetup=false,
+            askForTunerReUse=true,
+            tuner=
+                Optimization.Internal.Version.V22.Tuner(
+                    UseTunerMatrixForDiscreteValues=false,
+                    tunerParameters=
+                        {
+                            Optimization.Internal.Version.V22.TunerParameter(
+                                name="tune_a",
+                                active=true,
+                                Value=0.591444,
+                                min=0.1,
+                                max=2,
+                                equidistant=0,
+                                scaleToBounds=false,
+                                discreteValues=fill(0,0),
+                                unit=""),
+                            Optimization.Internal.Version.V22.TunerParameter(
+                                name="tune_b",
+                                active=true,
+                                Value=0.116111,
+                                min=1e-2,
+                                max=1,
+                                equidistant=0,
+                                scaleToBounds=false,
+                                discreteValues=fill(0,0),
+                                unit=""),
+                            Optimization.Internal.Version.V22.TunerParameter(
+                                name="tune_c",
+                                active=true,
+                                Value=1.1233599999999999,
+                                min=0.1,
+                                max=2,
+                                equidistant=0,
+                                scaleToBounds=false,
+                                discreteValues=fill(0,0),
+                                unit="")
+                        },
+                    tunerMatrix=
+                        zeros(0,1)),
+            criteria=
+                {
+                    Optimization.Internal.Version.V22.Criterion(
+                        name="integratedSquaredDeviation.y1",
+                        active=true,
+                        usage=Optimization.Internal.Version.V22.Types.CriterionUsage.Minimize,
+                        demand=1,
+                        unit="")
+                },
+            preferences=
+                Optimization.Internal.Version.V22.Preferences(
+                    optimizationOptions=
+                        Optimization.Internal.Version.V22.OptimizationOptions(
+                            method=Optimization.Internal.Version.V22.Types.OptimizationMethod.sqp,
+                            ObjectiveFunctionType=Optimization.Internal.Version.V22.Types.ObjectiveFunctionType.Max,
+                            OptTol=1e-3,
+                            maxEval=1000,
+                            evalBestFinal=false,
+                            saveBest=true,
+                            saveHistory=true,
+                            listFilename="OptimizationLog1.log",
+                            listOn=true,
+                            listOnline=false,
+                            listIncrement=100,
+                            numberOfShownDigits=3,
+                            onPlace=true,
+                            listTuners=true,
+                            GaPopSize=10,
+                            GaNGen=100,
+                            GridBlock=50),
+                    simulationOptions=
+                        Optimization.Internal.Version.V22.SimulationOptions(
+                            startTime=-600,
+                            stopTime=600,
+                            outputInterval=0,
+                            numberOfIntervals=1500,
+                            integrationMethod=Optimization.Internal.Version.V22.Types.IntegrationMethod.Dassl,
+                            integrationTolerance=1e-3,
+                            fixedStepSize=0,
+                            autoLoadResults=true,
+                            useDsFinal=true,
+                            translateModel=false,
+                            setCriteriaSimulationFailed=true,
+                            CriteriaSimulationFailedValue=1e+6,
+                            simulationMode=Optimization.Internal.Version.V22.Types.SimulationMode.Single,
+                            parallelizationMode=Optimization.Internal.Version.V22.Types.ParallelizationMode.None,
+                            numberOfThreads=0,
+                            copyFiles=
+                            fill("",0)),
+                    sensitivityOptions=
+                        Optimization.Internal.Version.V22.SensitivityOptions(
+                            TypeOfSensitivityComputation=Optimization.Internal.Version.V22.Types.SensitivityMethod.ExternalDifferencesSymmetric,
+                            automaticSensitivityTolerance=true,
+                            sensitivityTolerance=9.9999999999999995e-7))))
+ */
+        annotation (Documentation(info=
+                "<html><p>This class was automatically generated by the Optimization Library. It includes an inherited class with optimized tuner values. More information is found in the text layer of the class.</p></html>"));
+      end XBCycling_Hooijman_NokHmAtNoATP_optimized;
+
+      model XBCycling_Hooijman_NokHmAtNoATP_A240
+        "Optimized model parameters of mantATP.LabelLib.Experiments.XBCycling_Hooijman_NokHmAtNoATP"
+        extends mantATP.LabelLib.Experiments.XBCycling_Hooijman_NokHmAtNoATP(
+          tune_a=0.457922777524498,
+          tune_b=0.0900915490955254,
+          tune_c=1.0432043186568256,
+          A2(pop_start=0.4));
+
+        /* Automatically generated at Fri May 23 13:18:31 2025 */
+        /*
+    The final optimization result was as follows:
+    
+    Evaluation #15
+        4.3713270788883095e-3     min    integratedSquaredDeviation.y1
+    __________________________________________________
+        4.3713270788883095e-3    Maximum of criteria
+    
+    **************************************************
+    
+    The optimized Modelica parameters were found by running the following optimization setup:
+    
+    Optimization.Tasks.ModelOptimization.run22(
+        Optimization.Internal.Version.V22.ModelOptimizationSetup(
+            modelName="mantATP.LabelLib.Experiments.XBCycling_Hooijman_NokHmAtNoATP",
+            plotScript="",
+            saveSetup=true,
+            saveSetupFilename="OptimizationLastRunModel.mo",
+            convertSetup=false,
+            askForTunerReUse=true,
+            tuner=
+                Optimization.Internal.Version.V22.Tuner(
+                    UseTunerMatrixForDiscreteValues=false,
+                    tunerParameters=
+                        {
+                            Optimization.Internal.Version.V22.TunerParameter(
+                                name="tune_a",
+                                active=true,
+                                Value=0.591444,
+                                min=0.1,
+                                max=2,
+                                equidistant=0,
+                                scaleToBounds=false,
+                                discreteValues=fill(0,0),
+                                unit=""),
+                            Optimization.Internal.Version.V22.TunerParameter(
+                                name="tune_b",
+                                active=true,
+                                Value=0.116111,
+                                min=1e-2,
+                                max=1,
+                                equidistant=0,
+                                scaleToBounds=false,
+                                discreteValues=fill(0,0),
+                                unit=""),
+                            Optimization.Internal.Version.V22.TunerParameter(
+                                name="tune_c",
+                                active=true,
+                                Value=1.1233599999999999,
+                                min=0.1,
+                                max=2,
+                                equidistant=0,
+                                scaleToBounds=false,
+                                discreteValues=fill(0,0),
+                                unit="")
+                        },
+                    tunerMatrix=
+                        zeros(0,1)),
+            criteria=
+                {
+                    Optimization.Internal.Version.V22.Criterion(
+                        name="integratedSquaredDeviation.y1",
+                        active=true,
+                        usage=Optimization.Internal.Version.V22.Types.CriterionUsage.Minimize,
+                        demand=1,
+                        unit="")
+                },
+            preferences=
+                Optimization.Internal.Version.V22.Preferences(
+                    optimizationOptions=
+                        Optimization.Internal.Version.V22.OptimizationOptions(
+                            method=Optimization.Internal.Version.V22.Types.OptimizationMethod.sqp,
+                            ObjectiveFunctionType=Optimization.Internal.Version.V22.Types.ObjectiveFunctionType.Max,
+                            OptTol=1e-3,
+                            maxEval=1000,
+                            evalBestFinal=false,
+                            saveBest=true,
+                            saveHistory=true,
+                            listFilename="OptimizationLog1.log",
+                            listOn=true,
+                            listOnline=false,
+                            listIncrement=100,
+                            numberOfShownDigits=3,
+                            onPlace=true,
+                            listTuners=true,
+                            GaPopSize=10,
+                            GaNGen=100,
+                            GridBlock=50),
+                    simulationOptions=
+                        Optimization.Internal.Version.V22.SimulationOptions(
+                            startTime=-600,
+                            stopTime=600,
+                            outputInterval=0,
+                            numberOfIntervals=1500,
+                            integrationMethod=Optimization.Internal.Version.V22.Types.IntegrationMethod.Dassl,
+                            integrationTolerance=1e-3,
+                            fixedStepSize=0,
+                            autoLoadResults=true,
+                            useDsFinal=true,
+                            translateModel=false,
+                            setCriteriaSimulationFailed=true,
+                            CriteriaSimulationFailedValue=1e+6,
+                            simulationMode=Optimization.Internal.Version.V22.Types.SimulationMode.Single,
+                            parallelizationMode=Optimization.Internal.Version.V22.Types.ParallelizationMode.None,
+                            numberOfThreads=0,
+                            copyFiles=
+                            fill("",0)),
+                    sensitivityOptions=
+                        Optimization.Internal.Version.V22.SensitivityOptions(
+                            TypeOfSensitivityComputation=Optimization.Internal.Version.V22.Types.SensitivityMethod.ExternalDifferencesSymmetric,
+                            automaticSensitivityTolerance=true,
+                            sensitivityTolerance=9.9999999999999995e-7))))
+ */
+        annotation (Documentation(info=
+                "<html><p>This class was automatically generated by the Optimization Library. It includes an inherited class with optimized tuner values. More information is found in the text layer of the class.</p></html>"));
+      end XBCycling_Hooijman_NokHmAtNoATP_A240;
+
+      model XBCycling_Hooijman_NokHmAtNoATP_A240_optimized
+        "Optimized model parameters of mantATP.LabelLib.Experiments.XBCycling_Hooijman_NokHmAtNoATP_A240"
+        extends
+          mantATP.LabelLib.Experiments.XBCycling_Hooijman_NokHmAtNoATP_A240(
+          tune_a=0.4601773957086981,
+          tune_b=0.0877236672475727,
+          tune_c=1.0470985417389167);
+
+        /* Automatically generated at Fri May 23 13:29:45 2025 */
+        /*
+    The final optimization result was as follows:
+    
+    Evaluation #14
+        4.4748644431351105e-3     min    integratedSquaredDeviation.y1
+    __________________________________________________
+        4.4748644431351105e-3    Maximum of criteria
+    
+    **************************************************
+    
+    The optimized Modelica parameters were found by running the following optimization setup:
+    
+    Optimization.Tasks.ModelOptimization.run22(
+        Optimization.Internal.Version.V22.ModelOptimizationSetup(
+            modelName="mantATP.LabelLib.Experiments.XBCycling_Hooijman_NokHmAtNoATP_A240",
+            plotScript="",
+            saveSetup=false,
+            saveSetupFilename="OptimizationLastRunModel.mo",
+            convertSetup=false,
+            askForTunerReUse=true,
+            tuner=
+                Optimization.Internal.Version.V22.Tuner(
+                    UseTunerMatrixForDiscreteValues=false,
+                    tunerParameters=
+                        {
+                            Optimization.Internal.Version.V22.TunerParameter(
+                                name="tune_a",
+                                active=true,
+                                Value=0.457922777524498,
+                                min=0.1,
+                                max=2,
+                                equidistant=0,
+                                scaleToBounds=false,
+                                discreteValues=fill(0,0),
+                                unit=""),
+                            Optimization.Internal.Version.V22.TunerParameter(
+                                name="tune_b",
+                                active=true,
+                                Value=0.0900915490955254,
+                                min=1e-2,
+                                max=1,
+                                equidistant=0,
+                                scaleToBounds=false,
+                                discreteValues=fill(0,0),
+                                unit=""),
+                            Optimization.Internal.Version.V22.TunerParameter(
+                                name="tune_c",
+                                active=true,
+                                Value=1.0432043186568256,
+                                min=0.1,
+                                max=2,
+                                equidistant=0,
+                                scaleToBounds=false,
+                                discreteValues=fill(0,0),
+                                unit="")
+                        },
+                    tunerMatrix=
+                        zeros(0,1)),
+            criteria=
+                {
+                    Optimization.Internal.Version.V22.Criterion(
+                        name="integratedSquaredDeviation.y1",
+                        active=true,
+                        usage=Optimization.Internal.Version.V22.Types.CriterionUsage.Minimize,
+                        demand=1,
+                        unit="")
+                },
+            preferences=
+                Optimization.Internal.Version.V22.Preferences(
+                    optimizationOptions=
+                        Optimization.Internal.Version.V22.OptimizationOptions(
+                            method=Optimization.Internal.Version.V22.Types.OptimizationMethod.sqp,
+                            ObjectiveFunctionType=Optimization.Internal.Version.V22.Types.ObjectiveFunctionType.Max,
+                            OptTol=1e-3,
+                            maxEval=1000,
+                            evalBestFinal=false,
+                            saveBest=true,
+                            saveHistory=true,
+                            listFilename="OptimizationLog1.log",
+                            listOn=true,
+                            listOnline=false,
+                            listIncrement=100,
+                            numberOfShownDigits=3,
+                            onPlace=true,
+                            listTuners=true,
+                            GaPopSize=10,
+                            GaNGen=100,
+                            GridBlock=50),
+                    simulationOptions=
+                        Optimization.Internal.Version.V22.SimulationOptions(
+                            startTime=-600,
+                            stopTime=600,
+                            outputInterval=0,
+                            numberOfIntervals=1500,
+                            integrationMethod=Optimization.Internal.Version.V22.Types.IntegrationMethod.Dassl,
+                            integrationTolerance=1e-3,
+                            fixedStepSize=0,
+                            autoLoadResults=true,
+                            useDsFinal=true,
+                            translateModel=false,
+                            setCriteriaSimulationFailed=true,
+                            CriteriaSimulationFailedValue=1e+6,
+                            simulationMode=Optimization.Internal.Version.V22.Types.SimulationMode.Single,
+                            parallelizationMode=Optimization.Internal.Version.V22.Types.ParallelizationMode.None,
+                            numberOfThreads=0,
+                            copyFiles=
+                            fill("",0)),
+                    sensitivityOptions=
+                        Optimization.Internal.Version.V22.SensitivityOptions(
+                            TypeOfSensitivityComputation=Optimization.Internal.Version.V22.Types.SensitivityMethod.ExternalDifferencesSymmetric,
+                            automaticSensitivityTolerance=true,
+                            sensitivityTolerance=9.9999999999999995e-7))))
+ */
+        annotation (Documentation(info=
+                "<html><p>This class was automatically generated by the Optimization Library. It includes an inherited class with optimized tuner values. More information is found in the text layer of the class.</p></html>"));
+      end XBCycling_Hooijman_NokHmAtNoATP_A240_optimized;
+
+      model XBCycling_SrxD_optimized
+        "Optimized model parameters of mantATP.LabelLib.Experiments.XBCycling_SrxD"
+        extends mantATP.LabelLib.Experiments.XBCycling_SrxD(
+          tune_a=0.5553427923543645,
+          tune_b=0.1160283020164545,
+          tune_c=1.1276494616464963);
+
+        /* Automatically generated at Mon May 26 12:57:59 2025 */
+        /*
+    The final optimization result was as follows:
+    
+    Evaluation #15
+        3.3435450331892338e-3     min    integratedSquaredDeviation.y1
+    __________________________________________________
+        3.3435450331892338e-3    Maximum of criteria
+    
+    **************************************************
+    
+    The optimized Modelica parameters were found by running the following optimization setup:
+    
+    Optimization.Tasks.ModelOptimization.run22(
+        Optimization.Internal.Version.V22.ModelOptimizationSetup(
+            modelName="mantATP.LabelLib.Experiments.XBCycling_SrxD",
+            plotScript="",
+            saveSetup=false,
+            saveSetupFilename="OptimizationLastRunModel.mo",
+            convertSetup=false,
+            askForTunerReUse=true,
+            tuner=
+                Optimization.Internal.Version.V22.Tuner(
+                    UseTunerMatrixForDiscreteValues=false,
+                    tunerParameters=
+                        {
+                            Optimization.Internal.Version.V22.TunerParameter(
+                                name="tune_a",
+                                active=true,
+                                Value=0.457922777524498,
+                                min=0.1,
+                                max=2,
+                                equidistant=0,
+                                scaleToBounds=false,
+                                discreteValues=fill(0,0),
+                                unit=""),
+                            Optimization.Internal.Version.V22.TunerParameter(
+                                name="tune_b",
+                                active=true,
+                                Value=0.0900915490955254,
+                                min=1e-2,
+                                max=1,
+                                equidistant=0,
+                                scaleToBounds=false,
+                                discreteValues=fill(0,0),
+                                unit=""),
+                            Optimization.Internal.Version.V22.TunerParameter(
+                                name="tune_c",
+                                active=true,
+                                Value=1.0432043186568256,
+                                min=0.1,
+                                max=2,
+                                equidistant=0,
+                                scaleToBounds=false,
+                                discreteValues=fill(0,0),
+                                unit="")
+                        },
+                    tunerMatrix=
+                        zeros(0,1)),
+            criteria=
+                {
+                    Optimization.Internal.Version.V22.Criterion(
+                        name="integratedSquaredDeviation.y1",
+                        active=true,
+                        usage=Optimization.Internal.Version.V22.Types.CriterionUsage.Minimize,
+                        demand=1,
+                        unit="")
+                },
+            preferences=
+                Optimization.Internal.Version.V22.Preferences(
+                    optimizationOptions=
+                        Optimization.Internal.Version.V22.OptimizationOptions(
+                            method=Optimization.Internal.Version.V22.Types.OptimizationMethod.sqp,
+                            ObjectiveFunctionType=Optimization.Internal.Version.V22.Types.ObjectiveFunctionType.Max,
+                            OptTol=1e-3,
+                            maxEval=1000,
+                            evalBestFinal=false,
+                            saveBest=true,
+                            saveHistory=true,
+                            listFilename="OptimizationLog1.log",
+                            listOn=true,
+                            listOnline=false,
+                            listIncrement=100,
+                            numberOfShownDigits=3,
+                            onPlace=true,
+                            listTuners=true,
+                            GaPopSize=10,
+                            GaNGen=100,
+                            GridBlock=50),
+                    simulationOptions=
+                        Optimization.Internal.Version.V22.SimulationOptions(
+                            startTime=-600,
+                            stopTime=600,
+                            outputInterval=0,
+                            numberOfIntervals=1500,
+                            integrationMethod=Optimization.Internal.Version.V22.Types.IntegrationMethod.Dassl,
+                            integrationTolerance=1e-3,
+                            fixedStepSize=0,
+                            autoLoadResults=true,
+                            useDsFinal=true,
+                            translateModel=false,
+                            setCriteriaSimulationFailed=true,
+                            CriteriaSimulationFailedValue=1e+6,
+                            simulationMode=Optimization.Internal.Version.V22.Types.SimulationMode.Single,
+                            parallelizationMode=Optimization.Internal.Version.V22.Types.ParallelizationMode.None,
+                            numberOfThreads=0,
+                            copyFiles=
+                            fill("",0)),
+                    sensitivityOptions=
+                        Optimization.Internal.Version.V22.SensitivityOptions(
+                            TypeOfSensitivityComputation=Optimization.Internal.Version.V22.Types.SensitivityMethod.ExternalDifferencesSymmetric,
+                            automaticSensitivityTolerance=true,
+                            sensitivityTolerance=9.9999999999999995e-7))))
+ */
+        annotation (Documentation(info=
+                "<html><p>This class was automatically generated by the Optimization Library. It includes an inherited class with optimized tuner values. More information is found in the text layer of the class.</p></html>"));
+      end XBCycling_SrxD_optimized;
     end Experiments;
 
     model XBCycling
@@ -2919,7 +3468,7 @@ post-ratchetted",
       end Default_ageTime;
 
       model DefaultH
-        extends XBCycling_Hooijman_A240;
+        extends mantATP.LabelLib.Experiments.XBCycling_Hooijman_NokHmAtNoATP_A240_optimized;
         annotation (experiment(
             StartTime=-1200,
             StopTime=600,
@@ -2928,7 +3477,7 @@ post-ratchetted",
       end DefaultH;
 
       model DefaultW
-        extends XBCycling_Walklate2022Fig1A;
+        extends XBCycling_Walklate2022Fig1A_NokHmAtNoATP_A240_optimized;
         annotation (experiment(
             StartTime=-1200,
             StopTime=600,
@@ -3012,8 +3561,272 @@ post-ratchetted",
         ageTime=60.0,
         redeclare Data.TimeTable_ATPChaseWalklate1A timeTable_ATPChase,
         A2(pop_start=0.4));
-      annotation (Documentation(info="<html><p>This class was automatically generated by the Optimization Library. It includes an inherited class with optimized tuner values. More information is found in the text layer of the class.</p></html>"));
+      annotation (Documentation(info="<html><p>This class was automatically generated by the Optimization Library. It includes an inherited class with optimized tuner values. More information is found in the text layer of the class.</p></html>"),
+          experiment(
+          StartTime=-600,
+          StopTime=1000,
+          __Dymola_NumberOfIntervals=5000,
+          __Dymola_Algorithm="Dassl"));
     end XBCycling_Walklate2022Fig1A;
+
+    model XBCycling_Walklate2022Fig1A_NokHmAtNoATP_A240
+      "Optimized model parameters of mantATP.LabelLib.XBCycling_Walklate2022Fig1A"
+      extends mantATP.LabelLib.XBCycling_Walklate2022Fig1A(
+        tune_a=0.3038695594437007,
+        tune_b=0.1901605458354207,
+        tune_c=0.4094192549875971,
+        kH_m(useRateInput=true));
+
+      /* Automatically generated at Fri May 23 13:39:10 2025 */
+      /*
+    The final optimization result was as follows:
+    
+    Evaluation #23
+        1.6113096694284031e-3     min    integratedSquaredDeviation.y1
+    __________________________________________________
+        1.6113096694284031e-3    Maximum of criteria
+    
+    **************************************************
+    
+    The optimized Modelica parameters were found by running the following optimization setup:
+    
+    Optimization.Tasks.ModelOptimization.run22(
+        Optimization.Internal.Version.V22.ModelOptimizationSetup(
+            modelName="mantATP.LabelLib.XBCycling_Walklate2022Fig1A",
+            plotScript="",
+            saveSetup=false,
+            saveSetupFilename="OptimizationLastRunModel.mo",
+            convertSetup=false,
+            askForTunerReUse=true,
+            tuner=
+                Optimization.Internal.Version.V22.Tuner(
+                    UseTunerMatrixForDiscreteValues=false,
+                    tunerParameters=
+                        {
+                            Optimization.Internal.Version.V22.TunerParameter(
+                                name="tune_a",
+                                active=true,
+                                Value=0.457922777524498,
+                                min=0.1,
+                                max=2,
+                                equidistant=0,
+                                scaleToBounds=false,
+                                discreteValues=fill(0,0),
+                                unit=""),
+                            Optimization.Internal.Version.V22.TunerParameter(
+                                name="tune_b",
+                                active=true,
+                                Value=0.0900915490955254,
+                                min=1e-2,
+                                max=1,
+                                equidistant=0,
+                                scaleToBounds=false,
+                                discreteValues=fill(0,0),
+                                unit=""),
+                            Optimization.Internal.Version.V22.TunerParameter(
+                                name="tune_c",
+                                active=true,
+                                Value=1.0432043186568256,
+                                min=0.1,
+                                max=2,
+                                equidistant=0,
+                                scaleToBounds=false,
+                                discreteValues=fill(0,0),
+                                unit="")
+                        },
+                    tunerMatrix=
+                        zeros(0,1)),
+            criteria=
+                {
+                    Optimization.Internal.Version.V22.Criterion(
+                        name="integratedSquaredDeviation.y1",
+                        active=true,
+                        usage=Optimization.Internal.Version.V22.Types.CriterionUsage.Minimize,
+                        demand=1,
+                        unit="")
+                },
+            preferences=
+                Optimization.Internal.Version.V22.Preferences(
+                    optimizationOptions=
+                        Optimization.Internal.Version.V22.OptimizationOptions(
+                            method=Optimization.Internal.Version.V22.Types.OptimizationMethod.sqp,
+                            ObjectiveFunctionType=Optimization.Internal.Version.V22.Types.ObjectiveFunctionType.Max,
+                            OptTol=1e-3,
+                            maxEval=1000,
+                            evalBestFinal=false,
+                            saveBest=true,
+                            saveHistory=true,
+                            listFilename="OptimizationLog1.log",
+                            listOn=true,
+                            listOnline=false,
+                            listIncrement=100,
+                            numberOfShownDigits=3,
+                            onPlace=true,
+                            listTuners=true,
+                            GaPopSize=10,
+                            GaNGen=100,
+                            GridBlock=50),
+                    simulationOptions=
+                        Optimization.Internal.Version.V22.SimulationOptions(
+                            startTime=-600,
+                            stopTime=600,
+                            outputInterval=0,
+                            numberOfIntervals=1500,
+                            integrationMethod=Optimization.Internal.Version.V22.Types.IntegrationMethod.Dassl,
+                            integrationTolerance=1e-3,
+                            fixedStepSize=0,
+                            autoLoadResults=true,
+                            useDsFinal=true,
+                            translateModel=false,
+                            setCriteriaSimulationFailed=true,
+                            CriteriaSimulationFailedValue=1e+6,
+                            simulationMode=Optimization.Internal.Version.V22.Types.SimulationMode.Single,
+                            parallelizationMode=Optimization.Internal.Version.V22.Types.ParallelizationMode.None,
+                            numberOfThreads=0,
+                            copyFiles=
+                            fill("",0)),
+                    sensitivityOptions=
+                        Optimization.Internal.Version.V22.SensitivityOptions(
+                            TypeOfSensitivityComputation=Optimization.Internal.Version.V22.Types.SensitivityMethod.ExternalDifferencesSymmetric,
+                            automaticSensitivityTolerance=true,
+                            sensitivityTolerance=9.9999999999999995e-7))))
+ */
+      Modelica.Blocks.Sources.RealExpression rateA2Out1(y=if time > -ageTime
+             then 0.066*tune_c else 0)
+        annotation (Placement(transformation(extent={{64,-14},{44,6}})));
+    equation
+      connect(rateA2Out1.y, kH_m.rateInput) annotation (Line(points={{43,-4},{
+              32,-4},{32,-28},{12,-28}}, color={0,0,127}));
+      annotation (Documentation(info=
+              "<html><p>This class was automatically generated by the Optimization Library. It includes an inherited class with optimized tuner values. More information is found in the text layer of the class.</p></html>"));
+    end XBCycling_Walklate2022Fig1A_NokHmAtNoATP_A240;
+
+    model XBCycling_Walklate2022Fig1A_NokHmAtNoATP_A240_optimized
+      "Optimized model parameters of mantATP.LabelLib.XBCycling_Walklate2022Fig1A_NokHmAtNoATP_A240"
+      extends mantATP.LabelLib.XBCycling_Walklate2022Fig1A_NokHmAtNoATP_A240(
+        tune_a=0.3061467550165379,
+        tune_b=0.1947624404223471,
+        tune_c=0.411047421686107,
+        DRX_D(pop_start=max(1e-6, 0.95 - A2.pop_start)),
+        SRX(pop_start=1e-6));
+
+      /* Automatically generated at Fri May 23 13:42:48 2025 */
+      /*
+    The final optimization result was as follows:
+    
+    Evaluation #23
+        1.829931091619249e-3      min    integratedSquaredDeviation.y1
+    __________________________________________________
+        1.829931091619249e-3     Maximum of criteria
+    
+    **************************************************
+    
+    The optimized Modelica parameters were found by running the following optimization setup:
+    
+    Optimization.Tasks.ModelOptimization.run22(
+        Optimization.Internal.Version.V22.ModelOptimizationSetup(
+            modelName="mantATP.LabelLib.XBCycling_Walklate2022Fig1A_NokHmAtNoATP_A240",
+            plotScript="",
+            saveSetup=false,
+            saveSetupFilename="OptimizationLastRunModel.mo",
+            convertSetup=false,
+            askForTunerReUse=true,
+            tuner=
+                Optimization.Internal.Version.V22.Tuner(
+                    UseTunerMatrixForDiscreteValues=false,
+                    tunerParameters=
+                        {
+                            Optimization.Internal.Version.V22.TunerParameter(
+                                name="tune_a",
+                                active=true,
+                                Value=0.457922777524498,
+                                min=0.1,
+                                max=2,
+                                equidistant=0,
+                                scaleToBounds=false,
+                                discreteValues=fill(0,0),
+                                unit=""),
+                            Optimization.Internal.Version.V22.TunerParameter(
+                                name="tune_b",
+                                active=true,
+                                Value=0.0900915490955254,
+                                min=1e-2,
+                                max=1,
+                                equidistant=0,
+                                scaleToBounds=false,
+                                discreteValues=fill(0,0),
+                                unit=""),
+                            Optimization.Internal.Version.V22.TunerParameter(
+                                name="tune_c",
+                                active=true,
+                                Value=1.0432043186568256,
+                                min=0.1,
+                                max=2,
+                                equidistant=0,
+                                scaleToBounds=false,
+                                discreteValues=fill(0,0),
+                                unit="")
+                        },
+                    tunerMatrix=
+                        zeros(0,1)),
+            criteria=
+                {
+                    Optimization.Internal.Version.V22.Criterion(
+                        name="integratedSquaredDeviation.y1",
+                        active=true,
+                        usage=Optimization.Internal.Version.V22.Types.CriterionUsage.Minimize,
+                        demand=1,
+                        unit="")
+                },
+            preferences=
+                Optimization.Internal.Version.V22.Preferences(
+                    optimizationOptions=
+                        Optimization.Internal.Version.V22.OptimizationOptions(
+                            method=Optimization.Internal.Version.V22.Types.OptimizationMethod.sqp,
+                            ObjectiveFunctionType=Optimization.Internal.Version.V22.Types.ObjectiveFunctionType.Max,
+                            OptTol=1e-3,
+                            maxEval=1000,
+                            evalBestFinal=false,
+                            saveBest=true,
+                            saveHistory=true,
+                            listFilename="OptimizationLog1.log",
+                            listOn=true,
+                            listOnline=false,
+                            listIncrement=100,
+                            numberOfShownDigits=3,
+                            onPlace=true,
+                            listTuners=true,
+                            GaPopSize=10,
+                            GaNGen=100,
+                            GridBlock=50),
+                    simulationOptions=
+                        Optimization.Internal.Version.V22.SimulationOptions(
+                            startTime=-600,
+                            stopTime=600,
+                            outputInterval=0,
+                            numberOfIntervals=1500,
+                            integrationMethod=Optimization.Internal.Version.V22.Types.IntegrationMethod.Dassl,
+                            integrationTolerance=1e-3,
+                            fixedStepSize=0,
+                            autoLoadResults=true,
+                            useDsFinal=true,
+                            translateModel=false,
+                            setCriteriaSimulationFailed=true,
+                            CriteriaSimulationFailedValue=1e+6,
+                            simulationMode=Optimization.Internal.Version.V22.Types.SimulationMode.Single,
+                            parallelizationMode=Optimization.Internal.Version.V22.Types.ParallelizationMode.None,
+                            numberOfThreads=0,
+                            copyFiles=
+                            fill("",0)),
+                    sensitivityOptions=
+                        Optimization.Internal.Version.V22.SensitivityOptions(
+                            TypeOfSensitivityComputation=Optimization.Internal.Version.V22.Types.SensitivityMethod.ExternalDifferencesSymmetric,
+                            automaticSensitivityTolerance=true,
+                            sensitivityTolerance=9.9999999999999995e-7))))
+ */
+      annotation (Documentation(info=
+              "<html><p>This class was automatically generated by the Optimization Library. It includes an inherited class with optimized tuner values. More information is found in the text layer of the class.</p></html>"));
+    end XBCycling_Walklate2022Fig1A_NokHmAtNoATP_A240_optimized;
   end LabelLib;
   annotation (uses(
       Modelica(version="4.0.0"),

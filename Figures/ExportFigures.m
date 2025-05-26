@@ -13,7 +13,7 @@ if saveFigs
     saveas(gca, "../figures/Figure2.fig")
     saveas(gca, "../figures/Figure2.png")
 end
-
+%%
 figure(3)
 modelName = 'DefaultW';
 Figure2;
@@ -304,9 +304,10 @@ legend(string(rigorFrac), Location="best")
 % legend(string(ageTimes(ageTimesSubSel)), Location="best");
 
 if exist('saveFigs') && saveFigs
-    saveas(gcf, "../figures/Figure3.fig")
-    saveas(gcf, "../figures/Figure3.png")
+    saveas(gcf, "../figures/Figure4.fig")
+    saveas(gcf, "../figures/Figure4.png")
 end
+%% qunatify error for eq 1 and 2 fitting
 
 figure(3);clf;
 nexttile;hold on;

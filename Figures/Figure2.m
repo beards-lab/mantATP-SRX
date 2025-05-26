@@ -2,7 +2,7 @@
 t = linspace(-5, 5, 1000);
 
 % Generate timecourses
-cf = figure(gcf); clf; 
+cf = figure(); clf; 
 tiledlayout(1, 5, 'TileSpacing','Tight')
 
 if exist('modelName', 'var')
@@ -38,8 +38,8 @@ nexttile(1, [1 2]);hold on;
 color_rigor = [1 1 1]*0.7;
 color_incubation = [1 1 1]*0.85;
 color_chase = [1 1 1];
-fill([-5 -2 -2 -5], [0 0 100 100], color_rigor, 'EdgeColor', 'none', 'FaceAlpha', 1); % steady state
-fill([-2 0 0 -2], [0 0 100 100], color_incubation, 'EdgeColor', 'none', 'FaceAlpha', 1);   % rise
+fill([-5 x_marker x_marker -5], [0 0 100 100], color_rigor, 'EdgeColor', 'none', 'FaceAlpha', 1); % steady state
+fill([x_marker 0 0 x_marker], [0 0 100 100], color_incubation, 'EdgeColor', 'none', 'FaceAlpha', 1);   % rise
 % fill([0 5 5 0], [0 0 100 100], color_chase, 'EdgeColor', 'none', 'FaceAlpha', 1);     % decay
 
 lw = 2.5;
@@ -53,7 +53,7 @@ p4 = plot(time, getValsToPerc('A2.pop'), '-', 'Color', [1 1 1]*0.5, LineWidth=lw
 
 % Add triangular markers
 maxY = 99; % top y-value for markers
-m1 = plot(-2, maxY, 'v', 'MarkerEdgeColor', [0.4 0.4 0.4], 'MarkerFaceColor', color_incubation, 'MarkerSize', 8,DisplayName='Incubation'); % gray triangle
+m1 = plot(x_marker, maxY, 'v', 'MarkerEdgeColor', [0.4 0.4 0.4], 'MarkerFaceColor', color_incubation, 'MarkerSize', 8,DisplayName='Incubation'); % gray triangle
 m2 = plot(0, maxY, 'v', 'MarkerEdgeColor', 'k', 'MarkerFaceColor', color_chase, 'MarkerSize', 8, DisplayName='Chase'); % black triangle
 
 
