@@ -174,7 +174,11 @@ ageTimes = [.2, .5, 1, 2, 5, 10, 30, 60, 120, 300, 600, 1200];
 ageTimes = [.2, .5, 1, 2, 5, 10, 30, 60, 120, 240, 300, 400, 450, 500, 600, 1200];
 ageTimes = [.2, .5, 1, 2, 5, 10, 30, 60, 120, 300, 600, 900, 1200, 3600];
 ageTimes = [.2, .5, 1, 2, 5, 10, 30, 60, 120, 300, 600, 900];
+ageTimes = [.2, .5, 1, 2, 5, 10, 30, 60, 120, 300, 600, 900, 1200, 3600];
+
 rigorFrac = [0, 20, 40, 60, 80, 95];
+rigorFrac = [0, 40, 80, 95];
+rigorFrac = [40];
 
 
 fit1_A = zeros(size(ageTimes'*rigorFrac));
@@ -190,7 +194,11 @@ maxLabel = zeros(size(fit1_A));
 for i = 1:length(ageTimes)  
     nexttile;        hold on;    
     for j = 1:length(rigorFrac)    
-    filename = sprintf('../Modelica/mantATP.LabelLib.Figures.DefaultW_%dA2_%d.mat', ageTimes(i)*1000, rigorFrac(j));  
+    % filename = sprintf('../Modelica/mantATP.LabelLib.Figures.DefaultW_%dA2_%d.mat', ageTimes(i)*1000, rigorFrac(j));  
+    % filename = sprintf('../Modelica/mantATP.LabelLib.Figures.Walklate_PB_%dA2_%d.mat', ageTimes(i)*1000, rigorFrac(j));  
+    % filename = sprintf('../Modelica/mantATP.LabelLib.Figures.Walklate_CalcMantADP_%dA2_%d.mat', ageTimes(i)*1000, rigorFrac(j));  
+    filename = sprintf('../Modelica/mantATP.LabelLib.Figures.Walklate_CalcADP_%dA2_%d.mat', ageTimes(i)*1000, rigorFrac(j));  
+
     
     if exist(filename, 'file')  
 
@@ -261,7 +269,7 @@ for i = 1:length(ageTimes)
     end  
     end
 end
-%%
+%
 figure(2);clf;
 tiledlayout('flow', 'TileSpacing','compact')
 l2 = 1.5;
@@ -306,6 +314,9 @@ legend(string(rigorFrac), Location="best")
 if exist('saveFigs') && saveFigs
     saveas(gcf, "../figures/Figure4.fig")
     saveas(gcf, "../figures/Figure4.png")
+
+    % saveas(gcf, "../figures/Figure6.fig")
+    % saveas(gcf, "../figures/Figure6.png")    
 end
 %% qunatify error for eq 1 and 2 fitting
 

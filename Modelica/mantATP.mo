@@ -2410,65 +2410,79 @@ post-ratchetted",
             __Dymola_NumberOfIntervals=5000,
             __Dymola_Algorithm="Dassl"));
       end TestXB_Ctrl1_reparam_optimized_A2;
+
+      model XBCycling_A2
+        extends XBCycling(
+          A2(pop_start
+                    =0.4),
+          tune_a=0.32209674728815296,
+          tune_b=0.2580328344792636,
+          tune_c=0.2954172194469952);
+      end XBCycling_A2;
+
+      model XBCycling_kH120
+        extends Obsolete.XBCycling_A2
+                            (
+          kH(k=120),
+          tune_a=0.31375624657832374,
+          tune_b=0.37443405317894396,
+          tune_c=0.28187438139777166);
+      end XBCycling_kH120;
     end Obsolete;
 
     package Experiments
-      model XBCycling_A2_self
-        extends XBCycling_A2(SRX(nPorts=4));
-        Bodylight.Population.LabeledPopulation.Components.StateTransition kH_SRX_self(
-          k=0.01,
-          useRateInput=false,
-          useDynamicFlowLabeling=true,
-          labelIn=time > -ageTime and time < 0,
-          labelOut=time > 0) annotation (Placement(transformation(
-              extent={{-10,-10},{10,10}},
-              rotation=180,
-              origin={-64,16})));
-      equation
-        connect(kH_SRX_self.lpop_a, SRX.lpop[3]) annotation (Line(
-            points={{-54,16},{-40.2,16},{-40.2,40.4}},
-            color={107,45,134},
-            thickness=1));
-        connect(kH_SRX_self.lpop_b, SRX.lpop[4]) annotation (Line(
-            points={{-74,16},{-74,40.4},{-40.2,40.4}},
-            color={107,45,134},
-            thickness=1));
-      end XBCycling_A2_self;
+      model XBCycling_A280 "Retuned for higher initial rigor state"
+        import mantATP;
+        extends mantATP.LabelLib.XBCycling
+                                  (
+          tune_a=0.47733679799388273,
+          tune_b=0.08780130903693892,
+          tune_c=1.0251694037888126,
+          A2(pop_start=0.8));
+      end XBCycling_A280;
 
-      model XBCycling_Srx2DrxD "alternative configuration"
-        extends XBCycling_Hooijman(DRX_D(nPorts=3), SRX(nPorts=3),
-          k_srx_m(k=kmsr*kmsr_f));
+      model XBCycling_Srx2DrxD "alternative configuration where SRX can hydrolyze into DRX_ADP directly"
+        import mantATP;
+        extends mantATP.LabelLib.XBCycling
+                                  (DRX_D(nPorts=3), SRX(nPorts=3),
+          k_srx_m(k=kmsr*kmsr_f),
+          tune_c=1.013986378473558);
         Bodylight.Population.LabeledPopulation.Components.StateTransition k_srx_m1(k(
               displayUnit="s-1") = (1 - kmsr_f)*kmsr)
                        annotation (Placement(transformation(
               extent={{-10,-10},{10,10}},
               rotation=270,
-              origin={26,14})));
+              origin={40,14})));
         parameter Bodylight.Types.PopulationChange kmsr=0.014*tune_a;
         parameter Bodylight.Types.PopulationChange kmsr_f=1;
       equation
         connect(k_srx_m1.lpop_b, DRX_D.lpop[3]) annotation (Line(
-            points={{26,4},{26,-6},{40.2,-6},{40.2,-39.6}},
+            points={{40,4},{40,2},{40.2,2},{40.2,-39.6}},
             color={107,45,134},
             thickness=1));
         connect(k_srx_m1.lpop_a, SRX.lpop[3]) annotation (Line(
-            points={{26,24},{24,24},{24,44},{-40.2,44},{-40.2,40.4}},
+            points={{40,24},{40,40},{-40.2,40},{-40.2,40.4}},
             color={107,45,134},
             thickness=1));
       end XBCycling_Srx2DrxD;
 
-      model XBCycling_SrxD "alternative configuration"
-        extends XBCycling_Hooijman(
+      model XBCycling_SrxD "Alternative configuration, where a separate SRX_ADP state exists and transitions to DRX_ADP"
+        import mantATP;
+        extends mantATP.LabelLib.XBCycling
+                                  (
           DRX_D(nPorts=3),
           k_srx_m(k=kmsr),
           SRX(nPorts=3),
-          SRXLabel(y=SRX.labelAmount + SRX_D.labelAmount));
+          SRXLabel(y=SRX.labelAmount + SRX_D.labelAmount),
+          tune_a=0.4389320387284864,
+          tune_b=0.08804382574240988,
+          tune_c=1.0150553374423377);
         Bodylight.Population.LabeledPopulation.Components.StateTransition k_srx_m1(k(
               displayUnit="s-1") = kmsr)
                        annotation (Placement(transformation(
               extent={{-10,-10},{10,10}},
               rotation=270,
-              origin={32,10})));
+              origin={40,10})));
         parameter Bodylight.Types.PopulationChange kmsr=0.014*tune_a;
         Bodylight.Population.LabeledPopulation.Components.StateCompartment SRX_D(pop_start
             =1e-6, nPorts=2)
@@ -2480,7 +2494,7 @@ post-ratchetted",
           annotation (Placement(transformation(extent={{-6,30},{14,50}})));
       equation
         connect(k_srx_m1.lpop_b, DRX_D.lpop[3]) annotation (Line(
-            points={{32,0},{32,-40},{40.2,-40},{40.2,-39.6}},
+            points={{40,0},{40,-40},{40.2,-40},{40.2,-39.6}},
             color={107,45,134},
             thickness=1));
         connect(SRX.lpop[3], kH_srx.lpop_a) annotation (Line(
@@ -2492,19 +2506,57 @@ post-ratchetted",
             color={107,45,134},
             thickness=1));
         connect(k_srx_m1.lpop_a, SRX_D.lpop[2]) annotation (Line(
-            points={{32,20},{32,40.65},{40.2,40.65}},
+            points={{40,20},{40,40.65},{40.2,40.65}},
             color={107,45,134},
             thickness=1));
       end XBCycling_SrxD;
 
-      model XBCycling_CalcMantADP "Generating mantADP"
-        extends XBCycling_Walklate2022Fig1A (
+      model XBCycling_Walklate_CalcADP
+        "Generating ADP, having a slow-down effect on DRX_D to DRX_T transition"
+        extends XBCycling_Walklate2022Fig1A(
+          tune_a=0.2655897929630535,
+          tune_b=0.094895195683267,
+          tune_c=1.401853257217013,
           kH(useRateOutput=true),
           kH_m(
             k=0.066*tune_c,
             useRateInput=true,
             useRateOutput=true),
-          totalLabel(y=SRXLabel.y + DRXLabel.y + A2.labelAmount + mADPLabel.y));
+          rateDRXDOut(y=if time > -ageTime then inverseProportionalFactor.y
+                 else 0));
+        Modelica.Blocks.Continuous.Integrator integrator
+          annotation (Placement(transformation(extent={{74,-80},{94,-60}})));
+        Modelica.Blocks.Sources.Constant const(k=0.066*tune_c)
+          annotation (Placement(transformation(extent={{40,8},{60,28}})));
+        Bodylight.Blocks.Factors.InverseProportionalFactor inverseProportionalFactor(
+            scalingFactor=1,   enabled=true)
+          annotation (Placement(transformation(extent={{90,-18},{70,2}})));
+        parameter Real IfADP=0.1
+          "Intesity of free mADP as a fraction of mATP intensity";
+      equation
+        connect(const.y, inverseProportionalFactor.yBase)
+          annotation (Line(points={{61,18},{80,18},{80,-6}}, color={0,0,127}));
+        connect(integrator.y, inverseProportionalFactor.u) annotation (Line(points={{95,
+                -70},{96,-70},{96,-8},{88,-8}}, color={0,0,127}));
+        connect(kH_m.popChangeOutput, integrator.u) annotation (Line(points={{-10,-28},
+                {-14,-28},{-14,-56},{54,-56},{54,-70},{72,-70}}, color={0,0,127}));
+        annotation (experiment(
+            StartTime=-1500,
+            StopTime=1500,
+            __Dymola_NumberOfIntervals=5000,
+            __Dymola_Algorithm="Dassl"), Diagram(graphics={Line(points={{80,-12},{40,-12},
+                    {46,-8}}, color={28,108,200})}));
+      end XBCycling_Walklate_CalcADP;
+
+      model XBCycling_Walklate_CalcMantADP
+        "Generating mantADP and adding to the overall label. No significant difference when subtracking the offset at the end"
+        extends XBCycling_Walklate2022Fig1A (
+          kH(useRateOutput=true),
+          kH_m(
+            useRateInput=true,
+            useRateOutput=true),
+          totalLabel(y=SRXLabel.y + DRXLabel.y + A2.labelAmount + mADPLabel.y),
+          offset=-0.08);
         Modelica.Blocks.Math.Product product1
           annotation (Placement(transformation(extent={{46,-80},{66,-60}})));
         Bodylight.Population.LabeledPopulation.Components.LabelMeasure
@@ -2512,18 +2564,13 @@ post-ratchetted",
           annotation (Placement(transformation(extent={{38,-50},{18,-70}})));
         Modelica.Blocks.Continuous.Integrator integrator
           annotation (Placement(transformation(extent={{74,-80},{94,-60}})));
-        Modelica.Blocks.Sources.Constant const(k=0.066*tune_c)
-          annotation (Placement(transformation(extent={{40,0},{60,20}})));
-        Bodylight.Blocks.Factors.InverseProportionalFactor inverseProportionalFactor(
-            scalingFactor=1,   enabled=true)
-          annotation (Placement(transformation(extent={{90,-18},{70,2}})));
-        parameter Real IfADP=0.1
+        parameter Real IfADP=0.05
           "Intesity of free mADP as a fraction of mATP intensity";
         Modelica.Blocks.Sources.RealExpression mADPLabel(y=integrator.y*IfADP)
           annotation (Placement(transformation(extent={{-96,18},{-76,38}})));
       equation
         connect(kH.lpop_b,labelMeasure. lpop_a) annotation (Line(
-            points={{12,-46},{28,-46},{28,-50}},
+            points={{10,-46},{28,-46},{28,-50}},
             color={107,45,134},
             thickness=1,
             smooth=Smooth.Bezier));
@@ -2535,37 +2582,23 @@ post-ratchetted",
             points={{67,-70},{67,-70},{72,-70}},
             color={0,0,127},
             smooth=Smooth.Bezier));
-        connect(inverseProportionalFactor.y, kH_m.rateInput) annotation (Line(points={
-                {80,-12},{80,-16},{34,-16},{34,-28},{12,-28}}, color={0,0,127}));
-        connect(const.y, inverseProportionalFactor.yBase)
-          annotation (Line(points={{61,10},{80,10},{80,-6}}, color={0,0,127}));
-        connect(kH_m.popChangeOutput, product1.u2) annotation (Line(points={{-8,-28},{
-                -14,-28},{-14,-56},{18,-56},{18,-76},{44,-76}}, color={0,0,127}));
-        connect(integrator.y, inverseProportionalFactor.u) annotation (Line(points={{95,
-                -70},{96,-70},{96,-8},{88,-8}}, color={0,0,127}));
+        connect(kH_m.popChangeOutput, product1.u2) annotation (Line(points={{-10,-28},
+                {-14,-28},{-14,-56},{18,-56},{18,-76},{44,-76}},color={0,0,127}));
         annotation (experiment(
             StartTime=-1500,
             StopTime=1500,
             __Dymola_NumberOfIntervals=5000,
             __Dymola_Algorithm="Dassl"));
-      end XBCycling_CalcMantADP;
+      end XBCycling_Walklate_CalcMantADP;
 
-      model XBCycling_Hooijman_NokHmAtNoATP
-        extends XBCycling_Hooijman(
-          kH_m(k=0.066*tune_c, useRateInput=true),
-          DRX_D(pop_start=max(1e-6, 0.95 - A2.pop_start)),
-          SRX(pop_start=1e-6));
-        Modelica.Blocks.Sources.RealExpression rateA2Out1(y=if time > -ageTime
-               then 0.066*tune_c else 0)
-          annotation (Placement(transformation(extent={{62,-20},{42,0}})));
-      equation
-        connect(rateA2Out1.y, kH_m.rateInput) annotation (Line(points={{41,-10},
-                {30,-10},{30,-28},{12,-28}}, color={0,0,127}));
-      end XBCycling_Hooijman_NokHmAtNoATP;
-
-      model XBCycling_Hooijman_PB
-        extends XBCycling_Hooijman_NokHmAtNoATP (
-          k_pb=0.002);
+      model XBCycling_Hooijman_PB "Testing exponential photobleaching, can't fit properly"
+        import mantATP;
+        extends mantATP.LabelLib.XBCycling
+                                  (
+          k_pb=0.0005,
+          tune_a=0.3233812523561476,
+          tune_b=0.0743318438685294,
+          tune_c=0.9370780064146434);
         annotation (experiment(
             StartTime=-1600,
             StopTime=600,
@@ -2573,902 +2606,34 @@ post-ratchetted",
             __Dymola_Algorithm="Dassl"));
       end XBCycling_Hooijman_PB;
 
-      model XBCycling_Hooijman_NokHmAtNoATP_optimized
-        "Optimized model parameters of mantATP.LabelLib.Experiments.XBCycling_Hooijman_NokHmAtNoATP"
-        extends mantATP.LabelLib.Experiments.XBCycling_Hooijman_NokHmAtNoATP(
-          tune_a=0.457922777524498,
-          tune_b=0.0900915490955254,
-          tune_c=1.0432043186568256);
+      model XBCycling_Walklate_PB "Testing exponential photobleaching, can fit perfectly"
+        import mantATP;
+        extends mantATP.LabelLib.XBCycling_Walklate2022Fig1A
+                                  (
+          k_pb=0.001,
+          tune_a=0.22776069898941942,
+          tune_b=0.20220343838814298,
+          tune_c=0.397167404001727);
+        annotation (experiment(
+            StartTime=-1600,
+            StopTime=600,
+            __Dymola_NumberOfIntervals=5000,
+            __Dymola_Algorithm="Dassl"));
+      end XBCycling_Walklate_PB;
 
-        /* Automatically generated at Fri May 23 13:18:31 2025 */
-        /*
-    The final optimization result was as follows:
-    
-    Evaluation #15
-        4.3713270788883095e-3     min    integratedSquaredDeviation.y1
-    __________________________________________________
-        4.3713270788883095e-3    Maximum of criteria
-    
-    **************************************************
-    
-    The optimized Modelica parameters were found by running the following optimization setup:
-    
-    Optimization.Tasks.ModelOptimization.run22(
-        Optimization.Internal.Version.V22.ModelOptimizationSetup(
-            modelName="mantATP.LabelLib.Experiments.XBCycling_Hooijman_NokHmAtNoATP",
-            plotScript="",
-            saveSetup=true,
-            saveSetupFilename="OptimizationLastRunModel.mo",
-            convertSetup=false,
-            askForTunerReUse=true,
-            tuner=
-                Optimization.Internal.Version.V22.Tuner(
-                    UseTunerMatrixForDiscreteValues=false,
-                    tunerParameters=
-                        {
-                            Optimization.Internal.Version.V22.TunerParameter(
-                                name="tune_a",
-                                active=true,
-                                Value=0.591444,
-                                min=0.1,
-                                max=2,
-                                equidistant=0,
-                                scaleToBounds=false,
-                                discreteValues=fill(0,0),
-                                unit=""),
-                            Optimization.Internal.Version.V22.TunerParameter(
-                                name="tune_b",
-                                active=true,
-                                Value=0.116111,
-                                min=1e-2,
-                                max=1,
-                                equidistant=0,
-                                scaleToBounds=false,
-                                discreteValues=fill(0,0),
-                                unit=""),
-                            Optimization.Internal.Version.V22.TunerParameter(
-                                name="tune_c",
-                                active=true,
-                                Value=1.1233599999999999,
-                                min=0.1,
-                                max=2,
-                                equidistant=0,
-                                scaleToBounds=false,
-                                discreteValues=fill(0,0),
-                                unit="")
-                        },
-                    tunerMatrix=
-                        zeros(0,1)),
-            criteria=
-                {
-                    Optimization.Internal.Version.V22.Criterion(
-                        name="integratedSquaredDeviation.y1",
-                        active=true,
-                        usage=Optimization.Internal.Version.V22.Types.CriterionUsage.Minimize,
-                        demand=1,
-                        unit="")
-                },
-            preferences=
-                Optimization.Internal.Version.V22.Preferences(
-                    optimizationOptions=
-                        Optimization.Internal.Version.V22.OptimizationOptions(
-                            method=Optimization.Internal.Version.V22.Types.OptimizationMethod.sqp,
-                            ObjectiveFunctionType=Optimization.Internal.Version.V22.Types.ObjectiveFunctionType.Max,
-                            OptTol=1e-3,
-                            maxEval=1000,
-                            evalBestFinal=false,
-                            saveBest=true,
-                            saveHistory=true,
-                            listFilename="OptimizationLog1.log",
-                            listOn=true,
-                            listOnline=false,
-                            listIncrement=100,
-                            numberOfShownDigits=3,
-                            onPlace=true,
-                            listTuners=true,
-                            GaPopSize=10,
-                            GaNGen=100,
-                            GridBlock=50),
-                    simulationOptions=
-                        Optimization.Internal.Version.V22.SimulationOptions(
-                            startTime=-600,
-                            stopTime=600,
-                            outputInterval=0,
-                            numberOfIntervals=1500,
-                            integrationMethod=Optimization.Internal.Version.V22.Types.IntegrationMethod.Dassl,
-                            integrationTolerance=1e-3,
-                            fixedStepSize=0,
-                            autoLoadResults=true,
-                            useDsFinal=true,
-                            translateModel=false,
-                            setCriteriaSimulationFailed=true,
-                            CriteriaSimulationFailedValue=1e+6,
-                            simulationMode=Optimization.Internal.Version.V22.Types.SimulationMode.Single,
-                            parallelizationMode=Optimization.Internal.Version.V22.Types.ParallelizationMode.None,
-                            numberOfThreads=0,
-                            copyFiles=
-                            fill("",0)),
-                    sensitivityOptions=
-                        Optimization.Internal.Version.V22.SensitivityOptions(
-                            TypeOfSensitivityComputation=Optimization.Internal.Version.V22.Types.SensitivityMethod.ExternalDifferencesSymmetric,
-                            automaticSensitivityTolerance=true,
-                            sensitivityTolerance=9.9999999999999995e-7))))
- */
-        annotation (Documentation(info=
-                "<html><p>This class was automatically generated by the Optimization Library. It includes an inherited class with optimized tuner values. More information is found in the text layer of the class.</p></html>"));
-      end XBCycling_Hooijman_NokHmAtNoATP_optimized;
-
-      model XBCycling_Hooijman_NokHmAtNoATP_A240
-        "Optimized model parameters of mantATP.LabelLib.Experiments.XBCycling_Hooijman_NokHmAtNoATP"
-        extends mantATP.LabelLib.Experiments.XBCycling_Hooijman_NokHmAtNoATP(
-          tune_a=0.457922777524498,
-          tune_b=0.0900915490955254,
-          tune_c=1.0432043186568256,
-          A2(pop_start=0.4));
-
-        /* Automatically generated at Fri May 23 13:18:31 2025 */
-        /*
-    The final optimization result was as follows:
-    
-    Evaluation #15
-        4.3713270788883095e-3     min    integratedSquaredDeviation.y1
-    __________________________________________________
-        4.3713270788883095e-3    Maximum of criteria
-    
-    **************************************************
-    
-    The optimized Modelica parameters were found by running the following optimization setup:
-    
-    Optimization.Tasks.ModelOptimization.run22(
-        Optimization.Internal.Version.V22.ModelOptimizationSetup(
-            modelName="mantATP.LabelLib.Experiments.XBCycling_Hooijman_NokHmAtNoATP",
-            plotScript="",
-            saveSetup=true,
-            saveSetupFilename="OptimizationLastRunModel.mo",
-            convertSetup=false,
-            askForTunerReUse=true,
-            tuner=
-                Optimization.Internal.Version.V22.Tuner(
-                    UseTunerMatrixForDiscreteValues=false,
-                    tunerParameters=
-                        {
-                            Optimization.Internal.Version.V22.TunerParameter(
-                                name="tune_a",
-                                active=true,
-                                Value=0.591444,
-                                min=0.1,
-                                max=2,
-                                equidistant=0,
-                                scaleToBounds=false,
-                                discreteValues=fill(0,0),
-                                unit=""),
-                            Optimization.Internal.Version.V22.TunerParameter(
-                                name="tune_b",
-                                active=true,
-                                Value=0.116111,
-                                min=1e-2,
-                                max=1,
-                                equidistant=0,
-                                scaleToBounds=false,
-                                discreteValues=fill(0,0),
-                                unit=""),
-                            Optimization.Internal.Version.V22.TunerParameter(
-                                name="tune_c",
-                                active=true,
-                                Value=1.1233599999999999,
-                                min=0.1,
-                                max=2,
-                                equidistant=0,
-                                scaleToBounds=false,
-                                discreteValues=fill(0,0),
-                                unit="")
-                        },
-                    tunerMatrix=
-                        zeros(0,1)),
-            criteria=
-                {
-                    Optimization.Internal.Version.V22.Criterion(
-                        name="integratedSquaredDeviation.y1",
-                        active=true,
-                        usage=Optimization.Internal.Version.V22.Types.CriterionUsage.Minimize,
-                        demand=1,
-                        unit="")
-                },
-            preferences=
-                Optimization.Internal.Version.V22.Preferences(
-                    optimizationOptions=
-                        Optimization.Internal.Version.V22.OptimizationOptions(
-                            method=Optimization.Internal.Version.V22.Types.OptimizationMethod.sqp,
-                            ObjectiveFunctionType=Optimization.Internal.Version.V22.Types.ObjectiveFunctionType.Max,
-                            OptTol=1e-3,
-                            maxEval=1000,
-                            evalBestFinal=false,
-                            saveBest=true,
-                            saveHistory=true,
-                            listFilename="OptimizationLog1.log",
-                            listOn=true,
-                            listOnline=false,
-                            listIncrement=100,
-                            numberOfShownDigits=3,
-                            onPlace=true,
-                            listTuners=true,
-                            GaPopSize=10,
-                            GaNGen=100,
-                            GridBlock=50),
-                    simulationOptions=
-                        Optimization.Internal.Version.V22.SimulationOptions(
-                            startTime=-600,
-                            stopTime=600,
-                            outputInterval=0,
-                            numberOfIntervals=1500,
-                            integrationMethod=Optimization.Internal.Version.V22.Types.IntegrationMethod.Dassl,
-                            integrationTolerance=1e-3,
-                            fixedStepSize=0,
-                            autoLoadResults=true,
-                            useDsFinal=true,
-                            translateModel=false,
-                            setCriteriaSimulationFailed=true,
-                            CriteriaSimulationFailedValue=1e+6,
-                            simulationMode=Optimization.Internal.Version.V22.Types.SimulationMode.Single,
-                            parallelizationMode=Optimization.Internal.Version.V22.Types.ParallelizationMode.None,
-                            numberOfThreads=0,
-                            copyFiles=
-                            fill("",0)),
-                    sensitivityOptions=
-                        Optimization.Internal.Version.V22.SensitivityOptions(
-                            TypeOfSensitivityComputation=Optimization.Internal.Version.V22.Types.SensitivityMethod.ExternalDifferencesSymmetric,
-                            automaticSensitivityTolerance=true,
-                            sensitivityTolerance=9.9999999999999995e-7))))
- */
-        annotation (Documentation(info=
-                "<html><p>This class was automatically generated by the Optimization Library. It includes an inherited class with optimized tuner values. More information is found in the text layer of the class.</p></html>"));
-      end XBCycling_Hooijman_NokHmAtNoATP_A240;
-
-      model XBCycling_Hooijman_NokHmAtNoATP_A240_optimized
-        "Optimized model parameters of mantATP.LabelLib.Experiments.XBCycling_Hooijman_NokHmAtNoATP_A240"
-        extends
-          mantATP.LabelLib.Experiments.XBCycling_Hooijman_NokHmAtNoATP_A240(
-          tune_a=0.4601773957086981,
-          tune_b=0.0877236672475727,
-          tune_c=1.0470985417389167);
-
-        /* Automatically generated at Fri May 23 13:29:45 2025 */
-        /*
-    The final optimization result was as follows:
-    
-    Evaluation #14
-        4.4748644431351105e-3     min    integratedSquaredDeviation.y1
-    __________________________________________________
-        4.4748644431351105e-3    Maximum of criteria
-    
-    **************************************************
-    
-    The optimized Modelica parameters were found by running the following optimization setup:
-    
-    Optimization.Tasks.ModelOptimization.run22(
-        Optimization.Internal.Version.V22.ModelOptimizationSetup(
-            modelName="mantATP.LabelLib.Experiments.XBCycling_Hooijman_NokHmAtNoATP_A240",
-            plotScript="",
-            saveSetup=false,
-            saveSetupFilename="OptimizationLastRunModel.mo",
-            convertSetup=false,
-            askForTunerReUse=true,
-            tuner=
-                Optimization.Internal.Version.V22.Tuner(
-                    UseTunerMatrixForDiscreteValues=false,
-                    tunerParameters=
-                        {
-                            Optimization.Internal.Version.V22.TunerParameter(
-                                name="tune_a",
-                                active=true,
-                                Value=0.457922777524498,
-                                min=0.1,
-                                max=2,
-                                equidistant=0,
-                                scaleToBounds=false,
-                                discreteValues=fill(0,0),
-                                unit=""),
-                            Optimization.Internal.Version.V22.TunerParameter(
-                                name="tune_b",
-                                active=true,
-                                Value=0.0900915490955254,
-                                min=1e-2,
-                                max=1,
-                                equidistant=0,
-                                scaleToBounds=false,
-                                discreteValues=fill(0,0),
-                                unit=""),
-                            Optimization.Internal.Version.V22.TunerParameter(
-                                name="tune_c",
-                                active=true,
-                                Value=1.0432043186568256,
-                                min=0.1,
-                                max=2,
-                                equidistant=0,
-                                scaleToBounds=false,
-                                discreteValues=fill(0,0),
-                                unit="")
-                        },
-                    tunerMatrix=
-                        zeros(0,1)),
-            criteria=
-                {
-                    Optimization.Internal.Version.V22.Criterion(
-                        name="integratedSquaredDeviation.y1",
-                        active=true,
-                        usage=Optimization.Internal.Version.V22.Types.CriterionUsage.Minimize,
-                        demand=1,
-                        unit="")
-                },
-            preferences=
-                Optimization.Internal.Version.V22.Preferences(
-                    optimizationOptions=
-                        Optimization.Internal.Version.V22.OptimizationOptions(
-                            method=Optimization.Internal.Version.V22.Types.OptimizationMethod.sqp,
-                            ObjectiveFunctionType=Optimization.Internal.Version.V22.Types.ObjectiveFunctionType.Max,
-                            OptTol=1e-3,
-                            maxEval=1000,
-                            evalBestFinal=false,
-                            saveBest=true,
-                            saveHistory=true,
-                            listFilename="OptimizationLog1.log",
-                            listOn=true,
-                            listOnline=false,
-                            listIncrement=100,
-                            numberOfShownDigits=3,
-                            onPlace=true,
-                            listTuners=true,
-                            GaPopSize=10,
-                            GaNGen=100,
-                            GridBlock=50),
-                    simulationOptions=
-                        Optimization.Internal.Version.V22.SimulationOptions(
-                            startTime=-600,
-                            stopTime=600,
-                            outputInterval=0,
-                            numberOfIntervals=1500,
-                            integrationMethod=Optimization.Internal.Version.V22.Types.IntegrationMethod.Dassl,
-                            integrationTolerance=1e-3,
-                            fixedStepSize=0,
-                            autoLoadResults=true,
-                            useDsFinal=true,
-                            translateModel=false,
-                            setCriteriaSimulationFailed=true,
-                            CriteriaSimulationFailedValue=1e+6,
-                            simulationMode=Optimization.Internal.Version.V22.Types.SimulationMode.Single,
-                            parallelizationMode=Optimization.Internal.Version.V22.Types.ParallelizationMode.None,
-                            numberOfThreads=0,
-                            copyFiles=
-                            fill("",0)),
-                    sensitivityOptions=
-                        Optimization.Internal.Version.V22.SensitivityOptions(
-                            TypeOfSensitivityComputation=Optimization.Internal.Version.V22.Types.SensitivityMethod.ExternalDifferencesSymmetric,
-                            automaticSensitivityTolerance=true,
-                            sensitivityTolerance=9.9999999999999995e-7))))
- */
-        annotation (Documentation(info=
-                "<html><p>This class was automatically generated by the Optimization Library. It includes an inherited class with optimized tuner values. More information is found in the text layer of the class.</p></html>"));
-      end XBCycling_Hooijman_NokHmAtNoATP_A240_optimized;
-
-      model XBCycling_SrxD_optimized
-        "Optimized model parameters of mantATP.LabelLib.Experiments.XBCycling_SrxD"
-        extends mantATP.LabelLib.Experiments.XBCycling_SrxD(
-          tune_a=0.5553427923543645,
-          tune_b=0.1160283020164545,
-          tune_c=1.1276494616464963);
-
-        /* Automatically generated at Mon May 26 12:57:59 2025 */
-        /*
-    The final optimization result was as follows:
-    
-    Evaluation #15
-        3.3435450331892338e-3     min    integratedSquaredDeviation.y1
-    __________________________________________________
-        3.3435450331892338e-3    Maximum of criteria
-    
-    **************************************************
-    
-    The optimized Modelica parameters were found by running the following optimization setup:
-    
-    Optimization.Tasks.ModelOptimization.run22(
-        Optimization.Internal.Version.V22.ModelOptimizationSetup(
-            modelName="mantATP.LabelLib.Experiments.XBCycling_SrxD",
-            plotScript="",
-            saveSetup=false,
-            saveSetupFilename="OptimizationLastRunModel.mo",
-            convertSetup=false,
-            askForTunerReUse=true,
-            tuner=
-                Optimization.Internal.Version.V22.Tuner(
-                    UseTunerMatrixForDiscreteValues=false,
-                    tunerParameters=
-                        {
-                            Optimization.Internal.Version.V22.TunerParameter(
-                                name="tune_a",
-                                active=true,
-                                Value=0.457922777524498,
-                                min=0.1,
-                                max=2,
-                                equidistant=0,
-                                scaleToBounds=false,
-                                discreteValues=fill(0,0),
-                                unit=""),
-                            Optimization.Internal.Version.V22.TunerParameter(
-                                name="tune_b",
-                                active=true,
-                                Value=0.0900915490955254,
-                                min=1e-2,
-                                max=1,
-                                equidistant=0,
-                                scaleToBounds=false,
-                                discreteValues=fill(0,0),
-                                unit=""),
-                            Optimization.Internal.Version.V22.TunerParameter(
-                                name="tune_c",
-                                active=true,
-                                Value=1.0432043186568256,
-                                min=0.1,
-                                max=2,
-                                equidistant=0,
-                                scaleToBounds=false,
-                                discreteValues=fill(0,0),
-                                unit="")
-                        },
-                    tunerMatrix=
-                        zeros(0,1)),
-            criteria=
-                {
-                    Optimization.Internal.Version.V22.Criterion(
-                        name="integratedSquaredDeviation.y1",
-                        active=true,
-                        usage=Optimization.Internal.Version.V22.Types.CriterionUsage.Minimize,
-                        demand=1,
-                        unit="")
-                },
-            preferences=
-                Optimization.Internal.Version.V22.Preferences(
-                    optimizationOptions=
-                        Optimization.Internal.Version.V22.OptimizationOptions(
-                            method=Optimization.Internal.Version.V22.Types.OptimizationMethod.sqp,
-                            ObjectiveFunctionType=Optimization.Internal.Version.V22.Types.ObjectiveFunctionType.Max,
-                            OptTol=1e-3,
-                            maxEval=1000,
-                            evalBestFinal=false,
-                            saveBest=true,
-                            saveHistory=true,
-                            listFilename="OptimizationLog1.log",
-                            listOn=true,
-                            listOnline=false,
-                            listIncrement=100,
-                            numberOfShownDigits=3,
-                            onPlace=true,
-                            listTuners=true,
-                            GaPopSize=10,
-                            GaNGen=100,
-                            GridBlock=50),
-                    simulationOptions=
-                        Optimization.Internal.Version.V22.SimulationOptions(
-                            startTime=-600,
-                            stopTime=600,
-                            outputInterval=0,
-                            numberOfIntervals=1500,
-                            integrationMethod=Optimization.Internal.Version.V22.Types.IntegrationMethod.Dassl,
-                            integrationTolerance=1e-3,
-                            fixedStepSize=0,
-                            autoLoadResults=true,
-                            useDsFinal=true,
-                            translateModel=false,
-                            setCriteriaSimulationFailed=true,
-                            CriteriaSimulationFailedValue=1e+6,
-                            simulationMode=Optimization.Internal.Version.V22.Types.SimulationMode.Single,
-                            parallelizationMode=Optimization.Internal.Version.V22.Types.ParallelizationMode.None,
-                            numberOfThreads=0,
-                            copyFiles=
-                            fill("",0)),
-                    sensitivityOptions=
-                        Optimization.Internal.Version.V22.SensitivityOptions(
-                            TypeOfSensitivityComputation=Optimization.Internal.Version.V22.Types.SensitivityMethod.ExternalDifferencesSymmetric,
-                            automaticSensitivityTolerance=true,
-                            sensitivityTolerance=9.9999999999999995e-7))))
- */
-        annotation (Documentation(info=
-                "<html><p>This class was automatically generated by the Optimization Library. It includes an inherited class with optimized tuner values. More information is found in the text layer of the class.</p></html>"));
-      end XBCycling_SrxD_optimized;
+      model XBCycling_Walklate_PB2 "Testing photobleaching, cant fit anymore"
+        extends XBCycling_Walklate_PB(
+          k_pb=0.005,
+          tune_a=0.009993407751094915,
+          tune_b=0.3036857369135465,
+          tune_c=0.39164688836017886);
+      end XBCycling_Walklate_PB2;
     end Experiments;
 
-    model XBCycling
-      extends Modelica.Icons.Example;
-      parameter Real offset=1e-3 "Offsets of output signals";
-      replaceable Data.ATPChaseData_ATPChaseControl1 timeTable_ATPChase
-                         constrainedby Data.ATPChaseData
-        annotation (Placement(transformation(extent={{-60,80},{-40,100}})));
-      Optimization.Criteria.Signals.IntegratedSquaredDeviation
-        integratedSquaredDeviation
-        annotation (Placement(transformation(extent={{4,84},{12,92}})));
-      Modelica.Blocks.Sources.RealExpression totalLabelNorm_expr(y=if time > 0
-             then totalLabelNorm else timeTable_ATPChase.y)
-        annotation (Placement(transformation(extent={{-34,68},{-14,88}})));
-      parameter Real tune_a=0.32245011274220486;
-      parameter Real tune_b=0.2882752381092468;
-      parameter Real tune_c=0.2845516720912324;
-      Bodylight.Population.LabeledPopulation.Components.StateTransition k2(
-        k=50,
-        useRateInput=true,
-        useDynamicFlowLabeling=true)
-                           annotation (Placement(transformation(
-            extent={{-10,-10},{10,10}},
-            rotation=90,
-            origin={-32,-66})));
-      Modelica.Blocks.Sources.RealExpression rateA2Out(y=if time > -ageTime and A2.pop >
-            1e-6 then k2.k else 0)
-        annotation (Placement(transformation(extent={{10,-94},{-10,-74}})));
-      Modelica.Blocks.Sources.RealExpression labelA2Out(y=1)
-        annotation (Placement(transformation(extent={{10,-74},{-10,-58}})));
-      parameter Bodylight.Types.Concentration CmantATP=0.25;
-      parameter Bodylight.Types.Concentration CATP=4 "Unlabeled ATP concentration";
-      Modelica.Blocks.Sources.RealExpression labelDRX_D(y=if time > 0 then CmantATP/
-            CATP elseif time < 0 and time > -ageTime then 1 else 0)
-        annotation (Placement(transformation(extent={{28,-18},{-24,-4}})));
-    public
-      parameter Real k=0.016666666666666666;
-      Bodylight.Population.LabeledPopulation.Components.StateCompartment SRX(pop_start
-          =max(1e-6, 0.5 - A2.pop_start),
-                     nPorts=2)
-        annotation (Placement(transformation(extent={{-60,40},{-40,60}})));
-      Bodylight.Population.LabeledPopulation.Components.StateCompartment DRX_T(pop_start
-          =max(1e-6, 1 - A2.pop_start - SRX.pop_start - DRX_D.pop_start),
-                                        nPorts=5)
-        annotation (Placement(transformation(extent={{-60,-40},{-40,-20}})));
-      Bodylight.Population.LabeledPopulation.Components.StateCompartment DRX_D(pop_start
-          =max(1e-6, 0.5 - A2.pop_start),
-                     nPorts=2)
-        annotation (Placement(transformation(extent={{60,-40},{40,-20}})));
-      Bodylight.Population.LabeledPopulation.Components.StateTransition k_srx_m(k=0.014
-            *tune_a) annotation (Placement(transformation(
-            extent={{-10,-10},{10,10}},
-            rotation=270,
-            origin={-30,20})));
-      Bodylight.Population.LabeledPopulation.Components.StateTransition k_srx_p(k=48.5
-            *tune_b) annotation (Placement(transformation(
-            extent={{10,-10},{-10,10}},
-            rotation=270,
-            origin={-20,20})));
-      Bodylight.Population.LabeledPopulation.Components.StateTransition kH(
-        k=80,
-        allowReverse=true,
-        useRateOutput=false)
-        annotation (Placement(transformation(extent={{-8,-36},{12,-56}})));
-      Bodylight.Population.LabeledPopulation.Components.StateTransition kH_m(
-        k=0.066*tune_c,
-        allowReverse=true,
-        useRateOutput=false,
-        useDynamicFlowLabeling=true)
-                           annotation (Placement(transformation(
-            extent={{-10,-10},{10,10}},
-            rotation=180,
-            origin={2,-32})));
-      Bodylight.Population.LabeledPopulation.Components.StateCompartment A2(
-          pop_start = 1e-9, nPorts=1) "Attached state"
-        annotation (Placement(transformation(extent={{-60,-100},{-40,-80}})));
-      parameter Modelica.Units.SI.Time ageTime=60.0;
-      Modelica.Blocks.Sources.RealExpression totalLabel(y=SRXLabel.y + DRXLabel.y
-             + A2.labelAmount)
-        annotation (Placement(transformation(extent={{-96,78},{-76,98}})));
-      Modelica.Blocks.Sources.RealExpression SRXLabel(y=SRX.labelAmount)
-        annotation (Placement(transformation(extent={{-96,58},{-76,78}})));
-      Modelica.Blocks.Sources.RealExpression DRXLabel(y=DRX_D.labelAmount + DRX_T.labelAmount)
-        annotation (Placement(transformation(extent={{-96,38},{-76,58}})));
-      Real totalLabelNorm "Label normalized to chase onset";
-      Real normFactor(start=1);
-      Real SRX_fraction(start=0);
-
-      Real photobleaching(start = 1) "Photobleaching decay starts with aging";
-      parameter Real k_pb = 0;
-      Real totalLabel_PB = totalLabel.y*photobleaching "Total label including photobleaching";
-    equation
-
-      der(photobleaching) = if time >  -ageTime then -photobleaching*k_pb else 0;
-
-    //   if time > 0 then
-         totalLabelNorm = (totalLabel_PB+offset)/normFactor;
-    //   else
-    //     totalLabelNorm = 1;
-    //   end if;
-      when time > 0 then
-        normFactor = totalLabel.y + offset;
-        SRX_fraction = SRXLabel.y/totalLabel.y;
-      end when;
-      connect(SRX.lpop[1], k_srx_m.lpop_a) annotation (Line(
-          points={{-40.2,40.15},{-30,40.15},{-30,30}},
-          color={107,45,134},
-          thickness=1));
-      connect(k_srx_m.lpop_b, DRX_T.lpop[1]) annotation (Line(
-          points={{-30,10},{-30,-40},{-40.2,-40}},
-          color={107,45,134},
-          thickness=1));
-      connect(k_srx_p.lpop_b, SRX.lpop[2]) annotation (Line(
-          points={{-20,30},{-20,40},{-40.2,40},{-40.2,40.65}},
-          color={107,45,134},
-          thickness=1));
-      connect(k_srx_p.lpop_a, DRX_T.lpop[2]) annotation (Line(
-          points={{-20,10},{-20,0},{-30,0},{-30,-39.8},{-40.2,-39.8}},
-          color={107,45,134},
-          thickness=1));
-      connect(DRX_T.lpop[3], kH.lpop_a) annotation (Line(
-          points={{-40.2,-39.6},{-40.2,-40},{-20,-40},{-20,-46},{-8,-46}},
-          color={107,45,134},
-          thickness=1));
-      connect(kH.lpop_b, DRX_D.lpop[1]) annotation (Line(
-          points={{12,-46},{24,-46},{24,-39.85},{40.2,-39.85}},
-          color={107,45,134},
-          thickness=1));
-      connect(kH_m.lpop_b, DRX_T.lpop[4]) annotation (Line(
-          points={{-8,-32},{-20,-32},{-20,-39.4},{-40.2,-39.4}},
-          color={107,45,134},
-          thickness=1));
-      connect(kH_m.lpop_a, DRX_D.lpop[2]) annotation (Line(
-          points={{12,-32},{24,-32},{24,-39.35},{40.2,-39.35}},
-          color={107,45,134},
-          thickness=1));
-      connect(k2.lpop_a, A2.lpop[1]) annotation (Line(
-          points={{-32,-76},{-32,-100},{-40.2,-100},{-40.2,-99.6}},
-          color={107,45,134},
-          thickness=1));
-      connect(k2.lpop_b, DRX_T.lpop[5]) annotation (Line(
-          points={{-32,-56},{-32,-40},{-40.2,-40},{-40.2,-39.2}},
-          color={107,45,134},
-          thickness=1));
-      connect(labelDRX_D.y, kH_m.labelInput) annotation (Line(points={{-26.6,
-              -11},{-26.6,-18},{2,-18},{2,-24}},
-                                     color={0,0,127}));
-      connect(labelA2Out.y, k2.labelInput)
-        annotation (Line(points={{-11,-66},{-24,-66}}, color={0,0,127}));
-      connect(k2.rateInput, rateA2Out.y)
-        annotation (Line(points={{-28,-76},{-28,-84},{-11,-84}}, color={0,0,127}));
-      connect(timeTable_ATPChase.y, integratedSquaredDeviation.u1) annotation (
-          Line(points={{-39,90},{-38,90.4},{3.2,90.4}}, color={0,0,127}));
-      connect(integratedSquaredDeviation.u2, totalLabelNorm_expr.y) annotation (
-          Line(points={{3.2,85.6},{-10,85.6},{-10,78},{-13,78}}, color={0,0,127}));
-      annotation (Documentation(info="<html><p>This class was automatically generated by the Optimization Library. It includes an inherited class with optimized tuner values. More information is found in the text layer of the class.</p></html>"),
-          experiment(
-          StartTime=-600,
-          StopTime=600,
-          __Dymola_NumberOfIntervals=5000,
-          __Dymola_Algorithm="Dassl"));
-    end XBCycling;
-
-    model XBCycling_A2
-      extends XBCycling(
-        A2(pop_start
-                  =0.4),
-        tune_a=0.32209674728815296,
-        tune_b=0.2580328344792636,
-        tune_c=0.2954172194469952);
-    end XBCycling_A2;
-
-    model XBCycling_kH120
-      extends XBCycling_A2(
-        kH(k=120),
-        tune_a=0.31375624657832374,
-        tune_b=0.37443405317894396,
-        tune_c=0.28187438139777166);
-    end XBCycling_kH120;
-
-    model XBCycling_Ctrl2
-      extends XBCycling_A2(
-        redeclare Data.TimeTable_ATPChaseControl2 timeTable_ATPChase,
-        tune_a=0.8141449138950674,
-        tune_b=0.05421442918723505,
-        tune_c=0.35936611043631195);
-    end XBCycling_Ctrl2;
-
-    model XBCycling_ADP
-      extends XBCycling(DRX_D(nPorts=4));
-      Bodylight.Population.LabeledPopulation.Components.StateTransition kH_m1(
-        k=0.1,
-        useDynamicFlowLabeling=true,
-        labelIn=false,
-        labelOut=time > 0) annotation (Placement(transformation(
-            extent={{-10,-10},{10,10}},
-            rotation=270,
-            origin={36,-60})));
-    equation
-      connect(DRX_D.lpop[3], kH_m1.lpop_a) annotation (Line(
-          points={{40.2,-39.6},{36,-39.6},{36,-50}},
-          color={107,45,134},
-          thickness=1));
-      connect(kH_m1.lpop_b, DRX_D.lpop[4]) annotation (Line(
-          points={{36,-70},{36,-88},{48,-88},{48,-39.6},{40.2,-39.6}},
-          color={107,45,134},
-          thickness=1));
-    end XBCycling_ADP;
-
-    model XBCyclingModel4 "Dan's shcematics. Does not really fullfill the ageTime test"
-      extends Modelica.Icons.Example;
-      parameter Real offset=1e-3 "Offsets of output signals";
-      replaceable Data.TimeTable_ATPChaseControl1 timeTable_ATPChase(
-        smoothness=Modelica.Blocks.Types.Smoothness.LinearSegments,
-        extrapolation=Modelica.Blocks.Types.Extrapolation.HoldLastPoint,
-        offset={offset}) constrainedby Modelica.Blocks.Sources.CombiTimeTable
-        annotation (Placement(transformation(extent={{-60,80},{-40,100}})));
-      Optimization.Criteria.Signals.IntegratedSquaredDeviation
-        integratedSquaredDeviation
-        annotation (Placement(transformation(extent={{-6,92},{2,84}})));
-      Modelica.Blocks.Sources.RealExpression totalLabelNorm_expr(y=if time >
-            timeTable_ATPChase.t_min then totalLabelNorm else
-            timeTable_ATPChase.y[1])
-        annotation (Placement(transformation(extent={{-40,72},{-20,92}})));
-      parameter Real tune_a=0.9206235568303319;
-      parameter Real tune_b=0.5934329417957546;
-      parameter Real tune_c=0.2728835066814295;
-      Bodylight.Population.LabeledPopulation.Components.StateTransition kTs(
-        k=50*tune_c,
-        useRateInput=false,
-        useDynamicFlowLabeling=true,
-        labelIn=time > -ageTime and time < 0,
-        labelOut=time > 0) annotation (Placement(transformation(
-            extent={{-10,-10},{10,10}},
-            rotation=180,
-            origin={20,40})));
-      Modelica.Blocks.Sources.RealExpression SRXLabel1(y=if time > -ageTime and A2.pop >
-            1e-6 then kTs.k else 0)
-        annotation (Placement(transformation(extent={{60,58},{40,78}})));
-      Bodylight.Population.LabeledPopulation.Components.StateTransition kD2S(k=0.004)
-        annotation (Placement(transformation(
-            extent={{-10,-10},{10,10}},
-            rotation=90,
-            origin={40,6})));
-      Bodylight.Population.LabeledPopulation.Components.StateTransition kS2D(k=0)
-        annotation (Placement(transformation(
-            extent={{-10,-10},{10,10}},
-            rotation=270,
-            origin={58,6})));
-    equation
-      connect(integratedSquaredDeviation.u1, totalLabelNorm_expr.y) annotation (
-          Line(points={{-6.8,85.6},{-19,85.6},{-19,82}}, color={0,0,127}));
-    public
-      parameter Real k=0.016666666666666666;
-      Bodylight.Population.LabeledPopulation.Components.StateCompartment SRX(
-          pop_start, nPorts=3)
-        annotation (Placement(transformation(extent={{-60,40},{-40,60}})));
-      Bodylight.Population.LabeledPopulation.Components.StateCompartment DRX_T(
-          pop_start = 1 - A2.pop_start, nPorts=4)
-        annotation (Placement(transformation(extent={{-60,-40},{-40,-20}})));
-      Bodylight.Population.LabeledPopulation.Components.StateCompartment DRX_D(
-          pop_start, nPorts=4)
-        annotation (Placement(transformation(extent={{60,-40},{40,-20}})));
-      Bodylight.Population.LabeledPopulation.Components.StateTransition kS2T(k=0.004*
-            tune_a)
-        annotation (Placement(transformation(
-            extent={{-10,-10},{10,10}},
-            rotation=270,
-            origin={-30,10})));
-      Bodylight.Population.LabeledPopulation.Components.StateTransition kT2S(k=0)
-        annotation (Placement(transformation(
-            extent={{10,-10},{-10,10}},
-            rotation=270,
-            origin={-20,10})));
-      Bodylight.Population.LabeledPopulation.Components.StateTransition kH(k=50)
-        annotation (Placement(transformation(extent={{-8,-56},{12,-36}})));
-      Bodylight.Population.LabeledPopulation.Components.StateTransition kT(
-        k=0.025*tune_b,
-        useDynamicFlowLabeling=true,
-        labelIn=time > -ageTime and time < 0,
-        labelOut=time > 0) annotation (Placement(transformation(
-            extent={{-10,-10},{10,10}},
-            rotation=180,
-            origin={2,-36})));
-      Bodylight.Population.LabeledPopulation.Components.StateCompartment A2(
-          pop_start = 1e-9, nPorts=2) "Attached state"
-        annotation (Placement(transformation(extent={{60,40},{40,60}})));
-      parameter Modelica.Units.SI.Time ageTime=60.0;
-      Modelica.Blocks.Sources.RealExpression totalLabel(y=SRX.labelAmount + DRX_D.labelAmount
-             + DRX_T.labelAmount + A2.labelAmount)
-        annotation (Placement(transformation(extent={{-96,78},{-76,98}})));
-      Modelica.Blocks.Sources.RealExpression SRXLabel(y=SRX.labelAmount)
-        annotation (Placement(transformation(extent={{-96,58},{-76,78}})));
-      Modelica.Blocks.Sources.RealExpression DrxLabel(y=DRX_D.labelAmount + DRX_T.labelAmount)
-        annotation (Placement(transformation(extent={{-96,38},{-76,58}})));
-      Real totalLabelNorm "Label normalized to chase onset";
-      Real normFactor(start=1);
-      Real SRX_fraction(start=0);
-
-      Real photobleaching(start = 1) "Photobleaching decay starts with aging";
-      parameter Real k_pb = 1e-3;
-      Real totalLabel_PB = totalLabel.y*photobleaching "Total label including photobleaching";
-    equation
-
-      der(photobleaching) = if time >  -ageTime then -photobleaching*k_pb else 0;
-
-      if time > 0 then
-        totalLabelNorm = totalLabel_PB/normFactor;
-      else
-        totalLabelNorm = 1;
-      end if;
-      when time > 0 then
-        normFactor = totalLabel.y;
-        SRX_fraction = SRXLabel.y/totalLabel.y;
-      end when;
-      connect(SRX.lpop[1], kS2T.lpop_a) annotation (Line(
-          points={{-40.2,40.0667},{-30,40.0667},{-30,20}},
-          color={107,45,134},
-          thickness=1));
-      connect(kS2T.lpop_b, DRX_T.lpop[1]) annotation (Line(
-          points={{-30,0},{-30,-39.975},{-40.2,-39.975}},
-          color={107,45,134},
-          thickness=1));
-      connect(kT2S.lpop_b, SRX.lpop[2]) annotation (Line(
-          points={{-20,20},{-20,40},{-40.2,40},{-40.2,40.4}},
-          color={107,45,134},
-          thickness=1));
-      connect(kT2S.lpop_a, DRX_T.lpop[2]) annotation (Line(
-          points={{-20,0},{-20,-12},{-30,-12},{-30,-39.725},{-40.2,-39.725}},
-          color={107,45,134},
-          thickness=1));
-      connect(DRX_T.lpop[3], kH.lpop_a) annotation (Line(
-          points={{-40.2,-39.475},{-40.2,-40},{-20,-40},{-20,-46},{-8,-46}},
-          color={107,45,134},
-          thickness=1));
-      connect(kH.lpop_b, DRX_D.lpop[1]) annotation (Line(
-          points={{12,-46},{24,-46},{24,-39.975},{40.2,-39.975}},
-          color={107,45,134},
-          thickness=1));
-      connect(kT.lpop_b, DRX_T.lpop[4]) annotation (Line(
-          points={{-8,-36},{-20,-36},{-20,-39.225},{-40.2,-39.225}},
-          color={107,45,134},
-          thickness=1));
-      connect(kT.lpop_a, DRX_D.lpop[2]) annotation (Line(
-          points={{12,-36},{24,-36},{24,-39.725},{40.2,-39.725}},
-          color={107,45,134},
-          thickness=1));
-      connect(timeTable_ATPChase.y[1], integratedSquaredDeviation.u2)
-        annotation (Line(points={{-39,90},{-12,90},{-12,90.4},{-6.8,90.4}},
-            color={0,0,127}));
-      connect(SRXLabel1.y, kTs.rateInput)
-        annotation (Line(points={{39,68},{30,68},{30,44}}, color={0,0,127}));
-      connect(kTs.lpop_a, A2.lpop[1]) annotation (Line(
-          points={{30,40},{30,40.15},{40.2,40.15}},
-          color={107,45,134},
-          thickness=1));
-      connect(kD2S.lpop_b, A2.lpop[1]) annotation (Line(
-          points={{40,16},{40.2,18},{40.2,40.15}},
-          color={107,45,134},
-          thickness=1));
-      connect(kD2S.lpop_a, DRX_D.lpop[3]) annotation (Line(
-          points={{40,-4},{40,-16},{36,-16},{36,-39.475},{40.2,-39.475}},
-          color={107,45,134},
-          thickness=1));
-      connect(kS2D.lpop_a, A2.lpop[2]) annotation (Line(
-          points={{58,16},{58,36},{40.2,36},{40.2,40.65}},
-          color={107,45,134},
-          thickness=1));
-      connect(kS2D.lpop_b, DRX_D.lpop[4]) annotation (Line(
-          points={{58,-4},{58,-16},{36,-16},{36,-39.225},{40.2,-39.225}},
-          color={107,45,134},
-          thickness=1));
-      connect(kTs.lpop_b, SRX.lpop[3]) annotation (Line(
-          points={{10,40},{8,40.7333},{-40.2,40.7333}},
-          color={107,45,134},
-          thickness=1));
-      annotation (Documentation(info="<html><p>This class was automatically generated by the Optimization Library. It includes an inherited class with optimized tuner values. More information is found in the text layer of the class.</p></html>"),
-          experiment(
-          StartTime=-600,
-          StopTime=600,
-          __Dymola_NumberOfIntervals=5000,
-          __Dymola_Algorithm="Dassl"));
-    end XBCyclingModel4;
-
     package Figures
-      model Default
-        extends XBCycling;
-      end Default;
-
-      model Default_ageTime
-        extends XBCycling_A2(ageTime=120);
-      end Default_ageTime;
 
       model DefaultH
-        extends mantATP.LabelLib.Experiments.XBCycling_Hooijman_NokHmAtNoATP_A240_optimized;
+        extends XBCycling;
         annotation (experiment(
             StartTime=-1200,
             StopTime=600,
@@ -3477,64 +2642,26 @@ post-ratchetted",
       end DefaultH;
 
       model DefaultW
-        extends XBCycling_Walklate2022Fig1A_NokHmAtNoATP_A240_optimized;
+        extends XBCycling_Walklate2022Fig1A;
         annotation (experiment(
             StartTime=-1200,
             StopTime=600,
             __Dymola_NumberOfIntervals=5000,
             __Dymola_Algorithm="Dassl"));
       end DefaultW;
+
+      model Walklate_PB
+        extends Experiments.XBCycling_Walklate_PB;
+      end Walklate_PB;
+
+      model Walklate_CalcMantADP
+        extends Experiments.XBCycling_Walklate_CalcMantADP;
+      end Walklate_CalcMantADP;
+
+      model Walklate_CalcADP
+        extends Experiments.XBCycling_Walklate_CalcADP;
+      end Walklate_CalcADP;
     end Figures;
-
-    model XBCycling_Hooijman
-      extends XBCycling(
-        offset=0,
-        ageTime=120.0,
-        redeclare Data.TimeTable_ATPChaseHooijman2011 timeTable_ATPChase,
-        tune_a=0.5914437499637197,
-        tune_b=0.11611068066534437,
-        tune_c=1.1233630941907256);
-    end XBCycling_Hooijman;
-
-    model XBCycling_Hooijman_PB
-      extends XBCycling_Hooijman(
-        k_pb=0.002,
-        tune_a=0.019107469478963544,
-        tune_b=0.15799232259579712,
-        tune_c=0.5319702817265446);
-      annotation (experiment(
-          StartTime=-1600,
-          StopTime=600,
-          __Dymola_NumberOfIntervals=5000,
-          __Dymola_Algorithm="Dassl"));
-    end XBCycling_Hooijman_PB;
-
-    model XBCycling_Hooijman_5m
-      extends XBCycling_Hooijman(ageTime=5*60);
-    end XBCycling_Hooijman_5m;
-
-    model XBCycling_Hooijman_A20
-      extends XBCycling_Hooijman(
-        tune_a=0.589447302898601,
-        tune_b=0.11514396902490122,
-        tune_c=1.1157820953373943);
-    end XBCycling_Hooijman_A20;
-
-    model XBCycling_Hooijman_A240
-      extends XBCycling_Hooijman(
-        tune_a=0.5316634445449336,
-        tune_b=0.10021114666398111,
-        tune_c=1.0573706248433254,
-        A2(pop_start=0.4));
-    end XBCycling_Hooijman_A240;
-
-    model XBCycling_Hooijman_A280
-      extends XBCycling_Hooijman(
-        tune_a=0.47733679799388273,
-        tune_b=0.08780130903693892,
-        tune_c=1.0251694037888126,
-        A2(pop_start=0.8));
-    end XBCycling_Hooijman_A280;
 
     package FMUExport
       model Default
@@ -3551,282 +2678,177 @@ post-ratchetted",
       end Default;
     end FMUExport;
 
-    model XBCycling_Walklate2022Fig1A
+    model XBCycling "Default model parametrization to fit Hooijman 2011 mantATP chased by ATP."
+
+      extends Modelica.Icons.Example;
+      Modelica.Blocks.Sources.RealExpression rateDRXDOut(y=if time > -ageTime
+             then 0.066*tune_c else 0)
+        annotation (Placement(transformation(extent={{36,-20},{16,0}})));
+    equation
+      connect(rateDRXDOut.y, kH_m.rateInput) annotation (Line(points={{15,-10},
+              {14,-10},{14,-28},{10,-28}}, color={0,0,127}));
+    public
+      parameter Real offset=0 "Offsets of output signals";
+      replaceable Data.TimeTable_ATPChaseHooijman2011 timeTable_ATPChase
+        constrainedby Data.ATPChaseData
+        annotation (Placement(transformation(extent={{-60,80},{-40,100}})));
+      Optimization.Criteria.Signals.IntegratedSquaredDeviation
+        integratedSquaredDeviation
+        annotation (Placement(transformation(extent={{4,84},{12,92}})));
+      Modelica.Blocks.Sources.RealExpression totalLabelNorm_expr(y=if time > 0
+             then totalLabelNorm else timeTable_ATPChase.y)
+        annotation (Placement(transformation(extent={{-34,68},{-14,88}})));
+      parameter Real tune_a=0.4601773957086981;
+      parameter Real tune_b=0.0877236672475727;
+      parameter Real tune_c=1.0470985417389167;
+      Bodylight.Population.LabeledPopulation.Components.StateTransition k2(
+        k=50,
+        useRateInput=true,
+        useDynamicFlowLabeling=true) annotation (Placement(transformation(
+            extent={{-10,-10},{10,10}},
+            rotation=90,
+            origin={-32,-66})));
+      Modelica.Blocks.Sources.RealExpression rateA2Out(y=if time > -ageTime and
+            A2.pop > 1e-6 then k2.k else 0)
+        annotation (Placement(transformation(extent={{10,-94},{-10,-74}})));
+      Modelica.Blocks.Sources.RealExpression labelA2Out(y=1)
+        annotation (Placement(transformation(extent={{10,-74},{-10,-58}})));
+      parameter Bodylight.Types.Concentration CmantATP=0.25;
+      parameter Bodylight.Types.Concentration CATP=4
+        "Unlabeled ATP concentration";
+      Modelica.Blocks.Sources.RealExpression labelDRX_D(y=if time > 0 then
+            CmantATP/CATP elseif time < 0 and time > -ageTime then 1 else 0)
+        annotation (Placement(transformation(extent={{-24,-20},{-4,0}})));
+    public
+      parameter Real k=0.016666666666666666;
+      Bodylight.Population.LabeledPopulation.Components.StateCompartment SRX(
+          pop_start=1e-6, nPorts=2)
+        annotation (Placement(transformation(extent={{-60,40},{-40,60}})));
+      Bodylight.Population.LabeledPopulation.Components.StateCompartment DRX_T(
+          pop_start=max(1e-6, 1 - A2.pop_start - SRX.pop_start - DRX_D.pop_start),
+          nPorts=5)
+        annotation (Placement(transformation(extent={{-60,-40},{-40,-20}})));
+      Bodylight.Population.LabeledPopulation.Components.StateCompartment DRX_D(
+          pop_start=max(1e-6, 0.95 - A2.pop_start), nPorts=2)
+        annotation (Placement(transformation(extent={{60,-40},{40,-20}})));
+      Bodylight.Population.LabeledPopulation.Components.StateTransition k_srx_m(k
+          =0.014*tune_a) annotation (Placement(transformation(
+            extent={{-10,-10},{10,10}},
+            rotation=270,
+            origin={-30,20})));
+      Bodylight.Population.LabeledPopulation.Components.StateTransition k_srx_p(k
+          =48.5*tune_b) annotation (Placement(transformation(
+            extent={{10,-10},{-10,10}},
+            rotation=270,
+            origin={-20,20})));
+      Bodylight.Population.LabeledPopulation.Components.StateTransition kH(
+        k=80,
+        allowReverse=true,
+        useRateOutput=false)
+        annotation (Placement(transformation(extent={{-10,-36},{10,-56}})));
+      Bodylight.Population.LabeledPopulation.Components.StateTransition kH_m(
+        k=0.066*tune_c,
+        allowReverse=true,
+        useRateOutput=false,
+        useDynamicFlowLabeling=true,
+        useRateInput=true) annotation (Placement(transformation(
+            extent={{-10,-10},{10,10}},
+            rotation=180,
+            origin={0,-32})));
+      Bodylight.Population.LabeledPopulation.Components.StateCompartment A2(
+          pop_start=0.4, nPorts=1) "Attached state"
+        annotation (Placement(transformation(extent={{-60,-100},{-40,-80}})));
+      parameter Modelica.Units.SI.Time ageTime=120.0;
+      Modelica.Blocks.Sources.RealExpression totalLabel(y=SRXLabel.y + DRXLabel.y +
+            A2.labelAmount)
+        annotation (Placement(transformation(extent={{-100,80},{-80,100}})));
+      Modelica.Blocks.Sources.RealExpression SRXLabel(y=SRX.labelAmount)
+        annotation (Placement(transformation(extent={{-100,60},{-80,80}})));
+      Modelica.Blocks.Sources.RealExpression DRXLabel(y=DRX_D.labelAmount + DRX_T.labelAmount)
+        annotation (Placement(transformation(extent={{-100,40},{-80,60}})));
+      Real totalLabelNorm "Label normalized to chase onset";
+      Real normFactor(start=1);
+      Real SRX_fraction(start=0);
+      Real photobleaching(start=1) "Photobleaching decay starts with aging";
+      parameter Real k_pb=0;
+      Real totalLabel_PB=totalLabel.y*photobleaching
+        "Total label including photobleaching";
+    equation
+      der(photobleaching) = if time > -ageTime then -photobleaching*k_pb else 0;
+      totalLabelNorm = (totalLabel_PB + offset)/normFactor;
+      when time > 0 then
+        normFactor = totalLabel_PB + offset;
+        SRX_fraction = SRXLabel.y/totalLabel.y;
+      end when;
+      connect(SRX.lpop[1], k_srx_m.lpop_a) annotation (Line(
+          points={{-40.2,40.15},{-30,40.15},{-30,30}},
+          color={107,45,134},
+          thickness=1));
+      connect(k_srx_m.lpop_b, DRX_T.lpop[1]) annotation (Line(
+          points={{-30,10},{-30,-40},{-40.2,-40}},
+          color={107,45,134},
+          thickness=1));
+      connect(k_srx_p.lpop_b, SRX.lpop[2]) annotation (Line(
+          points={{-20,30},{-20,40},{-40.2,40},{-40.2,40.65}},
+          color={107,45,134},
+          thickness=1));
+      connect(k_srx_p.lpop_a, DRX_T.lpop[2]) annotation (Line(
+          points={{-20,10},{-20,4},{-30,4},{-30,-39.8},{-40.2,-39.8}},
+          color={107,45,134},
+          thickness=1));
+      connect(DRX_T.lpop[3], kH.lpop_a) annotation (Line(
+          points={{-40.2,-39.6},{-40.2,-40},{-20,-40},{-20,-46},{-10,-46}},
+          color={107,45,134},
+          thickness=1));
+      connect(kH.lpop_b, DRX_D.lpop[1]) annotation (Line(
+          points={{10,-46},{24,-46},{24,-39.85},{40.2,-39.85}},
+          color={107,45,134},
+          thickness=1));
+      connect(kH_m.lpop_b, DRX_T.lpop[4]) annotation (Line(
+          points={{-10,-32},{-20,-32},{-20,-39.4},{-40.2,-39.4}},
+          color={107,45,134},
+          thickness=1));
+      connect(kH_m.lpop_a, DRX_D.lpop[2]) annotation (Line(
+          points={{10,-32},{24,-32},{24,-39.35},{40.2,-39.35}},
+          color={107,45,134},
+          thickness=1));
+      connect(k2.lpop_a, A2.lpop[1]) annotation (Line(
+          points={{-32,-76},{-32,-100},{-40.2,-100},{-40.2,-99.6}},
+          color={107,45,134},
+          thickness=1));
+      connect(k2.lpop_b, DRX_T.lpop[5]) annotation (Line(
+          points={{-32,-56},{-32,-40},{-40.2,-40},{-40.2,-39.2}},
+          color={107,45,134},
+          thickness=1));
+      connect(labelDRX_D.y, kH_m.labelInput) annotation (Line(points={{-3,-10},{0,-10},
+              {0,-24}},                     color={0,0,127}));
+      connect(labelA2Out.y, k2.labelInput)
+        annotation (Line(points={{-11,-66},{-24,-66}}, color={0,0,127}));
+      connect(k2.rateInput, rateA2Out.y) annotation (Line(points={{-28,-76},{-28,-84},
+              {-11,-84}}, color={0,0,127}));
+      connect(timeTable_ATPChase.y, integratedSquaredDeviation.u1) annotation (
+          Line(points={{-39,90},{-38,90.4},{3.2,90.4}}, color={0,0,127}));
+      connect(integratedSquaredDeviation.u2, totalLabelNorm_expr.y) annotation (
+          Line(points={{3.2,85.6},{-10,85.6},{-10,78},{-13,78}}, color={0,0,127}));
+      annotation (Documentation(info="<html><p>This class was automatically generated by the Optimization Library. It includes an inherited class with optimized tuner values. More information is found in the text layer of the class.</p></html>"));
+
+    end XBCycling;
+
+    model XBCycling_Walklate2022Fig1A "Additional model parametrization to fit Walklate 2022 fig 1A"
       extends XBCycling(
-        tune_a=0.309609399632185,
-        tune_b=0.1938142510368674,
-        tune_c=0.4124677783178252,
+        tune_a=0.3061467550165379,
+        tune_b=0.1947624404223471,
+        tune_c=0.411047421686107,
+        DRX_D(pop_start=max(1e-6, 0.95 - A2.pop_start)),
+        SRX(pop_start=1e-6),
+        kH_m(useRateInput=true),
         CmantATP=0,
         offset=0,
         ageTime=60.0,
         redeclare Data.TimeTable_ATPChaseWalklate1A timeTable_ATPChase,
         A2(pop_start=0.4));
-      annotation (Documentation(info="<html><p>This class was automatically generated by the Optimization Library. It includes an inherited class with optimized tuner values. More information is found in the text layer of the class.</p></html>"),
-          experiment(
-          StartTime=-600,
-          StopTime=1000,
-          __Dymola_NumberOfIntervals=5000,
-          __Dymola_Algorithm="Dassl"));
+      annotation (Documentation(info="<html><p>This class was automatically generated by the Optimization Library. It includes an inherited class with optimized tuner values. More information is found in the text layer of the class.</p></html>"));
     end XBCycling_Walklate2022Fig1A;
-
-    model XBCycling_Walklate2022Fig1A_NokHmAtNoATP_A240
-      "Optimized model parameters of mantATP.LabelLib.XBCycling_Walklate2022Fig1A"
-      extends mantATP.LabelLib.XBCycling_Walklate2022Fig1A(
-        tune_a=0.3038695594437007,
-        tune_b=0.1901605458354207,
-        tune_c=0.4094192549875971,
-        kH_m(useRateInput=true));
-
-      /* Automatically generated at Fri May 23 13:39:10 2025 */
-      /*
-    The final optimization result was as follows:
-    
-    Evaluation #23
-        1.6113096694284031e-3     min    integratedSquaredDeviation.y1
-    __________________________________________________
-        1.6113096694284031e-3    Maximum of criteria
-    
-    **************************************************
-    
-    The optimized Modelica parameters were found by running the following optimization setup:
-    
-    Optimization.Tasks.ModelOptimization.run22(
-        Optimization.Internal.Version.V22.ModelOptimizationSetup(
-            modelName="mantATP.LabelLib.XBCycling_Walklate2022Fig1A",
-            plotScript="",
-            saveSetup=false,
-            saveSetupFilename="OptimizationLastRunModel.mo",
-            convertSetup=false,
-            askForTunerReUse=true,
-            tuner=
-                Optimization.Internal.Version.V22.Tuner(
-                    UseTunerMatrixForDiscreteValues=false,
-                    tunerParameters=
-                        {
-                            Optimization.Internal.Version.V22.TunerParameter(
-                                name="tune_a",
-                                active=true,
-                                Value=0.457922777524498,
-                                min=0.1,
-                                max=2,
-                                equidistant=0,
-                                scaleToBounds=false,
-                                discreteValues=fill(0,0),
-                                unit=""),
-                            Optimization.Internal.Version.V22.TunerParameter(
-                                name="tune_b",
-                                active=true,
-                                Value=0.0900915490955254,
-                                min=1e-2,
-                                max=1,
-                                equidistant=0,
-                                scaleToBounds=false,
-                                discreteValues=fill(0,0),
-                                unit=""),
-                            Optimization.Internal.Version.V22.TunerParameter(
-                                name="tune_c",
-                                active=true,
-                                Value=1.0432043186568256,
-                                min=0.1,
-                                max=2,
-                                equidistant=0,
-                                scaleToBounds=false,
-                                discreteValues=fill(0,0),
-                                unit="")
-                        },
-                    tunerMatrix=
-                        zeros(0,1)),
-            criteria=
-                {
-                    Optimization.Internal.Version.V22.Criterion(
-                        name="integratedSquaredDeviation.y1",
-                        active=true,
-                        usage=Optimization.Internal.Version.V22.Types.CriterionUsage.Minimize,
-                        demand=1,
-                        unit="")
-                },
-            preferences=
-                Optimization.Internal.Version.V22.Preferences(
-                    optimizationOptions=
-                        Optimization.Internal.Version.V22.OptimizationOptions(
-                            method=Optimization.Internal.Version.V22.Types.OptimizationMethod.sqp,
-                            ObjectiveFunctionType=Optimization.Internal.Version.V22.Types.ObjectiveFunctionType.Max,
-                            OptTol=1e-3,
-                            maxEval=1000,
-                            evalBestFinal=false,
-                            saveBest=true,
-                            saveHistory=true,
-                            listFilename="OptimizationLog1.log",
-                            listOn=true,
-                            listOnline=false,
-                            listIncrement=100,
-                            numberOfShownDigits=3,
-                            onPlace=true,
-                            listTuners=true,
-                            GaPopSize=10,
-                            GaNGen=100,
-                            GridBlock=50),
-                    simulationOptions=
-                        Optimization.Internal.Version.V22.SimulationOptions(
-                            startTime=-600,
-                            stopTime=600,
-                            outputInterval=0,
-                            numberOfIntervals=1500,
-                            integrationMethod=Optimization.Internal.Version.V22.Types.IntegrationMethod.Dassl,
-                            integrationTolerance=1e-3,
-                            fixedStepSize=0,
-                            autoLoadResults=true,
-                            useDsFinal=true,
-                            translateModel=false,
-                            setCriteriaSimulationFailed=true,
-                            CriteriaSimulationFailedValue=1e+6,
-                            simulationMode=Optimization.Internal.Version.V22.Types.SimulationMode.Single,
-                            parallelizationMode=Optimization.Internal.Version.V22.Types.ParallelizationMode.None,
-                            numberOfThreads=0,
-                            copyFiles=
-                            fill("",0)),
-                    sensitivityOptions=
-                        Optimization.Internal.Version.V22.SensitivityOptions(
-                            TypeOfSensitivityComputation=Optimization.Internal.Version.V22.Types.SensitivityMethod.ExternalDifferencesSymmetric,
-                            automaticSensitivityTolerance=true,
-                            sensitivityTolerance=9.9999999999999995e-7))))
- */
-      Modelica.Blocks.Sources.RealExpression rateA2Out1(y=if time > -ageTime
-             then 0.066*tune_c else 0)
-        annotation (Placement(transformation(extent={{64,-14},{44,6}})));
-    equation
-      connect(rateA2Out1.y, kH_m.rateInput) annotation (Line(points={{43,-4},{
-              32,-4},{32,-28},{12,-28}}, color={0,0,127}));
-      annotation (Documentation(info=
-              "<html><p>This class was automatically generated by the Optimization Library. It includes an inherited class with optimized tuner values. More information is found in the text layer of the class.</p></html>"));
-    end XBCycling_Walklate2022Fig1A_NokHmAtNoATP_A240;
-
-    model XBCycling_Walklate2022Fig1A_NokHmAtNoATP_A240_optimized
-      "Optimized model parameters of mantATP.LabelLib.XBCycling_Walklate2022Fig1A_NokHmAtNoATP_A240"
-      extends mantATP.LabelLib.XBCycling_Walklate2022Fig1A_NokHmAtNoATP_A240(
-        tune_a=0.3061467550165379,
-        tune_b=0.1947624404223471,
-        tune_c=0.411047421686107,
-        DRX_D(pop_start=max(1e-6, 0.95 - A2.pop_start)),
-        SRX(pop_start=1e-6));
-
-      /* Automatically generated at Fri May 23 13:42:48 2025 */
-      /*
-    The final optimization result was as follows:
-    
-    Evaluation #23
-        1.829931091619249e-3      min    integratedSquaredDeviation.y1
-    __________________________________________________
-        1.829931091619249e-3     Maximum of criteria
-    
-    **************************************************
-    
-    The optimized Modelica parameters were found by running the following optimization setup:
-    
-    Optimization.Tasks.ModelOptimization.run22(
-        Optimization.Internal.Version.V22.ModelOptimizationSetup(
-            modelName="mantATP.LabelLib.XBCycling_Walklate2022Fig1A_NokHmAtNoATP_A240",
-            plotScript="",
-            saveSetup=false,
-            saveSetupFilename="OptimizationLastRunModel.mo",
-            convertSetup=false,
-            askForTunerReUse=true,
-            tuner=
-                Optimization.Internal.Version.V22.Tuner(
-                    UseTunerMatrixForDiscreteValues=false,
-                    tunerParameters=
-                        {
-                            Optimization.Internal.Version.V22.TunerParameter(
-                                name="tune_a",
-                                active=true,
-                                Value=0.457922777524498,
-                                min=0.1,
-                                max=2,
-                                equidistant=0,
-                                scaleToBounds=false,
-                                discreteValues=fill(0,0),
-                                unit=""),
-                            Optimization.Internal.Version.V22.TunerParameter(
-                                name="tune_b",
-                                active=true,
-                                Value=0.0900915490955254,
-                                min=1e-2,
-                                max=1,
-                                equidistant=0,
-                                scaleToBounds=false,
-                                discreteValues=fill(0,0),
-                                unit=""),
-                            Optimization.Internal.Version.V22.TunerParameter(
-                                name="tune_c",
-                                active=true,
-                                Value=1.0432043186568256,
-                                min=0.1,
-                                max=2,
-                                equidistant=0,
-                                scaleToBounds=false,
-                                discreteValues=fill(0,0),
-                                unit="")
-                        },
-                    tunerMatrix=
-                        zeros(0,1)),
-            criteria=
-                {
-                    Optimization.Internal.Version.V22.Criterion(
-                        name="integratedSquaredDeviation.y1",
-                        active=true,
-                        usage=Optimization.Internal.Version.V22.Types.CriterionUsage.Minimize,
-                        demand=1,
-                        unit="")
-                },
-            preferences=
-                Optimization.Internal.Version.V22.Preferences(
-                    optimizationOptions=
-                        Optimization.Internal.Version.V22.OptimizationOptions(
-                            method=Optimization.Internal.Version.V22.Types.OptimizationMethod.sqp,
-                            ObjectiveFunctionType=Optimization.Internal.Version.V22.Types.ObjectiveFunctionType.Max,
-                            OptTol=1e-3,
-                            maxEval=1000,
-                            evalBestFinal=false,
-                            saveBest=true,
-                            saveHistory=true,
-                            listFilename="OptimizationLog1.log",
-                            listOn=true,
-                            listOnline=false,
-                            listIncrement=100,
-                            numberOfShownDigits=3,
-                            onPlace=true,
-                            listTuners=true,
-                            GaPopSize=10,
-                            GaNGen=100,
-                            GridBlock=50),
-                    simulationOptions=
-                        Optimization.Internal.Version.V22.SimulationOptions(
-                            startTime=-600,
-                            stopTime=600,
-                            outputInterval=0,
-                            numberOfIntervals=1500,
-                            integrationMethod=Optimization.Internal.Version.V22.Types.IntegrationMethod.Dassl,
-                            integrationTolerance=1e-3,
-                            fixedStepSize=0,
-                            autoLoadResults=true,
-                            useDsFinal=true,
-                            translateModel=false,
-                            setCriteriaSimulationFailed=true,
-                            CriteriaSimulationFailedValue=1e+6,
-                            simulationMode=Optimization.Internal.Version.V22.Types.SimulationMode.Single,
-                            parallelizationMode=Optimization.Internal.Version.V22.Types.ParallelizationMode.None,
-                            numberOfThreads=0,
-                            copyFiles=
-                            fill("",0)),
-                    sensitivityOptions=
-                        Optimization.Internal.Version.V22.SensitivityOptions(
-                            TypeOfSensitivityComputation=Optimization.Internal.Version.V22.Types.SensitivityMethod.ExternalDifferencesSymmetric,
-                            automaticSensitivityTolerance=true,
-                            sensitivityTolerance=9.9999999999999995e-7))))
- */
-      annotation (Documentation(info=
-              "<html><p>This class was automatically generated by the Optimization Library. It includes an inherited class with optimized tuner values. More information is found in the text layer of the class.</p></html>"));
-    end XBCycling_Walklate2022Fig1A_NokHmAtNoATP_A240_optimized;
   end LabelLib;
   annotation (uses(
       Modelica(version="4.0.0"),
