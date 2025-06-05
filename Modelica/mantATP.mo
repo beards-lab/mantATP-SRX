@@ -2525,7 +2525,7 @@ post-ratchetted",
           rateDRXDOut(y=if time > -ageTime then inverseProportionalFactor.y
                  else 0));
         Modelica.Blocks.Continuous.Integrator integrator
-          annotation (Placement(transformation(extent={{74,-80},{94,-60}})));
+          annotation (Placement(transformation(extent={{26,-66},{46,-46}})));
         Modelica.Blocks.Sources.Constant const(k=0.066*tune_c)
           annotation (Placement(transformation(extent={{40,8},{60,28}})));
         Bodylight.Blocks.Factors.InverseProportionalFactor inverseProportionalFactor(
@@ -2533,13 +2533,21 @@ post-ratchetted",
           annotation (Placement(transformation(extent={{90,-18},{70,2}})));
         parameter Real IfADP=0.1
           "Intesity of free mADP as a fraction of mATP intensity";
+        Modelica.Blocks.Math.Division a_times_u
+          annotation (Placement(transformation(extent={{90,-82},{110,-62}})));
+        Modelica.Blocks.Sources.Constant K_ADP(k=1)
+          annotation (Placement(transformation(extent={{60,-92},{74,-78}})));
       equation
         connect(const.y, inverseProportionalFactor.yBase)
           annotation (Line(points={{61,18},{80,18},{80,-6}}, color={0,0,127}));
-        connect(integrator.y, inverseProportionalFactor.u) annotation (Line(points={{95,
-                -70},{96,-70},{96,-8},{88,-8}}, color={0,0,127}));
         connect(kH_m.popChangeOutput, integrator.u) annotation (Line(points={{-10,-28},
-                {-14,-28},{-14,-56},{54,-56},{54,-70},{72,-70}}, color={0,0,127}));
+                {-18,-28},{-18,-56},{24,-56}},                   color={0,0,127}));
+        connect(a_times_u.y, inverseProportionalFactor.u) annotation (Line(
+              points={{111,-72},{116,-72},{116,-8},{88,-8}}, color={0,0,127}));
+        connect(K_ADP.y, a_times_u.u2) annotation (Line(points={{74.7,-85},{80,
+                -85},{80,-78},{88,-78}}, color={0,0,127}));
+        connect(integrator.y, a_times_u.u1) annotation (Line(points={{47,-56},{
+                74,-56},{74,-66},{88,-66}}, color={0,0,127}));
         annotation (experiment(
             StartTime=-1500,
             StopTime=1500,
@@ -2628,6 +2636,162 @@ post-ratchetted",
           tune_b=0.3036857369135465,
           tune_c=0.39164688836017886);
       end XBCycling_Walklate_PB2;
+
+      model XBCycling_Walklate_SlowATPBinding
+        "This reflects the 3.2 uM-1s-1 ATP attachment rate reported in Walklate. No difference."
+        extends XBCycling_Walklate2022Fig1A(CmantATP=0.05, k2(k(displayUnit=
+                  "1/s") = 3200*CmantATP));
+        annotation (experiment(
+            StartTime=-300,
+            StopTime=600,
+            Interval=0.001,
+            __Dymola_Algorithm="Dassl"));
+      end XBCycling_Walklate_SlowATPBinding;
+
+      model XBCycling_Walklate_CalcADPDil
+        "Generating ADP, having a slow-down effect on DRX_D to DRX_T transition"
+        extends XBCycling_Walklate2022Fig1A(
+          tune_a=0.2655897929630535,
+          tune_b=0.094895195683267,
+          tune_c=1.401853257217013,
+          kH(useRateOutput=true),
+          kH_m(
+            k=0.066*tune_c,
+            useRateInput=true,
+            useRateOutput=true),
+          rateDRXDOut(y=if time > -ageTime then inverseProportionalFactor.y
+                 else 0));
+        Modelica.Blocks.Continuous.Integrator integrator
+          annotation (Placement(transformation(extent={{26,-66},{46,-46}})));
+        Modelica.Blocks.Sources.Constant const(k=0.066*tune_c)
+          annotation (Placement(transformation(extent={{40,8},{60,28}})));
+        Bodylight.Blocks.Factors.InverseProportionalFactor inverseProportionalFactor(
+            scalingFactor=1,   enabled=true)
+          annotation (Placement(transformation(extent={{90,-18},{70,2}})));
+        parameter Real IfADP=0.1
+          "Intesity of free mADP as a fraction of mATP intensity";
+        Modelica.Blocks.Math.Division dillutionEffect "Relative to initial"
+          annotation (Placement(transformation(extent={{60,-72},{80,-52}})));
+        Modelica.Blocks.Math.Division a_times_u
+          annotation (Placement(transformation(extent={{90,-82},{110,-62}})));
+        Modelica.Blocks.Sources.Constant K_ADP(k=1)
+          annotation (Placement(transformation(extent={{60,-92},{74,-78}})));
+        Modelica.Blocks.Sources.RealExpression dillutionConst(y=if time > 0
+               then 4 elseif time > -ageTime then 2 + f_load_mix else 1)
+          annotation (Placement(transformation(extent={{24,-96},{38,-82}})));
+        parameter Bodylight.Types.Fraction f_load_mix=2;
+      equation
+        connect(const.y, inverseProportionalFactor.yBase)
+          annotation (Line(points={{61,18},{80,18},{80,-6}}, color={0,0,127}));
+        connect(kH_m.popChangeOutput, integrator.u) annotation (Line(points={{-10,-28},
+                {-18,-28},{-18,-56},{24,-56}},                   color={0,0,127}));
+        connect(integrator.y, dillutionEffect.u1)
+          annotation (Line(points={{47,-56},{58,-56}}, color={0,0,127}));
+        connect(a_times_u.y, inverseProportionalFactor.u) annotation (Line(
+              points={{111,-72},{116,-72},{116,-8},{88,-8}}, color={0,0,127}));
+        connect(dillutionEffect.y, a_times_u.u1) annotation (Line(points={{81,-62},
+                {84,-62},{84,-66},{88,-66}}, color={0,0,127}));
+        connect(K_ADP.y, a_times_u.u2) annotation (Line(points={{74.7,-85},{80,
+                -85},{80,-78},{88,-78}}, color={0,0,127}));
+        connect(dillutionConst.y, dillutionEffect.u2) annotation (Line(points={
+                {38.7,-89},{50,-89},{50,-68},{58,-68}}, color={0,0,127}));
+        annotation (experiment(
+            StartTime=-1500,
+            StopTime=1500,
+            __Dymola_NumberOfIntervals=5000,
+            __Dymola_Algorithm="Dassl"), Diagram(graphics={Line(points={{80,-12},{40,-12},
+                    {46,-8}}, color={28,108,200})}));
+      end XBCycling_Walklate_CalcADPDil;
+
+      model XBCycling_Walklate_CalcADPDilAffinity
+        "Generating ADP, having a slow-down effect on DRX_D to DRX_T transition, with different ADP / mant-ADP affinity"
+        extends XBCycling_Walklate2022Fig1A(
+          tune_a=0.2655897929630535,
+          tune_b=0.094895195683267,
+          tune_c=1.401853257217013,
+          kH(useRateOutput=true),
+          kH_m(
+            k=0.066*tune_c,
+            useRateInput=true,
+            useRateOutput=true),
+          rateDRXDOut(y=if time > -ageTime then inverseProportionalFactor.y
+                 else 0));
+        Modelica.Blocks.Continuous.Integrator AllADPBuilt
+          annotation (Placement(transformation(extent={{18,-118},{38,-98}})));
+        Modelica.Blocks.Sources.Constant const(k=0.066*tune_c)
+          annotation (Placement(transformation(extent={{40,8},{60,28}})));
+        Bodylight.Blocks.Factors.InverseProportionalFactor inverseProportionalFactor(
+            scalingFactor=1,   enabled=true)
+          annotation (Placement(transformation(extent={{90,-18},{70,2}})));
+        parameter Real IfADP=0.1
+          "Intesity of free mADP as a fraction of mATP intensity";
+        Modelica.Blocks.Math.Division dillutionEffect "Relative to initial"
+          annotation (Placement(transformation(extent={{136,-110},{156,-90}})));
+        Modelica.Blocks.Math.Division a_times_u
+          annotation (Placement(transformation(extent={{166,-120},{186,-100}})));
+        Modelica.Blocks.Sources.Constant K_ADP(k=1)
+          annotation (Placement(transformation(extent={{136,-130},{150,-116}})));
+        Modelica.Blocks.Sources.RealExpression dillutionConst(y=if time > 0
+               then 4 elseif time > -ageTime then 2 else 1)
+          annotation (Placement(transformation(extent={{98,-146},{112,-132}})));
+        parameter Bodylight.Types.Fraction f_load_mix=2;
+        Modelica.Blocks.Math.Product labelFlowD_D
+          annotation (Placement(transformation(extent={{36,-86},{56,-66}})));
+        Bodylight.Population.LabeledPopulation.Components.LabelMeasure
+          labelMeasure
+          annotation (Placement(transformation(extent={{34,-48},{14,-68}})));
+        Modelica.Blocks.Continuous.Integrator mantADPBuilt
+          annotation (Placement(transformation(extent={{64,-86},{84,-66}})));
+        Modelica.Blocks.Math.Add affinitySum(k1=1)
+          annotation (Placement(transformation(extent={{106,-100},{126,-80}})));
+        Modelica.Blocks.Math.Feedback ADPBuilt
+          annotation (Placement(transformation(extent={{82,-98},{102,-118}})));
+      equation
+        connect(const.y, inverseProportionalFactor.yBase)
+          annotation (Line(points={{61,18},{80,18},{80,-6}}, color={0,0,127}));
+        connect(kH_m.popChangeOutput, AllADPBuilt.u) annotation (Line(points={{
+                -10,-28},{-16,-28},{-16,-108},{16,-108}}, color={0,0,127}));
+        connect(a_times_u.y, inverseProportionalFactor.u) annotation (Line(
+              points={{187,-110},{180,-110},{180,-8},{88,-8}},
+                                                             color={0,0,127}));
+        connect(dillutionEffect.y, a_times_u.u1) annotation (Line(points={{157,
+                -100},{160,-100},{160,-104},{164,-104}}, color={0,0,127}));
+        connect(K_ADP.y, a_times_u.u2) annotation (Line(points={{150.7,-123},{
+                156,-123},{156,-116},{164,-116}},
+                                         color={0,0,127}));
+        connect(dillutionConst.y, dillutionEffect.u2) annotation (Line(points={
+                {112.7,-139},{126,-139},{126,-106},{134,-106}}, color={0,0,127}));
+        connect(labelMeasure.label, labelFlowD_D.u1) annotation (Line(
+            points={{34,-62},{34,-70}},
+            color={0,0,127},
+            smooth=Smooth.Bezier));
+        connect(labelFlowD_D.y, mantADPBuilt.u) annotation (Line(
+            points={{57,-76},{57,-76},{62,-76}},
+            color={0,0,127},
+            smooth=Smooth.Bezier));
+        connect(kH_m.popChangeOutput, labelFlowD_D.u2) annotation (Line(points=
+                {{-10,-28},{-16,-28},{-16,-82},{34,-82}}, color={0,0,127}));
+        connect(labelMeasure.lpop_a, kH_m.lpop_a) annotation (Line(
+            points={{24,-48},{24,-32},{10,-32}},
+            color={107,45,134},
+            thickness=1));
+        connect(mantADPBuilt.y, affinitySum.u1) annotation (Line(points={{85,
+                -76},{104,-76},{104,-84}}, color={0,0,127}));
+        connect(affinitySum.y, dillutionEffect.u1) annotation (Line(points={{
+                127,-90},{130,-90},{130,-94},{134,-94}}, color={0,0,127}));
+        connect(affinitySum.u2, ADPBuilt.y) annotation (Line(points={{104,-96},
+                {104,-108},{101,-108}}, color={0,0,127}));
+        connect(ADPBuilt.u1, AllADPBuilt.y)
+          annotation (Line(points={{84,-108},{39,-108}}, color={0,0,127}));
+        connect(mantADPBuilt.y, ADPBuilt.u2) annotation (Line(points={{85,-76},
+                {92,-76},{92,-100}}, color={0,0,127}));
+        annotation (experiment(
+            StartTime=-1500,
+            StopTime=1500,
+            __Dymola_NumberOfIntervals=5000,
+            __Dymola_Algorithm="Dassl"), Diagram(graphics={Line(points={{80,-12},{40,-12},
+                    {46,-8}}, color={28,108,200})}));
+      end XBCycling_Walklate_CalcADPDilAffinity;
     end Experiments;
 
     package Figures
@@ -2849,6 +3013,14 @@ post-ratchetted",
         A2(pop_start=0.4));
       annotation (Documentation(info="<html><p>This class was automatically generated by the Optimization Library. It includes an inherited class with optimized tuner values. More information is found in the text layer of the class.</p></html>"));
     end XBCycling_Walklate2022Fig1A;
+
+    model XBCycling_opt4
+      extends XBCycling(
+        offset=0.008004281747732694,
+        tune_a=0.5237545796417328,
+        tune_b=0.09271447402853447,
+        tune_c=1.0825734689322586);
+    end XBCycling_opt4;
   end LabelLib;
   annotation (uses(
       Modelica(version="4.0.0"),

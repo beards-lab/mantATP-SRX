@@ -1,0 +1,36 @@
+﻿// Dymola Script (.mos) to run simulations with different ageTime values  
+// cd("c:\home\git\mantATP-SRX\ModelResults")
+pop_start = 1e-3;
+pop_start = .4;
+i = 60;
+suffix := String(integer(i*1000));
+modelName = "mantATP.LabelLib.Experiments.XBCycling_Walklate_CalcADPDil";
+// modelName = "mantATP.LabelLib.Experiments.XBCycling_Walklate_CalcADPDilAffinity";
+
+// for i in {.2, .5, 1, 2, 5, 10, 30, 60.0000,  120.0000,  300.0000,  900.0000} loop  
+  for i in {.2, .5, 1, 2, 5, 10, 30, 60.0000} loop  
+    // Generate filename suffix  
+    suffix := String(integer(i*1000));  
+
+  // Loop over the desired ageTime values  
+//   for k_adp in {0.0100, 0.0215, 0.0464, 0.1000, 0.2154, 0.4642, 1.0000, 2.1544, 4.6416, 10.0000, 100, 1000} loop  
+  for k_adp in {0.1000, 0.1143, 0.1286, 0.1429, 0.1571, 0.1714, 0.1857, 0.2000} loop  
+
+//   for k_adp in {0.1000, 0.1468, 0.2154, 0.3162, 0.4642, 0.6813, 1.0000} loop  
+    
+    // Generate filename suffix  
+  
+    filename := modelName + "_" + suffix + "A2_" + String(floor(pop_start*100)) + "kAdp_" + String(k_adp);  
+    
+    // Run the simulation with specified parameter and output filename  
+    simulateExtendedModel(  
+      modelName,  
+      startTime=-600 - i,
+      numberOfIntervals=5000,  
+      stopTime=1000, // or your desired simulation duration  
+      resultFile=filename, 
+      initialNames = {"ageTime", "A2.pop_start", "K_ADP.k"},
+      initialValues={i, pop_start, k_adp}  
+    );  
+  end for;
+end for;

@@ -10,6 +10,7 @@ dsmodel.c
 /Modelica/*.txt
 /Modelica/*.log
 ~FMUOutput/
+~*
 _fmu/
 Modelica/request
 Modelica/status
