@@ -2,8 +2,13 @@
 t = linspace(-5, 5, 1000);
 
 % Generate timecourses
-cf = figure(); clf; 
-tiledlayout(1, 5, 'TileSpacing','Tight')
+% cf = figure(); clf; 
+cf = gcf; clf;
+aspect = 1.5;
+figscale = 1.0;
+cf.Position = [300 200 figscale*7.2*96 figscale*7.2*96/aspect];
+
+tiledlayout(1, 5, 'TileSpacing','Tight', 'Padding', 'compact')
 
 if exist('modelName', 'var')
     datafile = ['../Modelica/' modelName '.mat'];
@@ -32,8 +37,46 @@ xl = [-5, 10]*60*time_conv;
 % Coordinates for the marker
 x_marker = -agetime(1)*time_conv;
 
+%% pre-allocate axes
+% cf = clf;
+tiledlayout(1, 5, 'TileSpacing','Tight', 'Padding', 'compact')
+
+% Step 1: Create flow layout and 3 panels
+p1 = nexttile(1, [1 2]);
+xlabel("Placeholder", Interpreter="latex");ylabel("placeholder", Interpreter="latex");
+p2 = nexttile(3, [1 2]);
+xlabel("Placeholder", Interpreter="latex");ylabel("placeholder", Interpreter="latex");
+p3 = nexttile(5, [1 1]);
+xlabel("Placeholder", Interpreter="latex");ylabel("placeholder", Interpreter="latex");
+
+fontsize(12, "points");
+
+
+% Step 2: Grab their positions (in pixels, relative to figure)
+pos1 = p1.Position;
+pos2 = p2.Position;
+pos3 = p3.Position + [0 0 0.02 0];
+
+% clear;
+clf;
+
+% Step 4: Recreate using axes with stored positions
+ax1 = axes(cf, 'Position', pos1);
+% title(ax1, 'Axes 1');
+
+ax2 = axes(cf, 'Position', pos2);
+title(ax2, 'Axes 2');
+
+ax3 = axes(cf, 'Position', pos3);
+title(ax3, 'Axes 3');
+
+
+
 %% Panel A
-nexttile(1, [1 2]);hold on;
+% nexttile(1, [1 2]);hold on;
+axes(ax1);cla;hold on;
+ax1.TickLabelInterpreter = 'latex';
+
 % Add shaded regions for phases
 color_rigor = [1 1 1]*0.7;
 color_incubation = [1 1 1]*0.85;
@@ -42,11 +85,14 @@ fill([-5 x_marker x_marker -5], [0 0 100 100], color_rigor, 'EdgeColor', 'none',
 fill([x_marker 0 0 x_marker], [0 0 100 100], color_incubation, 'EdgeColor', 'none', 'FaceAlpha', 1);   % rise
 % fill([0 5 5 0], [0 0 100 100], color_chase, 'EdgeColor', 'none', 'FaceAlpha', 1);     % decay
 
+rng = time > -5 & time < 10;
+clip = @(A) A(rng);
+
 lw = 2.5;
-p1 = plot(time, getValsToPerc('SRX.pop'), '-', 'Color', [0 0 0], LineWidth=lw, DisplayName='$P_{SRX}$');
-p2 = plot(time, getValsToPerc('DRX_T.pop')*1000, ':', 'Color', [0 0 0], LineWidth=lw, DisplayName='$P_{DRX_{ATP}}$x10$^3$');
-p3 = plot(time, getValsToPerc('DRX_D.pop'), '--', 'Color', [1 1 1]*0, LineWidth=lw, DisplayName='$P_{DRX_{ADP}}$');
-p4 = plot(time, getValsToPerc('A2.pop'), '-', 'Color', [1 1 1]*0.5, LineWidth=lw, DisplayName='$P_{A2}$');
+p1 = plot(clip(time), clip(getValsToPerc('SRX.pop')), '-', 'Color', [0 0 0], LineWidth=lw, DisplayName='$P_{SRX}$');
+p2 = plot(clip(time), clip(getValsToPerc('DRX_T.pop'))*1000, ':', 'Color', [0 0 0], LineWidth=lw, DisplayName='$P_{DRX_{ATP}}$x10$^3$');
+p3 = plot(clip(time), clip(getValsToPerc('DRX_D.pop')), '--', 'Color', [1 1 1]*0, LineWidth=lw, DisplayName='$P_{DRX_{ADP}}$');
+p4 = plot(clip(time), clip(getValsToPerc('A2.pop')), '-', 'Color', [1 1 1]*0.5, LineWidth=lw, DisplayName='$P_{A2}$');
 % plot([time(1) time(end)], max(getValsToPerc('SRX_fraction'))*[1 1], ':', LineWidth=2, DisplayName='Slow-phase')
 
 
@@ -60,21 +106,38 @@ m2 = plot(0, maxY, 'v', 'MarkerEdgeColor', 'k', 'MarkerFaceColor', color_chase, 
 % Labels and formatting
 xlim(xl);
 ylim([0 100])
-xlabel('Time (min)', Interpreter='latex');ylabel('Population (\%)', Interpreter='latex')
+xlabel('$t$ (min)', Interpreter='latex');ylabel('Population (\%)', Interpreter='latex')
 
 % title('Overlapping Timecourses with Phase Highlighting');
 % legend(interpreter = "latex", Orientation="vertical", Location="northeast");
-legend([p1 p2 p3 p4], ...
-    {'$P_{SRX}$', '$P_{DRX_{ATP}}$x10$^3$', '$P_{DRX_{ADP}}$', '$P_{A2}$'}, ...
-     'Location', 'northeast', Interpreter='latex');
+% legend([p1 p2 p3 p4], ...
+%     {'$P_{SRX}$', '$P_{DRX_{ATP}}$x10$^3$', '$P_{DRX_{ADP}}$', '$P_{A2}$'}, ...
+%      'Location', 'northeast', Interpreter='latex');
 
-grid on;
-hold off;
+% grid on;
+% hold off;
 
+vd = 2;
+hd = 0.5;
+text(-2, 103, 'Incubation', FontSize=12)
+text(hd, 100 - vd, 'Chase', FontSize=12)
+
+text(10 - hd, tail(getValsToPerc('SRX.pop'), 1) - vd, '$P_{SRX}$', FontSize=12, HorizontalAlignment='right', VerticalAlignment='top', Interpreter='latex')
+text(10 - hd, tail(getValsToPerc('DRX_T.pop'), 1)*1000 - vd, '$P_{D_{T}}$x10$^3$', FontSize=12, HorizontalAlignment='right', VerticalAlignment='top', Interpreter='latex')
+text(10 - hd, tail(getValsToPerc('DRX_D.pop'), 1) + vd, '$P_{DRX_{ADP}}$', FontSize=12, HorizontalAlignment='right', VerticalAlignment='bottom', Interpreter='latex')
+text(10 - hd, tail(getValsToPerc('A2.pop'), 1) + vd, '$P_{A2}$', FontSize=12, HorizontalAlignment='right', VerticalAlignment='bottom', Interpreter='latex')
+
+
+quiver(x_marker, 95, 0 - x_marker, 0, 'Color', 'k', 'LineWidth', 3, 'MaxHeadSize', 4);
+quiver(0, 95, x_marker, 0, 'Color', 'k', 'LineWidth', 3, 'MaxHeadSize', 4);
+
+% quiver(0, 95, 10, 0, 0.9, 'Color', 'k', 'LineWidth', 3, 'MaxHeadSize', 1);
+% quiver(10, 95, -10, 0, 1, 'Color', 'k', 'LineWidth', 3, 'MaxHeadSize', 1);
 
 %% Panel B
 % nexttile(2); cla;hold on;
-nexttile(3, [1 2]);cla;hold on;
+% nexttile(3, [1 2]);cla;hold on;
+axes(ax2);cla;hold on;
 
 fill([-5 -2 -2 -5], [0 0 100 100], color_rigor, 'EdgeColor', 'none', 'FaceAlpha', 1); % steady state
 fill([-2 0 0 -2], [0 0 100 100], color_incubation, 'EdgeColor', 'none', 'FaceAlpha', 1);   % incubation
@@ -94,7 +157,7 @@ legend(interpreter = "latex", Orientation="vertical", Location="northeast");
 
 % Add triangular markers
 maxY = 99; % top y-value for markers
-m1 = plot(-2, maxY, 'v', 'MarkerEdgeColor', [0.4 0.4 0.4], 'MarkerFaceColor', color_incubation, 'MarkerSize', 8,DisplayName='Incubation'); % gray triangle
+m1 = plot(x_marker, maxY, 'v', 'MarkerEdgeColor', [0.4 0.4 0.4], 'MarkerFaceColor', color_incubation, 'MarkerSize', 8,DisplayName='Incubation'); % gray triangle
 m2 = plot(0, maxY, 'v', 'MarkerEdgeColor', 'k', 'MarkerFaceColor', color_chase, 'MarkerSize', 8, DisplayName='Chase'); % black triangle
 
 
@@ -145,23 +208,24 @@ scale = max(dymget(dl, 'totalLabel.y'));
 % timecourse only model 1 - they are the same
 % p4 = plot([0 ; xfit]/60, fitResult1([0 ; xfit])*100*scale, 'k:', LineWidth=lw*1.2, DisplayName="Fit eq. 1")
 % just the fits
-plot(xfit/60, fitResult1(xfit)*100*scale, '-.', ...
-    xfit/60, (fitResult2(xfit))*(yma-ymi) + ymi, '--', LineWidth=2.5)
+% plot(xfit/60, fitResult1(xfit)*100*scale, '-.', ...
+%     xfit/60, (fitResult2(xfit))*(yma-ymi) + ymi, '--', LineWidth=2.5)
 % 
 
 % p4 = plot(xfit/60, dataResult*scale*100, 'k:', LineWidth=lw*1.2, DisplayName="Fit eq. 1")
 tails = sum(time>0);
-p4 = plot(tail(time, tails), tail(getValsToPerc('timeTable_ATPChase.y'), tails)*getVal('normFactor'), 'k:', LineWidth=lw*1.2, DisplayName="Fit eq. 1")
+p4 = plot(tail(time, tails), tail(getValsToPerc('timeTable_ATPChase.y'), tails)*getVal('normFactor'), 'k:', LineWidth=lw*1.2, DisplayName="Fit eq. 1");
 
 
-legend([p1 p2 p3 p4 m1 m2], ...
-    {'$A_{SRX}$', '$A_{DRX}$', '$A_{tot}$', 'Data', ...
+l = legend([p1 p2 p3 p4 m1 m2], ...
+    {'$A_{SRX}$', '$A_{DRX}$', '$A_{tot}$', ['Data'  newline  '(Hooijman)'], ...
      'Incubation', 'Chase'}, ...
      'Location', 'northeast', Interpreter='latex');
+l.Position = l.Position + [0.03 0 0 0];
 grid on;
 %% panel C
-nexttile(5, [1 1]);hold on;
-
+% nexttile(5, [1 1]);hold on;
+axes(ax3);cla;hold on;
 
 bar_cats = ["$A_2$ (eq. 1)", "$A_2$ (eq. 2)", "$A_{SRX}$  / $A_{tot}$", "$P_{SRX}$"];
 bars = [fitResult1.b, tail(dymget(dl, 'SRX_fraction'), 1), tail(dymget(dl, 'SRX.pop'), 1)]*100;

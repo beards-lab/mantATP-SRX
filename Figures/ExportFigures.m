@@ -5,7 +5,8 @@ def_aux;
 saveFigs = false;
 %%
 
-figure(2);
+cf = figure(2);
+
 modelName = 'DefaultH';
 Figure2;
 
@@ -390,8 +391,8 @@ semilogx(...
 
 % ylim([0 inf])
 xlim([0.2, 60])
-k_adp_val = k_adp(e_min_i)*100/1000;
-legend(sprintf('Slow phase eq. 2, k_{adp} = %g M', k_adp_val), 'Data (Walklate 2022)', 'SRX population', Location='best')
+k_adp_val = k_adp(e_min_i)*100;
+legend(sprintf('Slow phase eq. 2, k_{adp} = %g nM', k_adp_val), 'Data (Walklate 2022)', 'SRX population', Location='best')
 xlabel('mATP incubation time (s)', Interpreter='latex');ylabel('Slow phase fraction (\%)', Interpreter='latex')
 xticks([ageTimes])
 
