@@ -4,11 +4,11 @@ t = linspace(-5, 5, 1000);
 % Generate timecourses
 % cf = figure(); clf; 
 cf = gcf; clf;
-aspect = 1.5;
+aspect = 1.2;
 figscale = 1.0;
-cf.Position = [300 200 figscale*7.2*96 figscale*7.2*96/aspect];
+cf.Position = [300 60 figscale*7.2*96 figscale*7.2*96/aspect];
 
-tiledlayout(1, 5, 'TileSpacing','Tight', 'Padding', 'compact')
+tiledlayout(1, 5, 'TileSpacing','compact', 'Padding', 'compact')
 
 if exist('modelName', 'var')
     datafile = ['../Modelica/' modelName '.mat'];
@@ -39,23 +39,27 @@ x_marker = -agetime(1)*time_conv;
 
 %% pre-allocate axes
 % cf = clf;
-tiledlayout(1, 5, 'TileSpacing','Tight', 'Padding', 'compact')
+tiledlayout(2, 2, 'TileSpacing','compact', 'Padding', 'compact')
 
 % Step 1: Create flow layout and 3 panels
-p1 = nexttile(1, [1 2]);
+p1 = nexttile(1, [1 1]);
 xlabel("Placeholder", Interpreter="latex");ylabel("placeholder", Interpreter="latex");
-p2 = nexttile(3, [1 2]);
+p2 = nexttile(2, [1 1]);
 xlabel("Placeholder", Interpreter="latex");ylabel("placeholder", Interpreter="latex");
-p3 = nexttile(5, [1 1]);
+p3 = nexttile(3, [1 1]);
+xlabel("Placeholder", Interpreter="latex");ylabel("placeholder", Interpreter="latex");
+p4 = nexttile(4, [1 1]);
 xlabel("Placeholder", Interpreter="latex");ylabel("placeholder", Interpreter="latex");
 
 fontsize(12, "points");
 
 
 % Step 2: Grab their positions (in pixels, relative to figure)
-pos1 = p1.Position;
-pos2 = p2.Position;
-pos3 = p3.Position + [0 0 0.02 0];
+vspc = 0.03
+pos1 = p1.Position + [0 0 0 -vspc];
+pos2 = p2.Position + [0 0 0 -vspc];
+pos3 = p3.Position + [0 vspc 0 -vspc];
+pos4 = p4.Position  +[0 vspc 0 -vspc];;
 
 % clear;
 clf;
@@ -65,10 +69,13 @@ ax1 = axes(cf, 'Position', pos1);
 % title(ax1, 'Axes 1');
 
 ax2 = axes(cf, 'Position', pos2);
-title(ax2, 'Axes 2');
+% title(ax2, 'Axes 2');
 
 ax3 = axes(cf, 'Position', pos3);
-title(ax3, 'Axes 3');
+% title(ax3, 'Axes 3');
+
+ax4 = axes(cf, 'Position', pos4);
+% title(ax3, 'Axes 3');
 
 
 
@@ -98,9 +105,9 @@ p4 = plot(clip(time), clip(getValsToPerc('A2.pop')), '-', 'Color', [1 1 1]*0.5, 
 
 
 % Add triangular markers
-maxY = 99; % top y-value for markers
-m1 = plot(x_marker, maxY, 'v', 'MarkerEdgeColor', [0.4 0.4 0.4], 'MarkerFaceColor', color_incubation, 'MarkerSize', 8,DisplayName='Incubation'); % gray triangle
-m2 = plot(0, maxY, 'v', 'MarkerEdgeColor', 'k', 'MarkerFaceColor', color_chase, 'MarkerSize', 8, DisplayName='Chase'); % black triangle
+% maxY = 99; % top y-value for markers
+% m1 = plot(x_marker, maxY, 'v', 'MarkerEdgeColor', [0.4 0.4 0.4], 'MarkerFaceColor', color_incubation, 'MarkerSize', 8,DisplayName='Incubation'); % gray triangle
+% m2 = plot(0, maxY, 'v', 'MarkerEdgeColor', 'k', 'MarkerFaceColor', color_chase, 'MarkerSize', 8, DisplayName='Chase'); % black triangle
 
 
 % Labels and formatting
@@ -119,46 +126,61 @@ xlabel('$t$ (min)', Interpreter='latex');ylabel('Population (\%)', Interpreter='
 
 vd = 2;
 hd = 0.5;
-text(-2, 103, 'Incubation', FontSize=12)
-text(hd, 100 - vd, 'Chase', FontSize=12)
+r = 15;
+text((-7 + x_marker)/2, 103, 'Rigor', FontSize=12, Rotation=r, Interpreter='latex')
+text(x_marker/2, 103, 'Incubation', FontSize=12, Rotation=r, Interpreter='latex')
+text(4, 103, 'Chase', FontSize=12, Rotation=r, Interpreter='latex')
 
-text(10 - hd, tail(getValsToPerc('SRX.pop'), 1) - vd, '$P_{SRX}$', FontSize=12, HorizontalAlignment='right', VerticalAlignment='top', Interpreter='latex')
+text(10 - hd, tail(getValsToPerc('SRX.pop'), 1) - vd, '$P_{S}$', FontSize=12, HorizontalAlignment='right', VerticalAlignment='top', Interpreter='latex')
 text(10 - hd, tail(getValsToPerc('DRX_T.pop'), 1)*1000 - vd, '$P_{D_{T}}$x10$^3$', FontSize=12, HorizontalAlignment='right', VerticalAlignment='top', Interpreter='latex')
-text(10 - hd, tail(getValsToPerc('DRX_D.pop'), 1) + vd, '$P_{DRX_{ADP}}$', FontSize=12, HorizontalAlignment='right', VerticalAlignment='bottom', Interpreter='latex')
-text(10 - hd, tail(getValsToPerc('A2.pop'), 1) + vd, '$P_{A2}$', FontSize=12, HorizontalAlignment='right', VerticalAlignment='bottom', Interpreter='latex')
+text(10 - hd, tail(getValsToPerc('DRX_D.pop'), 1) + vd, '$P_{D_{D}}$', FontSize=12, HorizontalAlignment='right', VerticalAlignment='bottom', Interpreter='latex')
+text(5 - hd, tail(getValsToPerc('A2.pop'), 1) + vd, '$P_{A2}$', FontSize=12, HorizontalAlignment='right', VerticalAlignment='bottom', Interpreter='latex')
 
 
-quiver(x_marker, 95, 0 - x_marker, 0, 'Color', 'k', 'LineWidth', 3, 'MaxHeadSize', 4);
-quiver(0, 95, x_marker, 0, 'Color', 'k', 'LineWidth', 3, 'MaxHeadSize', 4);
+% quiver(x_marker, 95, 0 - x_marker, 0, 'Color', 'k', 'LineWidth', 3, 'MaxHeadSize', 4);
+% quiver(0, 95, x_marker, 0, 'Color', 'k', 'LineWidth', 3, 'MaxHeadSize', 4);
 
 % quiver(0, 95, 10, 0, 0.9, 'Color', 'k', 'LineWidth', 3, 'MaxHeadSize', 1);
 % quiver(10, 95, -10, 0, 1, 'Color', 'k', 'LineWidth', 3, 'MaxHeadSize', 1);
 
+% box on;
+ax = gca; xl = ax.XLim;        yl = ax.YLim;
+
+% Define box corners
+x = [xl(1) xl(2) xl(2) xl(1) xl(1)]; y = [yl(1) yl(1) yl(2) yl(2) yl(1)];
+
+% Draw box using line
+line(x, y, 'Color', 'k', 'LineWidth', 0.25);
 %% Panel B
 % nexttile(2); cla;hold on;
 % nexttile(3, [1 2]);cla;hold on;
 axes(ax2);cla;hold on;
+ax2.TickLabelInterpreter = 'latex';
+text((-7 + x_marker)/2, 103, 'Rigor', FontSize=12, Rotation=r, Interpreter='latex')
+text(x_marker/2, 103, 'Incubation', FontSize=12, Rotation=r, Interpreter='latex')
+text(4, 103, 'Chase', FontSize=12, Rotation=r, Interpreter='latex')
 
-fill([-5 -2 -2 -5], [0 0 100 100], color_rigor, 'EdgeColor', 'none', 'FaceAlpha', 1); % steady state
-fill([-2 0 0 -2], [0 0 100 100], color_incubation, 'EdgeColor', 'none', 'FaceAlpha', 1);   % incubation
+
+fill([-5 x_marker x_marker -5], [0 0 100 100], color_rigor, 'EdgeColor', 'none', 'FaceAlpha', 1); % steady state
+fill([x_marker 0 0 x_marker], [0 0 100 100], color_incubation, 'EdgeColor', 'none', 'FaceAlpha', 1);   % incubation
 % fill([0 5 5 0], [0 0 100 100], color_chase, 'EdgeColor', 'none', 'FaceAlpha', 1);     % chase
 
-p3 = plot(time, getValsToPerc('totalLabel.y'), '-', 'Color', [1 1 1]*0.5, LineWidth=lw*2, DisplayName='$A_{tot}$');
-p1 = plot(time, getValsToPerc('SRXLabel.y'), '-', 'Color', [0 0 0], LineWidth=lw, DisplayName='$A_{SRX}$');
+p3 = plot(time, getValsToPerc('totalLabel.y'), '-', 'Color', [1 1 1]*0, LineWidth=lw, DisplayName='$A_{tot}$');
+p1 = plot(time, getValsToPerc('SRXLabel.y'), ':', 'Color', [0 0 0], LineWidth=lw, DisplayName='$A_{SRX}$');
 p2 = plot(time, getValsToPerc('DRXLabel.y'), '-.', 'Color', [0 0 0], LineWidth=lw, DisplayName='$A_{DRX}$');
 
 
 xlim(xl);ylim([0, 100])
 
-xlabel('Time (min)', Interpreter='latex');ylabel('Fluorescence (\% of max)', Interpreter='latex')
+xlabel('$t$ (min)', Interpreter='latex');ylabel('Fluorescence (\% of max)', Interpreter='latex')
 
 % plot([0 0], [0 max(getValsToPerc('totalLabel.y'))*1.1], 'k--', LineWidth=0.5, DisplayName="$t_0$");
-legend(interpreter = "latex", Orientation="vertical", Location="northeast");
+legend(interpreter = "latex", Orientation="vertical", Location="northeast", AutoUpdate='off');
 
 % Add triangular markers
 maxY = 99; % top y-value for markers
-m1 = plot(x_marker, maxY, 'v', 'MarkerEdgeColor', [0.4 0.4 0.4], 'MarkerFaceColor', color_incubation, 'MarkerSize', 8,DisplayName='Incubation'); % gray triangle
-m2 = plot(0, maxY, 'v', 'MarkerEdgeColor', 'k', 'MarkerFaceColor', color_chase, 'MarkerSize', 8, DisplayName='Chase'); % black triangle
+% m1 = plot(x_marker, maxY, 'v', 'MarkerEdgeColor', [0.4 0.4 0.4], 'MarkerFaceColor', color_incubation, 'MarkerSize', 8,DisplayName='Incubation'); % gray triangle
+% m2 = plot(0, maxY, 'v', 'MarkerEdgeColor', 'k', 'MarkerFaceColor', color_chase, 'MarkerSize', 8, DisplayName='Chase'); % black triangle
 
 
 % fit to ctrl from Julia and Alison
@@ -214,20 +236,50 @@ scale = max(dymget(dl, 'totalLabel.y'));
 
 % p4 = plot(xfit/60, dataResult*scale*100, 'k:', LineWidth=lw*1.2, DisplayName="Fit eq. 1")
 tails = sum(time>0);
-p4 = plot(tail(time, tails), tail(getValsToPerc('timeTable_ATPChase.y'), tails)*getVal('normFactor'), 'k:', LineWidth=lw*1.2, DisplayName="Fit eq. 1");
+% p4 = plot(tail(time, tails), tail(getValsToPerc('timeTable_ATPChase.y'), tails)*getVal('normFactor'), 'k:', LineWidth=lw*1.2, DisplayName="Fit eq. 1");
 
 
-l = legend([p1 p2 p3 p4 m1 m2], ...
-    {'$A_{SRX}$', '$A_{DRX}$', '$A_{tot}$', ['Data'  newline  '(Hooijman)'], ...
+l = legend([p1 p2 p3], ...
+    {'$M_{S}$', '$M_{D}$', '$M_{tot}$'}, ...
+     'Location', 'northeast', Interpreter='latex');
+% l.Position = l.Position + [0.03 0 0 0];
+% box on;
+ax = gca; xl = ax.XLim;        yl = ax.YLim;
+
+% Define box corners
+x = [xl(1) xl(2) xl(2) xl(1) xl(1)]; y = [yl(1) yl(1) yl(2) yl(2) yl(1)];
+
+% Draw box using line
+line(x, y, 'Color', 'k', 'LineWidth', 0.25);
+
+%% panel D
+axes(ax4);cla;hold on;
+% set(gca, 'Clipping', 'off')
+ax4.TickLabelInterpreter = 'latex';
+
+p2 = plot(xfit/60, fitResult1(xfit)*100*scale,'-', 'Color', [1 1 1]*0.5, LineWidth=lw*4, DisplayName='$A_{tot}$');
+p1 = plot(time, getValsToPerc('totalLabel.y'),  'k-',LineWidth=lw);
+
+xlabel('$t$ (min)', Interpreter='latex');ylabel('Fluorescence (\% of max)', Interpreter='latex')
+
+xlim([0 10])
+
+if ~exist('data_src', 'var')
+    error("DATA, INFORMATION MISSING! gIVE mE sOME 'data_src' pls");
+end
+
+l = legend([p1 p2], ...
+    {'$A_{tot}$', ['Data'  data_src], ...
      'Incubation', 'Chase'}, ...
      'Location', 'northeast', Interpreter='latex');
-l.Position = l.Position + [0.03 0 0 0];
-grid on;
+
+box on;
 %% panel C
 % nexttile(5, [1 1]);hold on;
 axes(ax3);cla;hold on;
+ax3.TickLabelInterpreter = 'latex';
 
-bar_cats = ["$A_2$ (eq. 1)", "$A_2$ (eq. 2)", "$A_{SRX}$  / $A_{tot}$", "$P_{SRX}$"];
+bar_cats = ["$C_2$ (Eq. 1)", "$C_2$ (Eq. 2)", "$M_{S}$  / $M_{tot}$", "$P_{S}$"];
 bars = [fitResult1.b, tail(dymget(dl, 'SRX_fraction'), 1), tail(dymget(dl, 'SRX.pop'), 1)]*100;
 bars = [fitResult1.b, fitResult2.b, tail(dymget(dl, 'SRX_fraction'), 1), tail(dymget(dl, 'SRX.pop'), 1)]*100;
 
@@ -237,7 +289,8 @@ x = reordercats(x, bar_cats)
 bar(x, bars, 'FaceColor',[1 1 1]*0.8); ylabel('SRX estimation (\%)', Interpreter='latex')
 ax = gca;  ax.TickLabelInterpreter = 'latex';  
 fontsize(12, 'points')
-% ylim([0 100])
+
+ylim([0 10*ceil(max(bars)/10)])
 
 % Add value labels atop each bar
 for i = 1:length(bars)
@@ -248,6 +301,7 @@ for i = 1:length(bars)
         'FontSize', 12);
 end
 
+box on;
 %% set 12 pts size
 
 fontsize(12, 'points');
