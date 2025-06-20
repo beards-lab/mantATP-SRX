@@ -325,7 +325,7 @@ package mantATP
       Real x = max(0, time);
       parameter Real P1 = 0.66, T1 = 14, P2=0.27, T2 = 144;
     equation
-
+      maxScale = 1;
       y = 1 - P1*(1 - exp(-x/T1)) - P2*(1 - exp(-x/T2));
 
       annotation (experiment(StopTime=600, __Dymola_Algorithm="Dassl"));
@@ -333,6 +333,8 @@ package mantATP
 
     partial block ATPChaseData
       extends Modelica.Blocks.Interfaces.SO;
+      parameter Real offset = 0;
+      Real maxScale;
       annotation (Icon(graphics={
         Polygon(lineColor={192,192,192},
           fillColor={192,192,192},
@@ -374,6 +376,7 @@ package mantATP
         annotation (Placement(transformation(extent={{-10,-10},{10,10}})));
 
     equation
+      maxScale = 1;
       connect(combiTimeTable.y[1], y) annotation (Line(
           points={{11,0},{110,0}},
           color={0,0,127},
@@ -382,13 +385,15 @@ package mantATP
 
     block TimeTable_ATPChaseWalklate1A
       "Chase control from fig 1 A mantATP-ATP from Walklate 2022"
-      extends ATPChaseData;
+      extends ATPChaseData(y(final quantity="Fraction",final unit="1", displayUnit="%"), offset = 0.99);
 
       Real x = max(0, time);
-      parameter Real P1 = 5.6, T1 = 1/0.027, P2=1.6, T2 = 1/0.0038, scale =1/(P1+P2), offset = 0;
-    equation
+      parameter Bodylight.Types.Fraction P1 = 0.056, P2=0.016;
 
-      y = (P1*(exp(-x/T1)) + P2*exp(-x/T2))*scale + offset;
+      parameter Bodylight.Types.Time T1 = 1/0.027, T2 = 1/0.0038;
+    equation
+      maxScale = P1+P2 + offset;
+      y = P1*(exp(-x/T1)) + P2*exp(-x/T2) + offset;
 
       annotation (experiment(StopTime=600, __Dymola_Algorithm="Dassl"));
     end TimeTable_ATPChaseWalklate1A;
@@ -2648,61 +2653,6 @@ post-ratchetted",
             __Dymola_Algorithm="Dassl"));
       end XBCycling_Walklate_SlowATPBinding;
 
-      model XBCycling_Walklate_CalcADPDil
-        "Generating ADP, having a slow-down effect on DRX_D to DRX_T transition"
-        extends XBCycling_Walklate2022Fig1A(
-          tune_a=0.2655897929630535,
-          tune_b=0.094895195683267,
-          tune_c=1.401853257217013,
-          kH(useRateOutput=true),
-          kH_m(
-            k=0.066*tune_c,
-            useRateInput=true,
-            useRateOutput=true),
-          rateDRXDOut(y=if time > -ageTime then inverseProportionalFactor.y
-                 else 0));
-        Modelica.Blocks.Continuous.Integrator integrator
-          annotation (Placement(transformation(extent={{26,-66},{46,-46}})));
-        Modelica.Blocks.Sources.Constant const(k=0.066*tune_c)
-          annotation (Placement(transformation(extent={{40,8},{60,28}})));
-        Bodylight.Blocks.Factors.InverseProportionalFactor inverseProportionalFactor(
-            scalingFactor=1,   enabled=true)
-          annotation (Placement(transformation(extent={{90,-18},{70,2}})));
-        parameter Real IfADP=0.1
-          "Intesity of free mADP as a fraction of mATP intensity";
-        Modelica.Blocks.Math.Division dillutionEffect "Relative to initial"
-          annotation (Placement(transformation(extent={{60,-72},{80,-52}})));
-        Modelica.Blocks.Math.Division a_times_u
-          annotation (Placement(transformation(extent={{90,-82},{110,-62}})));
-        Modelica.Blocks.Sources.Constant K_ADP(k=1)
-          annotation (Placement(transformation(extent={{60,-92},{74,-78}})));
-        Modelica.Blocks.Sources.RealExpression dillutionConst(y=if time > 0
-               then 4 elseif time > -ageTime then 2 + f_load_mix else 1)
-          annotation (Placement(transformation(extent={{24,-96},{38,-82}})));
-        parameter Bodylight.Types.Fraction f_load_mix=2;
-      equation
-        connect(const.y, inverseProportionalFactor.yBase)
-          annotation (Line(points={{61,18},{80,18},{80,-6}}, color={0,0,127}));
-        connect(kH_m.popChangeOutput, integrator.u) annotation (Line(points={{-10,-28},
-                {-18,-28},{-18,-56},{24,-56}},                   color={0,0,127}));
-        connect(integrator.y, dillutionEffect.u1)
-          annotation (Line(points={{47,-56},{58,-56}}, color={0,0,127}));
-        connect(a_times_u.y, inverseProportionalFactor.u) annotation (Line(
-              points={{111,-72},{116,-72},{116,-8},{88,-8}}, color={0,0,127}));
-        connect(dillutionEffect.y, a_times_u.u1) annotation (Line(points={{81,-62},
-                {84,-62},{84,-66},{88,-66}}, color={0,0,127}));
-        connect(K_ADP.y, a_times_u.u2) annotation (Line(points={{74.7,-85},{80,
-                -85},{80,-78},{88,-78}}, color={0,0,127}));
-        connect(dillutionConst.y, dillutionEffect.u2) annotation (Line(points={
-                {38.7,-89},{50,-89},{50,-68},{58,-68}}, color={0,0,127}));
-        annotation (experiment(
-            StartTime=-1500,
-            StopTime=1500,
-            __Dymola_NumberOfIntervals=5000,
-            __Dymola_Algorithm="Dassl"), Diagram(graphics={Line(points={{80,-12},{40,-12},
-                    {46,-8}}, color={28,108,200})}));
-      end XBCycling_Walklate_CalcADPDil;
-
       model XBCycling_Walklate_CalcADPDilAffinity
         "Generating ADP, having a slow-down effect on DRX_D to DRX_T transition, with different ADP / mant-ADP affinity"
         extends XBCycling_Walklate2022Fig1A(
@@ -2792,6 +2742,544 @@ post-ratchetted",
             __Dymola_Algorithm="Dassl"), Diagram(graphics={Line(points={{80,-12},{40,-12},
                     {46,-8}}, color={28,108,200})}));
       end XBCycling_Walklate_CalcADPDilAffinity;
+
+      model XBCycling_Walklate_CalcADPDil
+        "Generating ADP, having a slow-down effect on DRX_D to DRX_T transition"
+        extends XBCycling_Walklate2022Fig1A(
+          rho=0,
+          ageTime(displayUnit="s"),
+          CATP(displayUnit="uM") = 0.25,
+          CmantATP(displayUnit="uM") = 0.01,
+          tune_a=0.30370413816724146,
+          tune_b=0.16050353985950266,
+          tune_c=0.5869834836991373,
+          kH(useRateOutput=true),
+          kH_m(
+            useRateInput=true,
+            useRateOutput=true),
+          rateDRXDOut(y=if time > -ageTime then inverseProportionalFactor.y
+                 else 0));
+        Modelica.Blocks.Continuous.Integrator integrator(
+          k=CMyo,                                        use_reset=false, use_set=false)
+          annotation (Placement(transformation(extent={{26,-68},{46,-48}})));
+        Modelica.Blocks.Sources.Constant const(k=0.066*tune_c)
+          annotation (Placement(transformation(extent={{40,8},{60,28}})));
+        Bodylight.Blocks.Factors.InverseProportionalFactor inverseProportionalFactor(
+            scalingFactor=1,   enabled=true)
+          annotation (Placement(transformation(extent={{90,-18},{70,2}})));
+        parameter Real IfADP=0.1
+          "Intesity of free mADP as a fraction of mATP intensity";
+        Modelica.Blocks.Math.Division dillutionEffect "Relative to initial"
+          annotation (Placement(transformation(extent={{82,-74},{102,-54}})));
+        Modelica.Blocks.Math.Division a_times_u
+          annotation (Placement(transformation(extent={{112,-84},{132,-64}})));
+        Modelica.Blocks.Sources.Constant K_ADP(k=Ki_ADP)
+          annotation (Placement(transformation(extent={{82,-94},{96,-80}})));
+        Modelica.Blocks.Sources.RealExpression dillutionConst(y=if time >= 0 then 4
+               elseif time >= -ageTime then 2 else 1)
+          annotation (Placement(transformation(extent={{24,-96},{38,-82}})));
+        parameter Bodylight.Types.Fraction f_load_mix=2;
+        Bodylight.Blocks.BooleanPulseN booleanPulseN(
+          nperiod=2,
+          period(displayUnit="s") = ageTime,
+          startTime(displayUnit="s") = -ageTime)
+          annotation (Placement(transformation(extent={{108,-40},{100,-32}})));
+        Bodylight.Blocks.Stack stack(startTime(displayUnit="s"), outputVector={0.0,
+              CmantATP*fADP,CATP*fADP})
+          annotation (Placement(transformation(extent={{86,-40},{78,-32}})));
+        Modelica.Blocks.Math.MultiSum multiSum(nu=2)
+          annotation (Placement(transformation(extent={{60,-62},{68,-54}})));
+        parameter Bodylight.Types.Fraction fADP(displayUnit="%")=0.005
+                                                        "Fraction of ADP in ATP solution";
+        parameter Bodylight.Types.Concentration CMyo(displayUnit="nM")=0.0001;
+        parameter Bodylight.Types.Concentration Ki_ADP(displayUnit="uM")=0.001
+          "K_DD ADP inhibition constant";
+      equation
+        connect(const.y, inverseProportionalFactor.yBase)
+          annotation (Line(points={{61,18},{80,18},{80,-6}}, color={0,0,127}));
+        connect(kH_m.popChangeOutput, integrator.u) annotation (Line(points={{-10,-28},
+                {-18,-28},{-18,-58},{24,-58}},                   color={0,0,127}));
+        connect(a_times_u.y, inverseProportionalFactor.u) annotation (Line(
+              points={{133,-74},{138,-74},{138,-8},{88,-8}}, color={0,0,127}));
+        connect(dillutionEffect.y, a_times_u.u1) annotation (Line(points={{103,-64},{106,
+                -64},{106,-68},{110,-68}},   color={0,0,127}));
+        connect(K_ADP.y, a_times_u.u2) annotation (Line(points={{96.7,-87},{102,-87},{
+                102,-80},{110,-80}},     color={0,0,127}));
+        connect(dillutionConst.y, dillutionEffect.u2) annotation (Line(points={{38.7,-89},
+                {72,-89},{72,-70},{80,-70}},            color={0,0,127}));
+        connect(integrator.y, multiSum.u[1]) annotation (Line(points={{47,-58},{54,-58},
+                {54,-58.7},{60,-58.7}}, color={0,0,127}));
+        connect(multiSum.y, dillutionEffect.u1)
+          annotation (Line(points={{68.68,-58},{80,-58}}, color={0,0,127}));
+        connect(booleanPulseN.y, stack.u) annotation (Line(points={{99.6,-36},{90,-36},
+                {90,-36.08},{85.84,-36.08}}, color={255,0,255}));
+        connect(stack.y, multiSum.u[2]) annotation (Line(points={{77.6,-36},{66,-36},{
+                66,-48},{56,-48},{56,-57.3},{60,-57.3}}, color={0,0,127}));
+        annotation (experiment(
+            StartTime=-1500,
+            StopTime=1500,
+            __Dymola_NumberOfIntervals=1500,
+            Tolerance=1e-06,
+            __Dymola_Algorithm="Cvode"), Diagram(graphics={Line(points={{80,-12},{40,-12},
+                    {46,-8}}, color={28,108,200})}));
+      end XBCycling_Walklate_CalcADPDil;
+
+      model XBCycling_Walklate_CalcADPDil_kADP01
+        extends XBCycling_Walklate_CalcADPDil(
+          Ki_ADP(displayUnit="uM") = 0.0001,
+          tune_a=0.28952339266649135,
+          tune_b=0.09517699254373364,
+          tune_c=2.0500690583352084);
+      end XBCycling_Walklate_CalcADPDil_kADP01;
+
+      model XBCycling_Walklate_CalcADPDil_kADP02
+        extends XBCycling_Walklate_CalcADPDil(
+          K_ADP(k=0.2),
+          tune_a=0.3192617765196558,
+          tune_b=0.20151801261682287,
+          tune_c=0.39082746183399425,
+          timeTable_ATPChase(offset=0.04206972729281415)
+                                      );
+        Modelica.Blocks.Math.Gain gain(k=100)
+          annotation (Placement(transformation(extent={{28,78},{48,98}})));
+      equation
+        connect(integratedSquaredDeviation.y, gain.u)
+          annotation (Line(points={{12.4,88},{26,88}}, color={0,0,127}));
+      end XBCycling_Walklate_CalcADPDil_kADP02;
+
+      model XBCycling_Walklate_CalcADPDil_kADP1
+        extends XBCycling_Walklate_CalcADPDil;
+      end XBCycling_Walklate_CalcADPDil_kADP1;
+
+      model XBCycling_Walklate_CalcADPDil_kADP10
+        extends XBCycling_Walklate_CalcADPDil(
+          Ki_ADP=0.01,
+          tune_a=0.31069937323442376,
+          tune_b=0.1945208671571801,
+          tune_c=0.4279617850901371);
+      end XBCycling_Walklate_CalcADPDil_kADP10;
+
+      model XBCycling_Walklate_CalcADPDil_kADP100
+        extends XBCycling_Walklate_CalcADPDil(
+          Ki_ADP=0.1,
+          tune_a=0.30256873618474944,
+          tune_b=0.19238583122511393,
+          tune_c=0.40961296627141086
+                                   );
+      end XBCycling_Walklate_CalcADPDil_kADP100;
+
+      model XBCycling_Walklate_CalcADPDil_kADP01_ADP5
+        extends XBCycling_Walklate_CalcADPDil_kADP01(
+                      fADP=0.05,
+          tune_a=0.2787141746399196,
+          tune_b=0.0404736485818706,
+          tune_c=14.102698115712057);
+      end XBCycling_Walklate_CalcADPDil_kADP01_ADP5;
+
+    model XBCycling_Walklate_CalcADPDil_kADP1_ADP5
+      extends XBCycling_Walklate_CalcADPDil_kADP1(fADP=0.05,    tune_a=0.2848234228228876,
+        tune_b=0.0761985349130673,
+        tune_c=1.7351668176631261);
+    end XBCycling_Walklate_CalcADPDil_kADP1_ADP5;
+
+    model XBCycling_Walklate_CalcADPDil_kADP10_ADP5
+      extends XBCycling_Walklate_CalcADPDil_kADP10(fADP=0.05,
+        tune_a=0.2981978285774345,
+        tune_b=0.1629629939655471,
+        tune_c=0.5392855445983218);
+    end XBCycling_Walklate_CalcADPDil_kADP10_ADP5;
+
+      model XBCycling_Walklate_CalcADPDil_kADP01_ADP01
+        extends XBCycling_Walklate_CalcADPDil_kADP01(fADP=0.001,
+              tune_a=0.2961589569046533,
+          tune_b=0.137288406899978,
+          tune_c=0.8848250885534156);
+      end XBCycling_Walklate_CalcADPDil_kADP01_ADP01;
+
+      model XBCycling_Walklate_CalcADPDil_kADP1_ADP01
+        "Optimized model parameters of mantATP.LabelLib.Experiments.XBCycling_Walklate_CalcADPDil_kADP1_ADP01"
+        extends
+          mantATP.LabelLib.Experiments.XBCycling_Walklate_CalcADPDil_kADP1(
+            fADP=0.001,
+          tune_a=0.3023170951059688,
+          tune_b=0.1820706094286031,
+          tune_c=0.4524206918805784);
+
+        /* Automatically generated at Fri Jun 20 21:06:25 2025 */
+        /*
+    The final optimization result was as follows:
+    
+    Evaluation #20
+        4.871447476444905e-7      min    integratedSquaredDeviation.y1
+    __________________________________________________
+        4.871447476444905e-7     Maximum of criteria
+    
+    **************************************************
+    
+    The optimized Modelica parameters were found by running the following optimization setup:
+    
+    Optimization.Tasks.ModelOptimization.run22(
+        Optimization.Internal.Version.V22.ModelOptimizationSetup(
+            modelName="mantATP.LabelLib.Experiments.XBCycling_Walklate_CalcADPDil_kADP1_ADP01",
+            plotScript="",
+            saveSetup=true,
+            saveSetupFilename="OptimizationLastRunModel.mo",
+            convertSetup=false,
+            askForTunerReUse=true,
+            tuner=
+                Optimization.Internal.Version.V22.Tuner(
+                    UseTunerMatrixForDiscreteValues=false,
+                    tunerParameters=
+                        {
+                            Optimization.Internal.Version.V22.TunerParameter(
+                                name="tune_a",
+                                active=true,
+                                Value=0.2961589569046533,
+                                min=-10,
+                                max=10,
+                                equidistant=0,
+                                scaleToBounds=false,
+                                discreteValues=fill(0,0),
+                                unit=""),
+                            Optimization.Internal.Version.V22.TunerParameter(
+                                name="tune_b",
+                                active=true,
+                                Value=0.137288406899978,
+                                min=-10,
+                                max=10,
+                                equidistant=0,
+                                scaleToBounds=false,
+                                discreteValues=fill(0,0),
+                                unit=""),
+                            Optimization.Internal.Version.V22.TunerParameter(
+                                name="tune_c",
+                                active=true,
+                                Value=0.8848250885534156,
+                                min=-10,
+                                max=10,
+                                equidistant=0,
+                                scaleToBounds=false,
+                                discreteValues=fill(0,0),
+                                unit="")
+                        },
+                    tunerMatrix=
+                        zeros(0,1)),
+            criteria=
+                {
+                    Optimization.Internal.Version.V22.Criterion(
+                        name="integratedSquaredDeviation.y1",
+                        active=true,
+                        usage=Optimization.Internal.Version.V22.Types.CriterionUsage.Minimize,
+                        demand=1,
+                        unit="s")
+                },
+            preferences=
+                Optimization.Internal.Version.V22.Preferences(
+                    optimizationOptions=
+                        Optimization.Internal.Version.V22.OptimizationOptions(
+                            method=Optimization.Internal.Version.V22.Types.OptimizationMethod.sqp,
+                            ObjectiveFunctionType=Optimization.Internal.Version.V22.Types.ObjectiveFunctionType.Max,
+                            OptTol=9.9999999999999995e-7,
+                            maxEval=1000,
+                            evalBestFinal=false,
+                            saveBest=true,
+                            saveHistory=true,
+                            listFilename="OptimizationLog.log",
+                            listOn=true,
+                            listOnline=true,
+                            listIncrement=100,
+                            numberOfShownDigits=3,
+                            onPlace=true,
+                            listTuners=true,
+                            GaPopSize=10,
+                            GaNGen=100,
+                            GridBlock=50),
+                    simulationOptions=
+                        Optimization.Internal.Version.V22.SimulationOptions(
+                            startTime=-300,
+                            stopTime=1.5e+3,
+                            outputInterval=0,
+                            numberOfIntervals=1500,
+                            integrationMethod=Optimization.Internal.Version.V22.Types.IntegrationMethod.Cvode,
+                            integrationTolerance=9.9999999999999995e-7,
+                            fixedStepSize=0,
+                            autoLoadResults=true,
+                            useDsFinal=true,
+                            translateModel=false,
+                            setCriteriaSimulationFailed=true,
+                            CriteriaSimulationFailedValue=1e+6,
+                            simulationMode=Optimization.Internal.Version.V22.Types.SimulationMode.Single,
+                            parallelizationMode=Optimization.Internal.Version.V22.Types.ParallelizationMode.None,
+                            numberOfThreads=0,
+                            copyFiles=
+                            fill("",0)),
+                    sensitivityOptions=
+                        Optimization.Internal.Version.V22.SensitivityOptions(
+                            TypeOfSensitivityComputation=Optimization.Internal.Version.V22.Types.SensitivityMethod.ExternalDifferencesSymmetric,
+                            automaticSensitivityTolerance=true,
+                            sensitivityTolerance=9.9999999999999995e-7))))
+ */
+        annotation (Documentation(info="<html><p>This class was automatically generated by the Optimization Library. It includes an inherited class with optimized tuner values. More information is found in the text layer of the class.</p></html>"));
+      end XBCycling_Walklate_CalcADPDil_kADP1_ADP01;
+
+      model XBCycling_Walklate_CalcADPDil_kADP10_ADP01
+        "Optimized model parameters of mantATP.LabelLib.Experiments.XBCycling_Walklate_CalcADPDil_kADP10_ADP01"
+        extends
+          mantATP.LabelLib.Experiments.XBCycling_Walklate_CalcADPDil_kADP10(
+            fADP=0.001,
+          tune_a=0.3030936499331026,
+          tune_b=0.192069297470121,
+          tune_c=0.4130306071237762);
+
+        /* Automatically generated at Fri Jun 20 21:08:14 2025 */
+        /*
+    The final optimization result was as follows:
+    
+    Evaluation #8
+        2.7252208681999349e-8     min    integratedSquaredDeviation.y1
+    __________________________________________________
+        2.7252208681999349e-8    Maximum of criteria
+    
+    **************************************************
+    
+    The optimized Modelica parameters were found by running the following optimization setup:
+    
+    Optimization.Tasks.ModelOptimization.run22(
+        Optimization.Internal.Version.V22.ModelOptimizationSetup(
+            modelName="mantATP.LabelLib.Experiments.XBCycling_Walklate_CalcADPDil_kADP10_ADP01",
+            plotScript="",
+            saveSetup=true,
+            saveSetupFilename="OptimizationLastRunModel.mo",
+            convertSetup=false,
+            askForTunerReUse=true,
+            tuner=
+                Optimization.Internal.Version.V22.Tuner(
+                    UseTunerMatrixForDiscreteValues=false,
+                    tunerParameters=
+                        {
+                            Optimization.Internal.Version.V22.TunerParameter(
+                                name="tune_a",
+                                active=true,
+                                Value=0.3023170951059688,
+                                min=-10,
+                                max=10,
+                                equidistant=0,
+                                scaleToBounds=false,
+                                discreteValues=fill(0,0),
+                                unit=""),
+                            Optimization.Internal.Version.V22.TunerParameter(
+                                name="tune_b",
+                                active=true,
+                                Value=0.1820706094286031,
+                                min=-10,
+                                max=10,
+                                equidistant=0,
+                                scaleToBounds=false,
+                                discreteValues=fill(0,0),
+                                unit=""),
+                            Optimization.Internal.Version.V22.TunerParameter(
+                                name="tune_c",
+                                active=true,
+                                Value=0.4524206918805784,
+                                min=-10,
+                                max=10,
+                                equidistant=0,
+                                scaleToBounds=false,
+                                discreteValues=fill(0,0),
+                                unit="")
+                        },
+                    tunerMatrix=
+                        zeros(0,1)),
+            criteria=
+                {
+                    Optimization.Internal.Version.V22.Criterion(
+                        name="integratedSquaredDeviation.y1",
+                        active=true,
+                        usage=Optimization.Internal.Version.V22.Types.CriterionUsage.Minimize,
+                        demand=1,
+                        unit="s")
+                },
+            preferences=
+                Optimization.Internal.Version.V22.Preferences(
+                    optimizationOptions=
+                        Optimization.Internal.Version.V22.OptimizationOptions(
+                            method=Optimization.Internal.Version.V22.Types.OptimizationMethod.sqp,
+                            ObjectiveFunctionType=Optimization.Internal.Version.V22.Types.ObjectiveFunctionType.Max,
+                            OptTol=9.9999999999999995e-7,
+                            maxEval=1000,
+                            evalBestFinal=false,
+                            saveBest=true,
+                            saveHistory=true,
+                            listFilename="OptimizationLog.log",
+                            listOn=true,
+                            listOnline=true,
+                            listIncrement=100,
+                            numberOfShownDigits=3,
+                            onPlace=true,
+                            listTuners=true,
+                            GaPopSize=10,
+                            GaNGen=100,
+                            GridBlock=50),
+                    simulationOptions=
+                        Optimization.Internal.Version.V22.SimulationOptions(
+                            startTime=-300,
+                            stopTime=1.5e+3,
+                            outputInterval=0,
+                            numberOfIntervals=1500,
+                            integrationMethod=Optimization.Internal.Version.V22.Types.IntegrationMethod.Cvode,
+                            integrationTolerance=9.9999999999999995e-7,
+                            fixedStepSize=0,
+                            autoLoadResults=true,
+                            useDsFinal=true,
+                            translateModel=false,
+                            setCriteriaSimulationFailed=true,
+                            CriteriaSimulationFailedValue=1e+6,
+                            simulationMode=Optimization.Internal.Version.V22.Types.SimulationMode.Single,
+                            parallelizationMode=Optimization.Internal.Version.V22.Types.ParallelizationMode.None,
+                            numberOfThreads=0,
+                            copyFiles=
+                            fill("",0)),
+                    sensitivityOptions=
+                        Optimization.Internal.Version.V22.SensitivityOptions(
+                            TypeOfSensitivityComputation=Optimization.Internal.Version.V22.Types.SensitivityMethod.ExternalDifferencesSymmetric,
+                            automaticSensitivityTolerance=true,
+                            sensitivityTolerance=9.9999999999999995e-7))))
+ */
+        annotation (Documentation(info="<html><p>This class was automatically generated by the Optimization Library. It includes an inherited class with optimized tuner values. More information is found in the text layer of the class.</p></html>"));
+      end XBCycling_Walklate_CalcADPDil_kADP10_ADP01;
+
+      model XBCycling_Walklate_CalcADPDilHooijman
+        "Generating ADP, having a slow-down effect on DRX_D to DRX_T transition"
+        extends XBCycling(
+          kH(useRateOutput=true),
+          kH_m(
+            useRateInput=true,
+            useRateOutput=true),
+          rateDRXDOut(y=if time > -ageTime then inverseProportionalFactor.y
+                 else 0));
+        Modelica.Blocks.Continuous.Integrator integrator
+          annotation (Placement(transformation(extent={{26,-66},{46,-46}})));
+        Modelica.Blocks.Sources.Constant const(k=0.066*tune_c)
+          annotation (Placement(transformation(extent={{40,8},{60,28}})));
+        Bodylight.Blocks.Factors.InverseProportionalFactor inverseProportionalFactor(
+            scalingFactor=1,   enabled=true)
+          annotation (Placement(transformation(extent={{90,-18},{70,2}})));
+        parameter Real IfADP=0.1
+          "Intesity of free mADP as a fraction of mATP intensity";
+        Modelica.Blocks.Math.Division dillutionEffect "Relative to initial"
+          annotation (Placement(transformation(extent={{60,-72},{80,-52}})));
+        Modelica.Blocks.Math.Division a_times_u
+          annotation (Placement(transformation(extent={{90,-82},{110,-62}})));
+        Modelica.Blocks.Sources.Constant K_ADP(k=1)
+          annotation (Placement(transformation(extent={{60,-92},{74,-78}})));
+        Modelica.Blocks.Sources.RealExpression dillutionConst(y=if time > 0 then 4
+               elseif time > -ageTime then 2 else 1)
+          annotation (Placement(transformation(extent={{24,-96},{38,-82}})));
+        parameter Bodylight.Types.Fraction f_load_mix=2;
+      equation
+        connect(const.y, inverseProportionalFactor.yBase)
+          annotation (Line(points={{61,18},{80,18},{80,-6}}, color={0,0,127}));
+        connect(kH_m.popChangeOutput, integrator.u) annotation (Line(points={{-10,-28},
+                {-18,-28},{-18,-56},{24,-56}},                   color={0,0,127}));
+        connect(integrator.y, dillutionEffect.u1)
+          annotation (Line(points={{47,-56},{58,-56}}, color={0,0,127}));
+        connect(a_times_u.y, inverseProportionalFactor.u) annotation (Line(
+              points={{111,-72},{116,-72},{116,-8},{88,-8}}, color={0,0,127}));
+        connect(dillutionEffect.y, a_times_u.u1) annotation (Line(points={{81,-62},
+                {84,-62},{84,-66},{88,-66}}, color={0,0,127}));
+        connect(K_ADP.y, a_times_u.u2) annotation (Line(points={{74.7,-85},{80,
+                -85},{80,-78},{88,-78}}, color={0,0,127}));
+        connect(dillutionConst.y, dillutionEffect.u2) annotation (Line(points={
+                {38.7,-89},{50,-89},{50,-68},{58,-68}}, color={0,0,127}));
+        annotation (experiment(
+            StartTime=-1500,
+            StopTime=1500,
+            __Dymola_NumberOfIntervals=5000,
+            __Dymola_Algorithm="Dassl"), Diagram(graphics={Line(points={{80,-12},{40,-12},
+                    {46,-8}}, color={28,108,200})}));
+      end XBCycling_Walklate_CalcADPDilHooijman;
+
+      model XBCycling_CalcRho
+        extends XBCycling(
+          CATP=1,
+          CmantATP=1 - (0.66 + 0.27),
+          tune_a=0.5294380431849212,
+          tune_b=0.0936276241417932,
+          tune_c=1.0886986660156932);
+        annotation (experiment(
+            StartTime=-300,
+            StopTime=1000,
+            __Dymola_NumberOfIntervals=1500,
+            __Dymola_Algorithm="Dassl"));
+      end XBCycling_CalcRho;
+
+      model XBCycling_Walklate_CalcADPDilHooijmanKInf
+        "Generating ADP, having a slow-down effect on DRX_D to DRX_T transition"
+        extends XBCycling(
+          CATP(displayUnit="mmol/l") = 1.0,
+          CmantATP(displayUnit="mmol/l") = 0.07,
+          kH(useRateOutput=true),
+          kH_m(
+            useRateInput=true,
+            useRateOutput=true),
+          rateDRXDOut(y=if time > -ageTime then inverseProportionalFactor.y
+                 else 0),
+          offset=0.0003088442661046059,
+          tune_a=0.5316918755684544,
+          tune_b=0.09369064341187563,
+          tune_c=1.0614459881357723
+                        );
+        Modelica.Blocks.Continuous.Integrator integrator
+          annotation (Placement(transformation(extent={{26,-66},{46,-46}})));
+        Modelica.Blocks.Sources.Constant const(k=0.066*tune_c)
+          annotation (Placement(transformation(extent={{40,8},{60,28}})));
+        Bodylight.Blocks.Factors.InverseProportionalFactor inverseProportionalFactor(
+            scalingFactor=1,   enabled=true)
+          annotation (Placement(transformation(extent={{90,-18},{70,2}})));
+        parameter Real IfADP=0.1
+          "Intesity of free mADP as a fraction of mATP intensity";
+        Modelica.Blocks.Math.Division dillutionEffect "Relative to initial"
+          annotation (Placement(transformation(extent={{60,-72},{80,-52}})));
+        Modelica.Blocks.Math.Division a_times_u
+          annotation (Placement(transformation(extent={{90,-82},{110,-62}})));
+        Modelica.Blocks.Sources.Constant K_ADP(k=10e9)
+          annotation (Placement(transformation(extent={{60,-92},{74,-78}})));
+        Modelica.Blocks.Sources.RealExpression dillutionConst(y=if time > 0 then 4
+               elseif time > -ageTime then 2 else 1)
+          annotation (Placement(transformation(extent={{24,-96},{38,-82}})));
+        parameter Bodylight.Types.Fraction f_load_mix=2;
+      equation
+        connect(const.y, inverseProportionalFactor.yBase)
+          annotation (Line(points={{61,18},{80,18},{80,-6}}, color={0,0,127}));
+        connect(kH_m.popChangeOutput, integrator.u) annotation (Line(points={{-10,-28},
+                {-18,-28},{-18,-56},{24,-56}},                   color={0,0,127}));
+        connect(integrator.y, dillutionEffect.u1)
+          annotation (Line(points={{47,-56},{58,-56}}, color={0,0,127}));
+        connect(a_times_u.y, inverseProportionalFactor.u) annotation (Line(
+              points={{111,-72},{116,-72},{116,-8},{88,-8}}, color={0,0,127}));
+        connect(dillutionEffect.y, a_times_u.u1) annotation (Line(points={{81,-62},
+                {84,-62},{84,-66},{88,-66}}, color={0,0,127}));
+        connect(K_ADP.y, a_times_u.u2) annotation (Line(points={{74.7,-85},{80,
+                -85},{80,-78},{88,-78}}, color={0,0,127}));
+        connect(dillutionConst.y, dillutionEffect.u2) annotation (Line(points={
+                {38.7,-89},{50,-89},{50,-68},{58,-68}}, color={0,0,127}));
+        annotation (experiment(
+            StartTime=-1500,
+            StopTime=1500,
+            __Dymola_NumberOfIntervals=5000,
+            __Dymola_Algorithm="Dassl"), Diagram(graphics={Line(points={{80,-12},{40,-12},
+                    {46,-8}}, color={28,108,200})}));
+      end XBCycling_Walklate_CalcADPDilHooijmanKInf;
+
+      model XBCycling_Walklate_CalcADPDil_kADP02_opt
+        extends XBCycling_Walklate_CalcADPDil_kADP02(
+          tune_c=1.2517033172698397*tune2_c/100,
+          tune_b=0.11133613085770364*tune2_b/100,
+          tune_a=0.2127979395705147*tune2_a/100);
+        parameter Real tune2_a=100;
+        parameter Real tune2_b=100;
+        parameter Real tune2_c=100;
+      end XBCycling_Walklate_CalcADPDil_kADP02_opt;
     end Experiments;
 
     package Figures
@@ -2848,11 +3336,7 @@ post-ratchetted",
       Modelica.Blocks.Sources.RealExpression rateDRXDOut(y=if time > -ageTime
              then 0.066*tune_c else 0)
         annotation (Placement(transformation(extent={{36,-20},{16,0}})));
-    equation
-      connect(rateDRXDOut.y, kH_m.rateInput) annotation (Line(points={{15,-10},
-              {14,-10},{14,-28},{10,-28}}, color={0,0,127}));
-    public
-      parameter Real offset=0 "Offsets of output signals";
+    //  parameter Real offset=0 "Offsets of output signals";
       replaceable Data.TimeTable_ATPChaseHooijman2011 timeTable_ATPChase
         constrainedby Data.ATPChaseData
         annotation (Placement(transformation(extent={{-60,80},{-40,100}})));
@@ -2880,8 +3364,8 @@ post-ratchetted",
       parameter Bodylight.Types.Concentration CmantATP=0.25;
       parameter Bodylight.Types.Concentration CATP=4
         "Unlabeled ATP concentration";
-      Modelica.Blocks.Sources.RealExpression labelDRX_D(y=if time > 0 then
-            CmantATP/CATP elseif time < 0 and time > -ageTime then 1 else 0)
+      Modelica.Blocks.Sources.RealExpression labelDRX_D(y=if time > 0 then rho
+             elseif time < 0 and time > -ageTime then 1 else 0)
         annotation (Placement(transformation(extent={{-24,-20},{-4,0}})));
     public
       parameter Real k=0.016666666666666666;
@@ -2922,7 +3406,7 @@ post-ratchetted",
       Bodylight.Population.LabeledPopulation.Components.StateCompartment A2(
           pop_start=0.4, nPorts=1) "Attached state"
         annotation (Placement(transformation(extent={{-60,-100},{-40,-80}})));
-      parameter Modelica.Units.SI.Time ageTime=120.0;
+      parameter Modelica.Units.SI.Time ageTime(displayUnit="s")=120;
       Modelica.Blocks.Sources.RealExpression totalLabel(y=SRXLabel.y + DRXLabel.y +
             A2.labelAmount)
         annotation (Placement(transformation(extent={{-100,80},{-80,100}})));
@@ -2937,13 +3421,18 @@ post-ratchetted",
       parameter Real k_pb=0;
       Real totalLabel_PB=totalLabel.y*photobleaching
         "Total label including photobleaching";
+      parameter Real background=0;
+      parameter Real rho=CmantATP/CATP;
     equation
       der(photobleaching) = if time > -ageTime then -photobleaching*k_pb else 0;
-      totalLabelNorm = (totalLabel_PB + offset)/normFactor;
-      when time > 0 then
-        normFactor = totalLabel_PB + offset;
+      totalLabelNorm = totalLabel_PB/normFactor + timeTable_ATPChase.offset;
+      when time >= 0 then
+        normFactor = (totalLabel_PB + background)/(timeTable_ATPChase.maxScale - timeTable_ATPChase.offset);
         SRX_fraction = SRXLabel.y/totalLabel.y;
       end when;
+
+      connect(rateDRXDOut.y, kH_m.rateInput) annotation (Line(points={{15,-10},
+              {14,-10},{14,-28},{10,-28}}, color={0,0,127}));
       connect(SRX.lpop[1], k_srx_m.lpop_a) annotation (Line(
           points={{-40.2,40.15},{-30,40.15},{-30,30}},
           color={107,45,134},
@@ -3006,12 +3495,14 @@ post-ratchetted",
         DRX_D(pop_start=max(1e-6, 0.95 - A2.pop_start)),
         SRX(pop_start=1e-6),
         kH_m(useRateInput=true),
-        CmantATP=0,
-        offset=0,
         ageTime=60.0,
         redeclare Data.TimeTable_ATPChaseWalklate1A timeTable_ATPChase,
         A2(pop_start=0.4));
-      annotation (Documentation(info="<html><p>This class was automatically generated by the Optimization Library. It includes an inherited class with optimized tuner values. More information is found in the text layer of the class.</p></html>"));
+      annotation (Documentation(info="<html><p>This class was automatically generated by the Optimization Library. It includes an inherited class with optimized tuner values. More information is found in the text layer of the class.</p></html>"),
+          experiment(
+          StartTime=-300,
+          StopTime=1000,
+          __Dymola_Algorithm="Dassl"));
     end XBCycling_Walklate2022Fig1A;
 
     model XBCycling_opt4

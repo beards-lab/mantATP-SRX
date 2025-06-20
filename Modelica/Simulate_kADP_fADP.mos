@@ -1,0 +1,37 @@
+﻿// cd("c:\home\git\mantATP-SRX\ModelResults")
+pop_start = 1e-3;
+pop_start = .4;
+i = 60;
+suffix := String(integer(i*1000));
+modelNames = 
+  {"mantATP.LabelLib.Experiments.XBCycling_Walklate_CalcADPDil_kADP01_ADP5",
+    "mantATP.LabelLib.Experiments.XBCycling_Walklate_CalcADPDil_kADP1_ADP5",
+    "mantATP.LabelLib.Experiments.XBCycling_Walklate_CalcADPDil_kADP10_ADP5",
+    "mantATP.LabelLib.Experiments.XBCycling_Walklate_CalcADPDil_kADP01_ADP01",
+    "mantATP.LabelLib.Experiments.XBCycling_Walklate_CalcADPDil_kADP1_ADP01",
+    "mantATP.LabelLib.Experiments.XBCycling_Walklate_CalcADPDil_kADP10_ADP01",
+    "mantATP.LabelLib.Experiments.XBCycling_Walklate_CalcADPDil_kADP01",
+    "mantATP.LabelLib.Experiments.XBCycling_Walklate_CalcADPDil_kADP1",
+    "mantATP.LabelLib.Experiments.XBCycling_Walklate_CalcADPDil_kADP10"    
+    }
+
+for modelName in modelNames loop
+  for i in {.2, .5, 1, 2, 5, 10, 30, 60.0000,  120.0000,  300.0000,  900.0000} loop  
+  // Generate filename suffix  
+      suffix := String(integer(i*1000));  
+      filename := modelName + "_" + suffix;  
+    
+    // Run the simulation with specified parameter and output filename  
+    simulateExtendedModel(  
+      modelName,  
+      startTime=-300 - i,
+    numberOfIntervals=1500,  
+    method="cvode",
+    tolerance=1e-6,
+      stopTime=1000, // or your desired simulation duration  
+      resultFile=filename, 
+    initialNames = {"ageTime"},
+      initialValues={i}  
+    );  
+  end for;
+end for;

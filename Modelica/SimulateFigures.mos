@@ -7,6 +7,7 @@ modelName = "mantATP.LabelLib.Figures.Walklate_CalcMantADP";
 modelName = "mantATP.LabelLib.Figures.Walklate_CalcADP";
 modelName = "mantATP.LabelLib.Figures.DefaultH";
 modelName = "mantATP.LabelLib.Figures.DefaultW";
+modelName = "mantATP.LabelLib.Experiments.XBCycling_Walklate_CalcADPDil_kADP02";
 
 
  for pop_start in {1e-3, 0.2, 0.4, 0.6, 0.8, 0.95} loop  
@@ -26,7 +27,7 @@ modelName = "mantATP.LabelLib.Figures.DefaultW";
       modelName,  
       startTime=-600 - i,
       numberOfIntervals=5000,  
-      stopTime=600, // or your desired simulation duration  
+      stopTime=1000, // or your desired simulation duration  
       resultFile=filename, 
       initialNames = {"ageTime", "A2.pop_start"},
       initialValues={i, pop_start}  

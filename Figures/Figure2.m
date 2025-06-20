@@ -131,11 +131,17 @@ text((-7 + x_marker)/2, 103, 'Rigor', FontSize=12, Rotation=r, Interpreter='late
 text(x_marker/2, 103, 'Incubation', FontSize=12, Rotation=r, Interpreter='latex')
 text(4, 103, 'Chase', FontSize=12, Rotation=r, Interpreter='latex')
 
-text(10 - hd, tail(getValsToPerc('SRX.pop'), 1) - vd, '$P_{S}$', FontSize=12, HorizontalAlignment='right', VerticalAlignment='top', Interpreter='latex')
-text(10 - hd, tail(getValsToPerc('DRX_T.pop'), 1)*1000 - vd, '$P_{D_{T}}$x10$^3$', FontSize=12, HorizontalAlignment='right', VerticalAlignment='top', Interpreter='latex')
-text(10 - hd, tail(getValsToPerc('DRX_D.pop'), 1) + vd, '$P_{D_{D}}$', FontSize=12, HorizontalAlignment='right', VerticalAlignment='bottom', Interpreter='latex')
-text(5 - hd, tail(getValsToPerc('A2.pop'), 1) + vd, '$P_{A2}$', FontSize=12, HorizontalAlignment='right', VerticalAlignment='bottom', Interpreter='latex')
-
+if labelPosVariant == 1
+    text(10 - hd, tail(getValsToPerc('SRX.pop'), 1) - vd, '$P_{S}$', FontSize=12, HorizontalAlignment='right', VerticalAlignment='top', Interpreter='latex')
+    text(10 - hd, tail(getValsToPerc('DRX_T.pop'), 1)*1000 - vd, '$P_{D_{T}}$x10$^3$', FontSize=12, HorizontalAlignment='right', VerticalAlignment='top', Interpreter='latex')
+    text(10 - hd, tail(getValsToPerc('DRX_D.pop'), 1) + vd, '$P_{D_{D}}$', FontSize=12, HorizontalAlignment='right', VerticalAlignment='bottom', Interpreter='latex')
+    text(5 - hd, tail(getValsToPerc('A2.pop'), 1) + vd, '$P_{A2}$', FontSize=12, HorizontalAlignment='right', VerticalAlignment='bottom', Interpreter='latex')
+elseif labelPosVariant == 2
+    text(10 - hd, tail(getValsToPerc('SRX.pop'), 1) + 2*vd, '$P_{S}$', FontSize=12, HorizontalAlignment='right', VerticalAlignment='bottom', Interpreter='latex')
+    text(0, 30, '$P_{D_{T}}$x10$^3$', FontSize=12, HorizontalAlignment='left', VerticalAlignment='bottom', Interpreter='latex')
+    text(10 - hd, tail(getValsToPerc('DRX_D.pop'), 1) + vd, '$P_{D_{D}}$', FontSize=12, HorizontalAlignment='right', VerticalAlignment='bottom', Interpreter='latex')
+    text(-4, head(getValsToPerc('A2.pop'), 1) - vd, '$P_{A2}$', FontSize=12, HorizontalAlignment='left', VerticalAlignment='top', Interpreter='latex')    
+end
 
 % quiver(x_marker, 95, 0 - x_marker, 0, 'Color', 'k', 'LineWidth', 3, 'MaxHeadSize', 4);
 % quiver(0, 95, x_marker, 0, 'Color', 'k', 'LineWidth', 3, 'MaxHeadSize', 4);
@@ -165,9 +171,9 @@ fill([-5 x_marker x_marker -5], [0 0 100 100], color_rigor, 'EdgeColor', 'none',
 fill([x_marker 0 0 x_marker], [0 0 100 100], color_incubation, 'EdgeColor', 'none', 'FaceAlpha', 1);   % incubation
 % fill([0 5 5 0], [0 0 100 100], color_chase, 'EdgeColor', 'none', 'FaceAlpha', 1);     % chase
 
-p3 = plot(time, getValsToPerc('totalLabel.y'), '-', 'Color', [1 1 1]*0, LineWidth=lw, DisplayName='$A_{tot}$');
-p1 = plot(time, getValsToPerc('SRXLabel.y'), ':', 'Color', [0 0 0], LineWidth=lw, DisplayName='$A_{SRX}$');
-p2 = plot(time, getValsToPerc('DRXLabel.y'), '-.', 'Color', [0 0 0], LineWidth=lw, DisplayName='$A_{DRX}$');
+p3 = plot(time, getValsToPerc('totalLabel.y'), '-', 'Color', [1 1 1]*0, LineWidth=lw, DisplayName='$M_{tot}$');
+p1 = plot(time, getValsToPerc('SRXLabel.y'), ':', 'Color', [0 0 0], LineWidth=lw, DisplayName='$M_{SRX}$');
+p2 = plot(time, getValsToPerc('DRXLabel.y'), '-.', 'Color', [0 0 0], LineWidth=lw, DisplayName='$M_{DRX}$');
 
 
 xlim(xl);ylim([0, 100])
@@ -190,9 +196,11 @@ maxY = 99; % top y-value for markers
 
 % fit to exp from hooijman
 xfit = dymget(dl, 'Time');
-Lxfit = sum(xfit >= 0);
+Lxfit = sum(xfit > 1e-3);
 xfit = tail(xfit, Lxfit);
-yfit = tail(getValsToPerc('totalLabel.y'), Lxfit);
+yfit = tail(getVals('totalLabel.y'), Lxfit);
+label = tail(getVals('totalLabelNorm_expr.y'), Lxfit);
+
 % scale
 yma = max(yfit);
 ymi = min(yfit);
@@ -201,22 +209,24 @@ yfit_minmax = (yfit-ymi)/(yma -ymi);
 yfit = yfit/yma;
 
 % Define the model as a sum of two exponential decays
-model1 = fittype('1 - a*(1 - exp(-t/t1)) - b*(1 - exp(-t/t2))', ...
+model1 = fittype('1 - a*(1 - exp(-t/t1)) - b*(1 - exp(-t/t2)) + o', ...
                 'independent', 't', ...
-                'coefficients', {'a', 'b', 't1', 't2'});
+                'coefficients', {'a', 'b', 't1', 't2', 'o'});
 
 model2 = fittype('a*(exp(-t/t1)) + b*(exp(-t/t2)) + o', ...
                 'independent', 't', ...
                 'coefficients', {'a', 'b', 't1', 't2', 'o'});
 
 % Set initial guesses for the parameters
-opts = fitoptions('StartPoint', [0.5, 0.5, 14, 140], 'Method', 'NonlinearLeastSquares','Lower',[0 0, 0, 0],'Upper',[1, 1, 100, 1000]);
+opts = fitoptions('StartPoint', [0.5, 0.5, 14, 140, 0], 'Method', 'NonlinearLeastSquares','Lower',[0 0, 0, 0, 0],'Upper',[1, 1, 100, 1000, 100]);
 opts2 = fitoptions('StartPoint', [0.5, 0.5, 14, 140, 0], 'Method', 'NonlinearLeastSquares','Lower',[0 0, 0, 0, -1],'Upper',[1, 1, 100, 1000, 1]);
 % Perform the fit
 [fitResult1, gof] = fit(xfit, yfit, model1, opts);
-[fitResult2, gof2] = fit(xfit, yfit_minmax, model2, opts2);
+[fitResult2, gof2] = fit(xfit, tail(label, Lxfit), model2, opts2);
+[fitResult3, gof3] = fit(xfit, tail(getVals('timeTable_ATPChase.y'), Lxfit), model2, opts2);
+% [fitResult4, gof4] = fit(xfit, tail(getVals('totalLabelNorm'), Lxfit), model2, opts2);
 
-dataResult = feval(model1, 0.66, 0.27, 14, 144, xfit);
+dataResult = feval(model1, 0.66, 0.27, 14, 144, 0, xfit);
 
 scale = max(dymget(dl, 'totalLabel.y'));
 
@@ -256,20 +266,26 @@ line(x, y, 'Color', 'k', 'LineWidth', 0.25);
 axes(ax4);cla;hold on;
 % set(gca, 'Clipping', 'off')
 ax4.TickLabelInterpreter = 'latex';
-
-p2 = plot(xfit/60, fitResult1(xfit)*100*scale,'-', 'Color', [1 1 1]*0.5, LineWidth=lw*4, DisplayName='$A_{tot}$');
-p1 = plot(time, getValsToPerc('totalLabel.y'),  'k-',LineWidth=lw);
+% figure(222);clf; hold on;
+lw = 2.5;
+% p2 = plot(xfit/60, fitResult2(xfit)*100,'-', 'Color', [1 1 1]*0.5, LineWidth=lw*4, DisplayName='$M_{tot}$');
+p2 = plot(tail(time, Lxfit), tail(getValsToPerc('timeTable_ATPChase.y'), Lxfit),'-', 'Color', [1 1 1]*0.5, LineWidth=10);
+p1 = plot(tail(time, Lxfit), tail(getValsToPerc('totalLabelNorm'), Lxfit),  'k-',LineWidth=lw);
+% plot(xfit*time_conv, fitResult2(xfit)*100);
+% plot(xfit*time_conv, fitResult3(xfit)*100);
+% plot(xfit*time_conv, fitResult4(xfit)*100);
+legend('Walklate et al., Fig 1A', '$A_{tot}$ (adjusted)', interpreter='latex' )
 
 xlabel('$t$ (min)', Interpreter='latex');ylabel('Fluorescence (\% of max)', Interpreter='latex')
 
-xlim([0 10])
+% xlim([0 10])
 
 if ~exist('data_src', 'var')
     error("DATA, INFORMATION MISSING! gIVE mE sOME 'data_src' pls");
 end
-
+%%
 l = legend([p1 p2], ...
-    {'$A_{tot}$', ['Data'  data_src], ...
+    {'$M_{tot}$', ['Data'  data_src], ...
      'Incubation', 'Chase'}, ...
      'Location', 'northeast', Interpreter='latex');
 
@@ -280,8 +296,15 @@ axes(ax3);cla;hold on;
 ax3.TickLabelInterpreter = 'latex';
 
 bar_cats = ["$C_2$ (Eq. 1)", "$C_2$ (Eq. 2)", "$M_{S}$  / $M_{tot}$", "$P_{S}$"];
-bars = [fitResult1.b, tail(dymget(dl, 'SRX_fraction'), 1), tail(dymget(dl, 'SRX.pop'), 1)]*100;
-bars = [fitResult1.b, fitResult2.b, tail(dymget(dl, 'SRX_fraction'), 1), tail(dymget(dl, 'SRX.pop'), 1)]*100;
+
+iAt10min = find(time >= 10, 1);
+valAt10min = @(str) tail(head(dymget(dl, str), iAt10min), 1);
+
+% bars = [fitResult1.b, tail(dymget(dl, 'SRX_fraction'), 1), tail(dymget(dl, 'SRX.pop'), 1)]*100;
+bars = [fitResult1.b, fitResult2.b, valAt10min('SRX_fraction'), valAt10min('SRX.pop')]*100;
+
+bar_cats = ["$C_2$ (Eq. 1)", "$C_2$ (Eq. 2)", "Data, Eq. 2", "$M_{S}$  / $M_{tot}$", "$P_{S}$"];
+bars = [fitResult1.b, fitResult2.b/(fitResult2.a+fitResult2.b), fitResult3.b/(fitResult3.a + fitResult3.b), valAt10min('SRX_fraction'), valAt10min('SRX.pop')]*100;
 
 x = categorical(bar_cats);
 x = reordercats(x, bar_cats)
@@ -290,11 +313,16 @@ bar(x, bars, 'FaceColor',[1 1 1]*0.8); ylabel('SRX estimation (\%)', Interpreter
 ax = gca;  ax.TickLabelInterpreter = 'latex';  
 fontsize(12, 'points')
 
-ylim([0 10*ceil(max(bars)/10)])
+% ylim([0 10*ceil(max(bars+3)/10)])
 
 % Add value labels atop each bar
 for i = 1:length(bars)
-    text(x(i), bars(i) + 0.01, sprintf('%.0f', bars(i)), ...
+    if i == length(bars) && exist('markP_S') && ~isempty(markP_S)
+        addon = markP_S;
+    else
+        addon = '';
+    end
+    text(x(i), bars(i) + 0.01, sprintf('%.0f%s', bars(i), addon), ...
         'HorizontalAlignment', 'center', ...
         'VerticalAlignment', 'bottom', ...
         'Interpreter', 'latex', ...

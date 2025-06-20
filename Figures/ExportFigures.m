@@ -8,7 +8,9 @@ saveFigs = false;
 cf = figure(2);
 
 modelName = 'DefaultH';
-data_src = '(Hooijman et al.)';
+data_src = ' (Hooijman et al.)';
+labelPosVariant = 1;
+markP_S = '';
 Figure2;
 
 add_panel_labels(["(C)", "(D)", "(B)", "(A)"], 0, [], [-40, 5]);
@@ -21,7 +23,11 @@ end
 %%
 figure(3)
 modelName = 'DefaultW';
-data_src = '(Walklate et al.)';
+modelName = 'mantATP.LabelLib.Experiments.XBCycling_Walklate_CalcADPDil_60000';
+data_src = ' (Walklate et al.)';
+
+labelPosVariant = 2;
+markP_S = '*';
 Figure2;
 
 add_panel_labels(["(C)", "(D)", "(B)", "(A)"], 0, [], [-40, 5]);
@@ -37,7 +43,7 @@ end
 %% Output the table of kinetic params
 
 datafile = '../Modelica/DefaultH.mat';
-datafile = '../Modelica/DefaultW.mat';
+% datafile = '../Modelica/DefaultW.mat';
 dl = dymload(datafile);
 
 time_conv = 1/60;
@@ -193,9 +199,12 @@ ageTimesSubSel = [1 8 9 10 12];
 walklate1D = getWalklateData();
 
 filenameFun = @(firstDim, secondDim) sprintf('../Modelica/mantATP.LabelLib.Figures.DefaultW_%dA2_%d.mat', firstDim, secondDim);
+filenameFun = @(firstDim, secondDim) sprintf('../Modelica/mantATP.LabelLib.Figures.DefaultW_%dA2_%d.mat', firstDim, secondDim);
+filenameFun = @(firstDim, secondDim) sprintf('../Modelica/mantATP.LabelLib.Figures.DefaultW_%dA2_%d.mat', firstDim, secondDim);
+filenameFun = @(firstDim, secondDim) sprintf('../Modelica/mantATP.LabelLib.Experiments.XBCycling_Walklate_CalcADPDil_kADP02_%dA2_%d.mat', firstDim, secondDim);
 outS = load_sim_results(ageTimes*1000, rigorFrac, filenameFun);
 %% just plot Fig 4
-cf = figure(4);clf;
+cf = figure(5);clf;
 aspect = 1.5;
 aspect = 1.0;
 figscale = 1.0;
@@ -214,14 +223,14 @@ end
 % without the eq1
 semilogx(ageTimes, outS.fit2_B(:, ub_40)*100, 's-', Color=[1 1 1]*0, LineWidth=lw, MarkerSize=ms);
 hold on;
-semilogx(ageTimes, outS.SRX_pop(:, ub_40)*100, 'x-', Color=[1 1 1]*0, LineWidth=lw*2, MarkerSize=ms);
+% semilogx(ageTimes, outS.SRX_pop(:, ub_40)*100, 'x-', Color=[1 1 1]*0, LineWidth=lw*2, MarkerSize=ms);
 errorbar(walklate1D.AgeTime, walklate1D.SRX, walklate1D.SD, 's-', Color=[1 1 1]*0.5, LineWidth=lw*2, MarkerSize=8);
 semilogx(ageTimes, outS.fit2_A(:, ub_40)*100, 's:', Color=[1 1 1]*0, LineWidth=lw, MarkerSize=ms); 
-semilogx(ageTimes, outS.DRX_pop(:, ub_40)*100, 'x:', Color=[1 1 1]*0, LineWidth=lw*2, MarkerSize=ms);
+% semilogx(ageTimes, outS.DRX_pop(:, ub_40)*100, 'x:', Color=[1 1 1]*0, LineWidth=lw*2, MarkerSize=ms);
 errorbar(walklate1D.AgeTime, walklate1D.DRX, walklate1D.SD,'s:', Color=[1 1 1]*0.5, LineWidth=lw*2, MarkerSize=8);
 ylim([0 100])
 xlim([0.2, 3600])
-legend('$C_{slow}$ (model)', '$P_S$ (Model)', '$C_{slow}$ (Walklate 2022)', '$C_{fast}$ (model)', '$P_{D_D}$ + $P_{D_T}$ (Model)', '$C_{fast}$ (Walklate 2022)', Location='northeast', interpreter = "latex")
+% legend('$C_{slow}$ (model)', '$P_S$ (Model)', '$C_{slow}$ (Walklate 2022)', '$C_{fast}$ (model)', '$P_{D_D}$ + $P_{D_T}$ (Model)', '$C_{fast}$ (Walklate 2022)', Location='northeast', interpreter = "latex")
 xl = xlabel('mant-ATP incubation duration (s)', Interpreter='latex', HorizontalAlignment='right');
 ylabel('Fraction (\%)', Interpreter='latex');
 % xl.Position = xl.Position + [0 -2 0];
@@ -229,11 +238,11 @@ ylabel('Fraction (\%)', Interpreter='latex');
 xticks([ageTimes]);
 
 vd = 2;
-text(3600, outS.SRX_pop(end)*100 - vd, '$P_{S}$ (Model)', FontSize=12, HorizontalAlignment='right', VerticalAlignment='top', Interpreter='latex')
+% text(3600, outS.SRX_pop(end)*100 - vd, '$P_{S}$ (Model)', FontSize=12, HorizontalAlignment='right', VerticalAlignment='top', Interpreter='latex')
 text(120, outS.fit2_B(9)*100, '$C_{slow}$ (model)', FontSize=12, HorizontalAlignment='left', VerticalAlignment='top', Interpreter='latex')
 text(3, walklate1D.SRX(4), '$C_{slow}$ (Walklate 2022)', FontSize=12, HorizontalAlignment='left', VerticalAlignment='bottom', Interpreter='latex')
 
-text(2, outS.DRX_pop(end)*100 + vd, '$P_{D_D} + P_{D_T}$ (Model)', FontSize=12, HorizontalAlignment='left', VerticalAlignment='bottom', Interpreter='latex')
+% text(2, outS.DRX_pop(end)*100 + vd, '$P_{D_D} + P_{D_T}$ (Model)', FontSize=12, HorizontalAlignment='left', VerticalAlignment='bottom', Interpreter='latex')
 text(10, outS.fit2_A(6)*100, '$C_{fast}$ (model)', FontSize=12, HorizontalAlignment='left', VerticalAlignment='bottom', Interpreter='latex')
 text(3, walklate1D.DRX(4), '$C_{fast}$ (Walklate 2022)', FontSize=12, HorizontalAlignment='left', VerticalAlignment='top', Interpreter='latex')
 
@@ -295,6 +304,12 @@ walklate1D = getWalklateData();
 
 filenameFun = @(firstDim, secondDim) sprintf('../Modelica/mantATP.LabelLib.Experiments.XBCycling_Walklate_CalcADPDil_%dA2_40kAdp_%g.mat', firstDim, secondDim);  
 outS = load_sim_results(ageTimes*1000, k_adp, filenameFun);
+%% Test fit
+ageTimes = [0.2, 1, 2, 5, 10, 30, 60.0000,  120.0000,  300.0000,  900.0000];
+
+filenameFun = @(firstDim, secondDim) sprintf('../Modelica/mantATP.LabelLib.Experiments.XBCycling_Walklate_CalcADPDil_%d.mat', firstDim);
+outS = load_sim_results(ageTimes*1000, rigorFrac, filenameFun);
+
 %%
 cf = figure(4);clf;
 aspect = 1.5;
@@ -411,6 +426,68 @@ xticks([ageTimes])
 nexttile;
 plot(k_adp, err, 'x-', k_adp, err_w*10, 'o-', [e_min_v, e_min_v], [min(err), max(err)], 'k--',[e_min_v_w, e_min_v_w], [min(err), max(err)], 'k--')
 
+%% Fit Walklate 2022 fig1A at k_ADP
+figure(13);
+% modelName = sprintf('mantATP.LabelLib.Experiments.XBCycling_Walklate_CalcADPDil_%d', 60*1000);
+modelName = sprintf('mantATP.LabelLib.Experiments.XBCycling_Walklate_CalcADPDil_kADP02_%d', 60*1000);
+% modelName = sprintf('mantATP.LabelLib.Experiments.XBCycling_Walklate_CalcADPDil_kADP01_900000');
+
+% modelName = sprintf('XBCycling_Walklate_CalcADPDilHooijman');
+
+data_src = ' (Walklate et al., ADP)';
+Figure2;
+
+%%
+figure; hold on;
+p2 = plot(tail(time, Lxfit), tail(getValsToPerc('integratedSquaredDeviation.u1'), Lxfit));
+p1 = plot(tail(time, Lxfit), tail(getValsToPerc('integratedSquaredDeviation.u2'), Lxfit));
+
+
+%%
+clear;clf;
+def_aux;
+saveFigs = false;
+
+ageTimes = [.2, .5, 1, 2, 5, 10, 30, 60.0000,  120.0000,  300.0000,  900.0000];
+
+rigorFrac = 40;
+walklate1D = getWalklateData();
+
+filenameFun = @(firstDim, secondDim) sprintf('../Modelica/mantATP.LabelLib.Experiments.XBCycling_Walklate_CalcADPDil_kADP01_%d.mat', firstDim);  
+outS(1) = load_sim_results(ageTimes*1000, [10], filenameFun);
+filenameFun = @(firstDim, secondDim) sprintf('../Modelica/mantATP.LabelLib.Experiments.XBCycling_Walklate_CalcADPDil_%d.mat', firstDim);  
+outS(2) = load_sim_results(ageTimes*1000, [10], filenameFun);
+filenameFun = @(firstDim, secondDim) sprintf('../Modelica/mantATP.LabelLib.Experiments.XBCycling_Walklate_CalcADPDil_kADP10_%d.mat', firstDim);  
+outS(3) = load_sim_results(ageTimes*1000, [10], filenameFun);
+filenameFun = @(firstDim, secondDim) sprintf('../Modelica/mantATP.LabelLib.Experiments.XBCycling_Walklate_CalcADPDil_kADP100_%d.mat', firstDim);  
+outS(4) = load_sim_results(ageTimes*1000, [10], filenameFun);
+%%
+
+err1 = sum((outS(1).fit2_B(1:8, 1) - walklate1D.SRX/100).^2./walklate1D.SD.^2, 1)
+err2 = sum((outS(2).fit2_B(1:8, 1) - walklate1D.SRX/100).^2./walklate1D.SD.^2, 1)
+err3 = sum((outS(3).fit2_B(1:8, 1) - walklate1D.SRX/100).^2./walklate1D.SD.^2, 1)
+err4 = sum((outS(4).fit2_B(1:8, 1) - walklate1D.SRX/100).^2./walklate1D.SD.^2, 1)
+
+
+% err_w = sum(((outS.fit2_B(1:8, ub_40) - walklate1D.SRX/100).^2)./walklate1D.SD.^2, 1);
+
+% [~, e_min_i] = min(err); e_min_v = k_adp(e_min_i);
+% [~, e_min_i_w] = min(err_w); e_min_v_w = k_adp(e_min_i_w);
+
+% 
+figure(232);clf;
+lw = 1;
+semilogx(ageTimes, outS(1).fit2_B(:, 1)*100, 's-', LineWidth=lw, MarkerSize=ms);
+hold on;
+semilogx(ageTimes, outS(2).fit2_B(:, 1)*100, 's-', LineWidth=lw, MarkerSize=ms);
+semilogx(ageTimes, outS(3).fit2_B(:, 1)*100, 's-', LineWidth=lw, MarkerSize=ms);
+semilogx(ageTimes, outS(4).fit2_B(:, 1)*100, 's-', LineWidth=lw, MarkerSize=ms);
+xticks(ageTimes)
+
+walklate1D = getWalklateData();
+errorbar(walklate1D.AgeTime, walklate1D.SRX, walklate1D.SD, 's-', LineWidth=lw, MarkerSize=8);
+
+
 function placeMarker(x_marker)
 
     % Add a triangle character as x-tick label
@@ -436,128 +513,6 @@ function placeMarker(x_marker)
     ax.XTickLabel = xticklabels;
 end
 
-function outputStruct = load_sim_results(ageTimes, rigorFrac, filenameFun)
-    % Define the model as a sum of two exponential decays
-    model1 = fittype('1 - a*(1 - exp(-t/t1)) - b*(1 - exp(-t/t2))', ...
-                    'independent', 't', ...
-                    'coefficients', {'a', 'b', 't1', 't2'});
-    
-    model2 = fittype('a*(exp(-t/t1)) + b*(exp(-t/t2)) + o', ...
-                    'independent', 't', ...
-                    'coefficients', {'a', 'b', 't1', 't2', 'o'});
-    
-    % Set initial guesses for the parameters
-    initialGuess = [0.5, 0.5, 14, 140]; % Adjust these based on your data
-    opts = fitoptions('StartPoint', initialGuess, 'Method', 'NonlinearLeastSquares','Lower',[0 0, 0, 0],'Upper',[1, 1, 100, 1000]);
-    
-    initialGuess = [0.5, 0.5, 14, 140, 0]; % Adjust these based on your data
-    opts2 = fitoptions('StartPoint', initialGuess, 'Method', 'NonlinearLeastSquares','Lower',[0 0, 0, 0, -0.2],'Upper',[1, 1, 100, 1000, 0.2]);
-    
-    fit1_A = zeros(size(ageTimes'*rigorFrac));
-    fit2_A = zeros(size(fit1_A));
-    fit1_B = zeros(size(fit1_A));
-    fit2_B = zeros(size(fit1_A));
-    slowPhase1_background = zeros(size(fit1_A));
-    SRX_labelFraction = zeros(size(fit1_A));
-    SRX_pop = zeros(size(fit1_A));
-    DRX_pop = zeros(size(fit1_A));
-    maxLabel = zeros(size(fit1_A));
-    
-    % Loop to load each file  
-    for i = 1:length(ageTimes)  
-        nexttile;        hold on;    
-        for j = 1:length(rigorFrac)
-            filename = filenameFun(ageTimes(i), rigorFrac(j));
-        
-            if exist(filename, 'file')  
-        
-                dl = dymload(filename);
-                time = dymget(dl, 'Time');
-                validTime = sum(time>=0);
-                time = tail(time, validTime);
-        
-                label = tail(dymget(dl, 'totalLabel.y'), validTime);
-        
-                DRX_label = tail(dymget(dl, 'DRXLabel.y'), validTime);
-                SRX_label = tail(dymget(dl, 'SRXLabel.y'), validTime);
-        
-                SRX_labelFraction(i, j) = tail(dymget(dl, 'SRX_fraction'), 1);
-                SRX_pop(i, j) = tail(dymget(dl, 'SRX.pop'), 1);
-                DRX_pop(i, j) = tail(dymget(dl, 'DRX_D.pop'), 1) + tail(dymget(dl, 'DRX_T.pop'), 1);
-                maxLabel(i, j) = tail(dymget(dl, 'normFactor'), 1);
-                
-                % scale = max(label);
-                % bckg = scale*0.05;
-                % labelWBckg = (label + bckg)/(scale + bckg);
-        
-                % label = label/scale;
-                yma = max(label);
-                ymi = min(label);
-                yfit_norMax = label/yma;
-                yfit_norMinMax = (label-ymi)/(yma -ymi);
-        
-                % validTime = sum(time>0);
-                % label = label(validTime)/scale;
-                % time = time(validTime);
-        
-                % Perform the fit
-                [fitResult1, gof] = fit(time, yfit_norMax, model1, opts);
-                [fitResult2, gof2] = fit(time, yfit_norMinMax, model2, opts2);
-                % [fitResultWBckg, gof2_5] = fit(time, labelWBckg, model1, opts);
-                %% fit state labels separately
-                % opts_single = opts;
-                % opts_single.TolFun = 1e-9;
-                % opts_single.Upper = [1 0 400 1000];
-                % opts_single.StartPoint = [0.5 0 5 100];
-                % [fitResult_singleDrx, gof3] = fit(time, DRX_label, model2, opts_single);
-                % opts_single.StartPoint = [0.5 0 150 100];
-                % [fitResult_singleSrx, gof4] = fit(time, SRX_label, model2, opts_single);
-        
-                plot(time, yfit_norMax, '-', time, yfit_norMinMax, '-',time, fitResult1(time), '--', time, fitResult2(time), ':', LineWidth=2); 
-                % plot(time, label, '-', LineWidth=1.5);
-                % plot(time, DRX_label, '-', time, fitResult_singleDrx(time), '--', time, SRX_label, '-', time, fitResult_singleSrx(time),'--', LineWidth=1.5);
-                % plot(time, labelWBckg, '-', time,fitResultWBckg(time), '--',  LineWidth=1.5);
-                % title(sprintf("Incubation %g s", ageTimes(i))); 
-        
-        
-                fit1_A(i, j) = fitResult1.a;
-                fit1_B(i, j) = fitResult1.b;
-                fit1_T1(i, j) = fitResult1.t1;
-                fit1_T2(i, j) = fitResult1.t2;
-        
-                fit2_A(i, j) = fitResult2.a;
-                fit2_B(i, j) = fitResult2.b;
-                fit2_T1(i, j) = fitResult2.t1;
-                fit2_T2(i, j) = fitResult2.t2;
-                
-                % slowPhase1_background(i, j) = fitResultWBckg.b;
-        
-            else  
-                warning('File %s not found!', filename);  
-                fit1_A(i, j) = NaN;
-                fit1_B(i, j) = NaN;
-                fit1_T1(i, j) = NaN;
-                fit1_T2(i, j) = NaN;
-        
-                fit2_A(i, j) = NaN;
-                fit2_B(i, j) = NaN;
-                fit2_T1(i, j) = NaN;
-                fit2_T2(i, j) = NaN;
-            end
-        end
-    end
-    
-    outputStruct.fit1_A = fit1_A;
-    outputStruct.fit2_A = fit2_A;
-    outputStruct.fit1_B = fit1_B;
-    outputStruct.fit2_B = fit2_B;
-    outputStruct.slowPhase1_background = slowPhase1_background;
-    outputStruct.SRX_labelFraction = SRX_labelFraction;
-    outputStruct.SRX_pop = SRX_pop;
-    outputStruct.DRX_pop = DRX_pop;
-    outputStruct.maxLabel = maxLabel;
-
-end
 
 function walklate1D = getWalklateData()
     % walklate1D = readtable('../data/Walklate J Biol Chem 2022 Fig 1D.csv')
