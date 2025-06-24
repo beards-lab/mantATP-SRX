@@ -23,7 +23,14 @@ end
 %%
 figure(3)
 modelName = 'DefaultW';
-modelName = 'mantATP.LabelLib.Experiments.XBCycling_Walklate_CalcADPDil_60000';
+modelName = 'XBCycling_Walklate2022Fig1A';
+modelName = 'XBCycling_Walklate_CalcADPDil_kADP01_fixedDil';
+% modelName = 'XBCycling_Walklate_CalcADPDil_kADP10_fixedDil';
+% modelName = 'XBCycling_Walklate_CalcADPDil_kADP01_fixedDil';
+modelName = 'mantATP.LabelLib.Experiments.XBCycling_Walklate_CalcADPDil_kADP01_fixedDil_60000';
+% modelName = 'mantATP.LabelLib.Experiments.XBCycling_Walklate_CalcADPDil_kADP10_fixedDil_60000';
+% modelName = 'mantATP.LabelLib.Experiments.XBCycling_Walklate_CalcADPDil_kADP1_fixedDil_60000';
+
 data_src = ' (Walklate et al.)';
 
 labelPosVariant = 2;
@@ -453,20 +460,20 @@ ageTimes = [.2, .5, 1, 2, 5, 10, 30, 60.0000,  120.0000,  300.0000,  900.0000];
 rigorFrac = 40;
 walklate1D = getWalklateData();
 
-filenameFun = @(firstDim, secondDim) sprintf('../Modelica/mantATP.LabelLib.Experiments.XBCycling_Walklate_CalcADPDil_kADP01_%d.mat', firstDim);  
+filenameFun = @(firstDim, secondDim) sprintf('../Modelica/mantATP.LabelLib.Experiments.XBCycling_Walklate_CalcADPDil_kADP01_fixedDil_%d.mat', firstDim);  
 outS(1) = load_sim_results(ageTimes*1000, [10], filenameFun);
-filenameFun = @(firstDim, secondDim) sprintf('../Modelica/mantATP.LabelLib.Experiments.XBCycling_Walklate_CalcADPDil_%d.mat', firstDim);  
+filenameFun = @(firstDim, secondDim) sprintf('../Modelica/mantATP.LabelLib.Experiments.XBCycling_Walklate_CalcADPDil_kADP1_fixedDil_%d.mat', firstDim);  
 outS(2) = load_sim_results(ageTimes*1000, [10], filenameFun);
 filenameFun = @(firstDim, secondDim) sprintf('../Modelica/mantATP.LabelLib.Experiments.XBCycling_Walklate_CalcADPDil_kADP10_%d.mat', firstDim);  
 outS(3) = load_sim_results(ageTimes*1000, [10], filenameFun);
-filenameFun = @(firstDim, secondDim) sprintf('../Modelica/mantATP.LabelLib.Experiments.XBCycling_Walklate_CalcADPDil_kADP100_%d.mat', firstDim);  
-outS(4) = load_sim_results(ageTimes*1000, [10], filenameFun);
+% filenameFun = @(firstDim, secondDim) sprintf('../Modelica/mantATP.LabelLib.Experiments.XBCycling_Walklate_CalcADPDil_kADP100_%d.mat', firstDim);  
+% outS(4) = load_sim_results(ageTimes*1000, [10], filenameFun);
 %%
 
-err1 = sum((outS(1).fit2_B(1:8, 1) - walklate1D.SRX/100).^2./walklate1D.SD.^2, 1)
-err2 = sum((outS(2).fit2_B(1:8, 1) - walklate1D.SRX/100).^2./walklate1D.SD.^2, 1)
-err3 = sum((outS(3).fit2_B(1:8, 1) - walklate1D.SRX/100).^2./walklate1D.SD.^2, 1)
-err4 = sum((outS(4).fit2_B(1:8, 1) - walklate1D.SRX/100).^2./walklate1D.SD.^2, 1)
+% err1 = sum((outS(1).fit2_B(1:8, 1) - walklate1D.SRX/100).^2./walklate1D.SD.^2, 1)
+% err2 = sum((outS(2).fit2_B(1:8, 1) - walklate1D.SRX/100).^2./walklate1D.SD.^2, 1)
+% err3 = sum((outS(3).fit2_B(1:8, 1) - walklate1D.SRX/100).^2./walklate1D.SD.^2, 1)
+% err4 = sum((outS(4).fit2_B(1:8, 1) - walklate1D.SRX/100).^2./walklate1D.SD.^2, 1)
 
 
 % err_w = sum(((outS.fit2_B(1:8, ub_40) - walklate1D.SRX/100).^2)./walklate1D.SD.^2, 1);
@@ -481,11 +488,21 @@ semilogx(ageTimes, outS(1).fit2_B(:, 1)*100, 's-', LineWidth=lw, MarkerSize=ms);
 hold on;
 semilogx(ageTimes, outS(2).fit2_B(:, 1)*100, 's-', LineWidth=lw, MarkerSize=ms);
 semilogx(ageTimes, outS(3).fit2_B(:, 1)*100, 's-', LineWidth=lw, MarkerSize=ms);
-semilogx(ageTimes, outS(4).fit2_B(:, 1)*100, 's-', LineWidth=lw, MarkerSize=ms);
+
+set(gca,'ColorOrderIndex',1)
+semilogx(ageTimes, outS(1).SRX_pop*100, 'x--', LineWidth=lw, MarkerSize=ms);
+semilogx(ageTimes, outS(2).SRX_pop*100, 'x--', LineWidth=lw, MarkerSize=ms);
+semilogx(ageTimes, outS(3).SRX_pop*100, 'x--', LineWidth=lw, MarkerSize=ms);
+
+% semilogx(ageTimes, outS(4).fit2_B(:, 1)*100, 's-', LineWidth=lw, MarkerSize=ms);
 xticks(ageTimes)
 
 walklate1D = getWalklateData();
 errorbar(walklate1D.AgeTime, walklate1D.SRX, walklate1D.SD, 's-', LineWidth=lw, MarkerSize=8);
+
+legend('C_2, Ki = 0.1 uM','C_2, Ki = 1 uM','C_2, Ki = 10 uM','SRX @ 10m','SRX @ 10m','SRX @ 10m', 'Data Walklate, Fig 1D', Location='northwest');
+xlabel('Incubation time');
+ylabel('Fraction (%)')
 
 
 function placeMarker(x_marker)

@@ -264,7 +264,7 @@ line(x, y, 'Color', 'k', 'LineWidth', 0.25);
 
 %% panel D
 axes(ax4);cla;hold on;
-% set(gca, 'Clipping', 'off')
+set(ax4, 'Clipping', 'on')
 ax4.TickLabelInterpreter = 'latex';
 % figure(222);clf; hold on;
 lw = 2.5;
@@ -278,7 +278,7 @@ legend('Walklate et al., Fig 1A', '$A_{tot}$ (adjusted)', interpreter='latex' )
 
 xlabel('$t$ (min)', Interpreter='latex');ylabel('Fluorescence (\% of max)', Interpreter='latex')
 
-% xlim([0 10])
+xlim([0 10])
 
 if ~exist('data_src', 'var')
     error("DATA, INFORMATION MISSING! gIVE mE sOME 'data_src' pls");

@@ -35,8 +35,8 @@ for i in {.2, .5, 1, 2, 5, 10, 30, 60.0000,  120.0000,  300.0000,  900.0000} loo
     tolerance=1e-6,
       stopTime=1000, // or your desired simulation duration  
       resultFile=filename, 
-      initialNames = {"ageTime", "A2.pop_start"},
-      initialValues={i, pop_start}  
+    initialNames = {"ageTime", "A2.pop_start"},
+    initialValues={i, pop_start}  
     );  
 //  end for;
 end for;
