@@ -3,6 +3,7 @@ pop_start = 1e-3;
 pop_start = .4;
 i = 60;
 suffix := String(integer(i*1000));
+
 modelNames = 
   {"mantATP.LabelLib.Experiments.XBCycling_Walklate_CalcADPDil_kADP01_ADP5",
     "mantATP.LabelLib.Experiments.XBCycling_Walklate_CalcADPDil_kADP1_ADP5",
@@ -14,6 +15,18 @@ modelNames =
     "mantATP.LabelLib.Experiments.XBCycling_Walklate_CalcADPDil_kADP1",
     "mantATP.LabelLib.Experiments.XBCycling_Walklate_CalcADPDil_kADP10"    
     }
+  // mant-ADP has high affinity
+modelNames = 
+   {"mantATP.DataMatched.Walklate.ADPEffect.mantADPAffinity.mantADPAffinity_DoubleMix.XBCycling_Walklate_CalcADPDilAffinity_Ki01", 
+    "mantATP.DataMatched.Walklate.ADPEffect.mantADPAffinity.mantADPAffinity_DoubleMix.XBCycling_Walklate_CalcADPDilAffinity_Ki1", 
+    "mantATP.DataMatched.Walklate.ADPEffect.mantADPAffinity.mantADPAffinity_DoubleMix.XBCycling_Walklate_CalcADPDilAffinity_Ki10"};
+// high rigor fraction
+modelNames = {"mantATP.DataMatched.Walklate.ADPEffect.mantADPAffinity.mantADPAffinity_DoubleMix.XBCycling_Walklate_CalcADPDilAffinity80_Ki01"};
+// PB
+modelNames = {"mantATP.DataMatched.Walklate.Photobleaching.XBCycling_Walklate_PB0005",
+  "mantATP.DataMatched.Walklate.Photobleaching.XBCycling_Walklate_PB001",
+  "mantATP.DataMatched.Walklate.Photobleaching.XBCycling_Walklate_PB002"};
+modelNames = {"mantATP.DataMatched.Walklate.ADPEffect.mantADPAffinity.XBCycling_Walklate_CalcADPDilMaxAffinity_Ki01"};
 
 for modelName in modelNames loop
   for i in {.2, .5, 1, 2, 5, 10, 30, 60.0000,  120.0000,  300.0000,  900.0000} loop  

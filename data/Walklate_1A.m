@@ -30,10 +30,10 @@ hold on;
 plot(xfit, dataResult,'y-',  LineWidth=2.5)
 plot(xfit, fitResult3(xfit), '--', LineWidth=2.5)
 
-legend('Reported fit', 'Actual fit')
+legend(sprintf('Reported fit, SRX = %0.1f', 100*b/(a + b) ), sprintf('Actual fit, SRX = %0.1f', 100*fitResult3.b/(fitResult3.a + fitResult3.b)))
 
-% b/(a + b)
-% fitResult3.b/(fitResult3.a + fitResult3.b)
+b/(a + b)
+fitResult3.b/(fitResult3.a + fitResult3.b)
 
 % plot(xfit, 6.2 + 100*feval(model1, a/100, b/100, t1, t2, 106.2, xfit), '--', LineWidth=2.5);
 
@@ -83,6 +83,6 @@ opts2 = fitoptions('StartPoint', [5, 2, 30, 300, 99], 'Method', 'NonlinearLeastS
 
 figure(102);clf;hold on;
 scatter(xfit, yfit_norm);
-scatter(xfit, fitResult1(xfit));
-scatter(xfit, fitResult2(xfit));
-scatter(xfit, fitResult3(xfit)/yma);
+plot(xfit, fitResult1(xfit));
+plot(xfit, fitResult2(xfit));
+plot(xfit, fitResult3(xfit)/yma);

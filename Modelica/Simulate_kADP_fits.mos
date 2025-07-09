@@ -10,6 +10,10 @@ modelName = "mantATP.LabelLib.Experiments.XBCycling_Walklate_CalcADPDil_kADP01";
 modelName = "mantATP.LabelLib.Experiments.XBCycling_Walklate_CalcADPDil_kADP10";
 modelName = "mantATP.LabelLib.Experiments.XBCycling_Walklate_CalcADPDil_kADP100";
 // modelName = "mantATP.LabelLib.Experiments.XBCycling_Walklate_CalcADPDilAffinity";
+modelName = "mantATP.LabelLib.Experiments.XBCycling_Walklate_CalcADPDil_kADP01_fixedDil";
+// modelName = "mantATP.LabelLib.Experiments.XBCycling_Walklate_CalcADPDil_kADP1_fixedDil";
+modelName = "mantATP.LabelLib.Experiments.XBCycling_Walklate_CalcADPDil_kADP10_fixedDil";
+modelName = "mantATP.LabelLib.Experiments.XBCycling_Walklate_PB001_T0";
 
 for i in {.2, .5, 1, 2, 5, 10, 30, 60.0000,  120.0000,  300.0000,  900.0000} loop  
 //  for i in {.2, .5, 1, 2, 5, 10, 30, 60.0000} loop  

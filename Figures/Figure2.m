@@ -1,5 +1,5 @@
 % Time vector
-t = linspace(-5, 5, 1000);
+% t = linspace(-5, 5, 1000);
 
 % Generate timecourses
 % cf = figure(); clf; 
@@ -33,7 +33,7 @@ getVal = @(s) tail(getVals(s), 1);
 getValsToPerc = @(s) getVals(s)*100;
 
 agetime = getVals('ageTime');
-xl = [-5, 10]*60*time_conv;
+xl = [-3, 10]*60*time_conv;
 % Coordinates for the marker
 x_marker = -agetime(1)*time_conv;
 
@@ -55,7 +55,7 @@ fontsize(12, "points");
 
 
 % Step 2: Grab their positions (in pixels, relative to figure)
-vspc = 0.03
+vspc = 0.03;
 pos1 = p1.Position + [0 0 0 -vspc];
 pos2 = p2.Position + [0 0 0 -vspc];
 pos3 = p3.Position + [0 vspc 0 -vspc];
@@ -88,11 +88,11 @@ ax1.TickLabelInterpreter = 'latex';
 color_rigor = [1 1 1]*0.7;
 color_incubation = [1 1 1]*0.85;
 color_chase = [1 1 1];
-fill([-5 x_marker x_marker -5], [0 0 100 100], color_rigor, 'EdgeColor', 'none', 'FaceAlpha', 1); % steady state
+fill([xl(1) x_marker x_marker xl(1)], [0 0 100 100], color_rigor, 'EdgeColor', 'none', 'FaceAlpha', 1); % steady state
 fill([x_marker 0 0 x_marker], [0 0 100 100], color_incubation, 'EdgeColor', 'none', 'FaceAlpha', 1);   % rise
 % fill([0 5 5 0], [0 0 100 100], color_chase, 'EdgeColor', 'none', 'FaceAlpha', 1);     % decay
 
-rng = time > -5 & time < 10;
+rng = time > xl(1) & time < 10;
 clip = @(A) A(rng);
 
 lw = 2.5;
@@ -127,7 +127,7 @@ xlabel('$t$ (min)', Interpreter='latex');ylabel('Population (\%)', Interpreter='
 vd = 2;
 hd = 0.5;
 r = 15;
-text((-7 + x_marker)/2, 103, 'Rigor', FontSize=12, Rotation=r, Interpreter='latex')
+text((-4 + x_marker)/2, 103, 'Rigor', FontSize=12, Rotation=r, Interpreter='latex')
 text(x_marker/2, 103, 'Incubation', FontSize=12, Rotation=r, Interpreter='latex')
 text(4, 103, 'Chase', FontSize=12, Rotation=r, Interpreter='latex')
 
@@ -162,12 +162,12 @@ line(x, y, 'Color', 'k', 'LineWidth', 0.25);
 % nexttile(3, [1 2]);cla;hold on;
 axes(ax2);cla;hold on;
 ax2.TickLabelInterpreter = 'latex';
-text((-7 + x_marker)/2, 103, 'Rigor', FontSize=12, Rotation=r, Interpreter='latex')
+text((-4 + x_marker)/2, 103, 'Rigor', FontSize=12, Rotation=r, Interpreter='latex')
 text(x_marker/2, 103, 'Incubation', FontSize=12, Rotation=r, Interpreter='latex')
 text(4, 103, 'Chase', FontSize=12, Rotation=r, Interpreter='latex')
 
 
-fill([-5 x_marker x_marker -5], [0 0 100 100], color_rigor, 'EdgeColor', 'none', 'FaceAlpha', 1); % steady state
+fill([xl(1) x_marker x_marker xl(1)], [0 0 100 100], color_rigor, 'EdgeColor', 'none', 'FaceAlpha', 1); % steady state
 fill([x_marker 0 0 x_marker], [0 0 100 100], color_incubation, 'EdgeColor', 'none', 'FaceAlpha', 1);   % incubation
 % fill([0 5 5 0], [0 0 100 100], color_chase, 'EdgeColor', 'none', 'FaceAlpha', 1);     % chase
 
@@ -274,7 +274,7 @@ p1 = plot(tail(time, Lxfit), tail(getValsToPerc('totalLabelNorm'), Lxfit),  'k-'
 % plot(xfit*time_conv, fitResult2(xfit)*100);
 % plot(xfit*time_conv, fitResult3(xfit)*100);
 % plot(xfit*time_conv, fitResult4(xfit)*100);
-legend('Walklate et al., Fig 1A', '$A_{tot}$ (adjusted)', interpreter='latex' )
+% legend('Walklate et al., Fig 1A', '$I_{sim}$', interpreter='latex' )
 
 xlabel('$t$ (min)', Interpreter='latex');ylabel('Fluorescence (\% of max)', Interpreter='latex')
 
@@ -283,10 +283,9 @@ xlim([0 10])
 if ~exist('data_src', 'var')
     error("DATA, INFORMATION MISSING! gIVE mE sOME 'data_src' pls");
 end
-%%
+
 l = legend([p1 p2], ...
-    {'$M_{tot}$', ['Data'  data_src], ...
-     'Incubation', 'Chase'}, ...
+    {'$I_{sim}$', ['$I_{obs}$'  data_src]}, ...
      'Location', 'northeast', Interpreter='latex');
 
 box on;
@@ -295,19 +294,21 @@ box on;
 axes(ax3);cla;hold on;
 ax3.TickLabelInterpreter = 'latex';
 
-bar_cats = ["$C_2$ (Eq. 1)", "$C_2$ (Eq. 2)", "$M_{S}$  / $M_{tot}$", "$P_{S}$"];
-
 iAt10min = find(time >= 10, 1);
 valAt10min = @(str) tail(head(dymget(dl, str), iAt10min), 1);
 
 % bars = [fitResult1.b, tail(dymget(dl, 'SRX_fraction'), 1), tail(dymget(dl, 'SRX.pop'), 1)]*100;
-bars = [fitResult1.b, fitResult2.b, valAt10min('SRX_fraction'), valAt10min('SRX.pop')]*100;
+% bars = [fitResult1.b, fitResult2.b, valAt10min('SRX_fraction'), valAt10min('SRX.pop')]*100;
 
-bar_cats = ["$C_2$ (Eq. 1)", "$C_2$ (Eq. 2)", "Data, Eq. 2", "$M_{S}$  / $M_{tot}$", "$P_{S}$"];
-bars = [fitResult1.b, fitResult2.b/(fitResult2.a+fitResult2.b), fitResult3.b/(fitResult3.a + fitResult3.b), valAt10min('SRX_fraction'), valAt10min('SRX.pop')]*100;
+% bar_cats = ["$C_2$ (Eq. 1)","$SRX_1$ (Eq. 1)", "$SRX_2$ (Eq. 2)", "Data, Eq. 2", "$M_{S}$  / $M_{tot}$", "$P_{S}$"];
+% bars = [fitResult1.b, fitResult1.b/(fitResult1.b + fitResult1.a), fitResult2.b/(fitResult2.a+fitResult2.b), fitResult3.b/(fitResult3.a + fitResult3.b), valAt10min('SRX_fraction'), valAt10min('SRX.pop')]*100;
+
+bar_cats = ["$SRX_C$ (Eq. 1)", "$SRX_C$ (Eq. 2)", "$P_{S}$"];
+bar_cats = ["(Eq. 1)", "(Eq. 2)", "$P_{S}$"];
+bars = [fitResult1.b, fitResult2.b/(fitResult2.a+fitResult2.b), valAt10min('SRX.pop')]*100;
 
 x = categorical(bar_cats);
-x = reordercats(x, bar_cats)
+x = reordercats(x, bar_cats);
 
 bar(x, bars, 'FaceColor',[1 1 1]*0.8); ylabel('SRX estimation (\%)', Interpreter='latex')
 ax = gca;  ax.TickLabelInterpreter = 'latex';  

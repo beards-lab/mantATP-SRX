@@ -12,8 +12,8 @@ function outputStruct = load_sim_results(ageTimes, rigorFrac, filenameFun)
     initialGuess = [0.5, 0.5, 14, 140]; % Adjust these based on your data
     opts = fitoptions('StartPoint', initialGuess, 'Method', 'NonlinearLeastSquares','Lower',[0 0, 0, 0],'Upper',[1, 1, 100, 1000]);
     
-    initialGuess = [0.05, 0.01, 14, 140, 0.5]; % Adjust these based on your data
-    opts2 = fitoptions('StartPoint', initialGuess, 'Method', 'NonlinearLeastSquares','Lower',[0 0, 0, 0, -0.2],'Upper',[1, 1, 100, 1000, 1]);
+    initialGuess = [0.05, 0.01, 14, 140, 0.9]; % Adjust these based on your data
+    opts2 = fitoptions('StartPoint', initialGuess, 'Method', 'NonLinearLeastSquares', 'Lower',[0 0, 0, 0, 0],'Upper',[1, 1, 100, 1000, 1]);
     
     fit1_A = zeros(size(ageTimes'*rigorFrac));
     fit2_A = zeros(size(fit1_A));
@@ -24,6 +24,7 @@ function outputStruct = load_sim_results(ageTimes, rigorFrac, filenameFun)
     SRX_pop = zeros(size(fit1_A));
     DRX_pop = zeros(size(fit1_A));
     maxLabel = zeros(size(fit1_A));
+    SRX_popAt0 = zeros(size(fit1_A));
     
     % Loop to load each file  
     for i = 1:length(ageTimes)  
@@ -35,18 +36,26 @@ function outputStruct = load_sim_results(ageTimes, rigorFrac, filenameFun)
         
                 dl = dymload(filename);
                 time = dymget(dl, 'Time');
-                validTime = sum(time>=0);
-                time = tail(time, validTime);
+                timeSinceChase = sum(time>=0);
+                ageTime = tail(dymget(dl, 'ageTime'), 1);
+                timeSinceInc = sum(time>=-ageTime);
+                Abscissa{i, j} = tail(time, timeSinceInc);
+                time_chase = tail(time, timeSinceChase);
         
                 % label = tail(dymget(dl, 'totalLabel.y'), validTime);
-                label = tail(dymget(dl, 'totalLabelNorm_expr.y'), validTime);
-                label_data = tail(dymget(dl, 'timeTable_ATPChase.y'), validTime);
-        
-                DRX_label = tail(dymget(dl, 'DRXLabel.y'), validTime);
-                SRX_label = tail(dymget(dl, 'SRXLabel.y'), validTime);
+                label = tail(dymget(dl, 'totalLabelNorm_expr.y'), timeSinceChase);
+                label_data = tail(dymget(dl, 'timeTable_ATPChase.y'), timeSinceChase);
+                
+                DRX_label = tail(dymget(dl, 'DRXLabel.y'), timeSinceChase);
+                
+                SRX_label = tail(dymget(dl, 'SRXLabel.y'), timeSinceChase);
+                
+                
+                Mtot{i, j} = tail(dymget(dl, 'totalLabel.y'), timeSinceInc);
         
                 SRX_labelFraction(i, j) = tail(dymget(dl, 'SRX_fraction'), 1);
                 SRX_pop(i, j) = tail(dymget(dl, 'SRX.pop'), 1);
+                SRX_popAt0(i, j) = head(tail(dymget(dl, 'SRX.pop'), timeSinceChase), 1);
                 DRX_pop(i, j) = tail(dymget(dl, 'DRX_D.pop'), 1) + tail(dymget(dl, 'DRX_T.pop'), 1);
                 maxLabel(i, j) = tail(dymget(dl, 'normFactor'), 1);
                 
@@ -65,10 +74,12 @@ function outputStruct = load_sim_results(ageTimes, rigorFrac, filenameFun)
                 % time = time(validTime);
         
                 % Perform the fit
-                [fitResult1, gof] = fit(time, yfit_norMax, model1, opts);
+                [fitResult1, gof1] = fit(time_chase, yfit_norMax, model1, opts);
                 % [fitResult2, gof2] = fit(time, yfit_norMinMax, model2, opts2);
-                [fitResult2, gof2] = fit(time, label, model2, opts2);
-                [fitResult_GT, gof2] = fit(time, label_data, model2, opts2);
+                [fitResult2, gof2] = fit(time_chase, label, model2, opts2);
+                gof(i, j) = gof2;
+
+                % [fitResult_GT, gof2] = fit(time_chase, label_data, model2, opts2);
                 % [fitResultWBckg, gof2_5] = fit(time, labelWBckg, model1, opts);
                 %% fit state labels separately
                 % opts_single = opts;
@@ -79,13 +90,15 @@ function outputStruct = load_sim_results(ageTimes, rigorFrac, filenameFun)
                 % opts_single.StartPoint = [0.5 0 150 100];
                 % [fitResult_singleSrx, gof4] = fit(time, SRX_label, model2, opts_single);
         
-                plot(time, yfit_norMax, '-', time, fitResult1(time), '--', time, label, '-', time, fitResult2(time), ':', LineWidth=2); 
+                % plot(time_chase, yfit_norMax, '-', time_chase, fitResult1(time_chase), '--', time_chase, label, '-', time_chase, fitResult2(time_chase), ':', LineWidth=2); 
+                % plot(time_chase, label, '-', time_chase, label_data, ':', LineWidth=2); 
+                plot(time_chase, label, '-', time_chase, fitResult2(time_chase), ':', LineWidth=2); 
                 % plot(time, label, '-', LineWidth=1.5);
                 % plot(time, DRX_label, '-', time, fitResult_singleDrx(time), '--', time, SRX_label, '-', time, fitResult_singleSrx(time),'--', LineWidth=1.5);
                 % plot(time, labelWBckg, '-', time,fitResultWBckg(time), '--',  LineWidth=1.5);
                 % title(sprintf("Incubation %g s", ageTimes(i))); 
         
-        
+                
                 fit1_A(i, j) = fitResult1.a;
                 fit1_B(i, j) = fitResult1.b;
                 fit1_T1(i, j) = fitResult1.t1;
@@ -113,7 +126,8 @@ function outputStruct = load_sim_results(ageTimes, rigorFrac, filenameFun)
             end
         end
     end
-    
+    outputStruct.Time = Abscissa;
+    outputStruct.Mtot = Mtot;
     outputStruct.fit1_A = fit1_A;
     outputStruct.fit2_A = fit2_A;
     outputStruct.fit1_B = fit1_B;
@@ -123,5 +137,9 @@ function outputStruct = load_sim_results(ageTimes, rigorFrac, filenameFun)
     outputStruct.SRX_pop = SRX_pop;
     outputStruct.DRX_pop = DRX_pop;
     outputStruct.maxLabel = maxLabel;
+    outputStruct.SRX_popAt0 = SRX_popAt0;
+    outputStruct.gof = gof;
+    outputStruct.fit2_T1 = fit2_T1;
+    outputStruct.fit2_T2 = fit2_T2;
 
 end
