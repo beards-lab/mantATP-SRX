@@ -1831,7 +1831,8 @@ package mantATP
 
         model Walklate_RigorFor120s
           extends
-            Walklate_RigorFor300s(RigorDuration=120.0,    tune_a=0.3063957837352183,
+            Walklate_RigorFor300s(RigorDuration=120.0,
+            tune_a=0.3063957837352183,
             tune_b=0.2168638192610709,
             tune_c=0.4087731993688888);
           annotation (experiment(
@@ -1841,6 +1842,36 @@ package mantATP
               Tolerance=1e-05,
               __Dymola_Algorithm="Cvode"));
         end Walklate_RigorFor120s;
+
+        model Walklate_RigorFor600s
+          extends Walklate_RigorFor300s(RigorDuration=600.0,
+            tune_a=0.3069448139661405,
+            tune_b=0.21574284955928857,
+            tune_c=0.40909296051577354                     );
+        end Walklate_RigorFor600s;
+
+        model Walklate_RigorFor60s
+          extends
+            Walklate_RigorFor300s(
+            RigorDuration=60,
+            tune_a=0.30727215077639414,
+            tune_b=0.21816494426127417,
+            tune_c=0.4091000030032352);
+          annotation (experiment(
+              StartTime=-6000,
+              StopTime=1000,
+              __Dymola_NumberOfIntervals=5000,
+              Tolerance=1e-05,
+              __Dymola_Algorithm="Cvode"));
+        end Walklate_RigorFor60s;
+
+        model Walklate_RigorFor6000s
+          extends Walklate_RigorFor300s(
+            RigorDuration=6000.0,
+            tune_a=0.3069448139661405,
+            tune_b=0.21574284955928857,
+            tune_c=0.40909296051577354                     );
+        end Walklate_RigorFor6000s;
       end RigorFraction;
 
       package Photobleaching
@@ -3643,8 +3674,5 @@ package mantATP
 
     end Unnamed;
   end Diffusion;
-  annotation (uses(
-      Modelica(version="4.0.0"),
-      Bodylight(version="1.0"),
-      Optimization(version="2.2.7")));
+  annotation (uses(Modelica(version="4.0.0"), Bodylight(version="1.0")));
 end mantATP;
