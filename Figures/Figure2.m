@@ -138,9 +138,9 @@ if labelPosVariant == 1
     text(5 - hd, tail(getValsToPerc('A2.pop'), 1) + vd, '$P_{A2}$', FontSize=12, HorizontalAlignment='right', VerticalAlignment='bottom', Interpreter='latex')
 elseif labelPosVariant == 2
     text(10 - hd, tail(getValsToPerc('SRX.pop'), 1) + 2*vd, '$P_{S}$', FontSize=12, HorizontalAlignment='right', VerticalAlignment='bottom', Interpreter='latex')
-    text(0, 30, '$P_{D_{T}}$x10$^3$', FontSize=12, HorizontalAlignment='left', VerticalAlignment='bottom', Interpreter='latex')
-    text(10 - hd, tail(getValsToPerc('DRX_D.pop'), 1) + vd, '$P_{D_{D}}$', FontSize=12, HorizontalAlignment='right', VerticalAlignment='bottom', Interpreter='latex')
-    text(-4, head(getValsToPerc('A2.pop'), 1) - vd, '$P_{A2}$', FontSize=12, HorizontalAlignment='left', VerticalAlignment='top', Interpreter='latex')    
+    text(10 - hd, tail(getValsToPerc('DRX_T.pop'), 1)*1000 + vd, '$P_{D_{T}}$x10$^3$', FontSize=12, HorizontalAlignment='right', VerticalAlignment='bottom', Interpreter='latex')
+    text(10 - hd, tail(getValsToPerc('DRX_D.pop'), 1) + vd, '$P_{D_{D}}$', FontSize=12, HorizontalAlignment='right', VerticalAlignment='top', Interpreter='latex')
+    text(5 - hd, tail(getValsToPerc('A2.pop'), 1) + vd, '$P_{A2}$', FontSize=12, HorizontalAlignment='right', VerticalAlignment='bottom', Interpreter='latex')
 end
 
 % quiver(x_marker, 95, 0 - x_marker, 0, 'Color', 'k', 'LineWidth', 3, 'MaxHeadSize', 4);
@@ -171,14 +171,28 @@ fill([xl(1) x_marker x_marker xl(1)], [0 0 100 100], color_rigor, 'EdgeColor', '
 fill([x_marker 0 0 x_marker], [0 0 100 100], color_incubation, 'EdgeColor', 'none', 'FaceAlpha', 1);   % incubation
 % fill([0 5 5 0], [0 0 100 100], color_chase, 'EdgeColor', 'none', 'FaceAlpha', 1);     % chase
 
-p3 = plot(time, getValsToPerc('totalLabel.y'), '-', 'Color', [1 1 1]*0, LineWidth=lw, DisplayName='$M_{tot}$');
-p1 = plot(time, getValsToPerc('SRXLabel.y'), ':', 'Color', [0 0 0], LineWidth=lw, DisplayName='$M_{SRX}$');
-p2 = plot(time, getValsToPerc('DRXLabel.y'), '-.', 'Color', [0 0 0], LineWidth=lw, DisplayName='$M_{DRX}$');
-
+if exist('plotPhotobleaching', 'var') && plotPhotobleaching
+    p1 = plot(time, getValsToPerc('SRXLabel.y'), ':', 'Color', [1 1 1]*0.5, LineWidth=lw, DisplayName='$M_{SRX}$');
+    p2 = plot(time, getValsToPerc('DRXLabel.y'), '-.', 'Color', [1 1 1]*0.5, LineWidth=lw, DisplayName='$M_{DRX}$');
+    p3 = plot(time, getValsToPerc('totalLabel.y'), '-', 'Color', [1 1 1]*0.5, LineWidth=lw, DisplayName='$M_{tot}$');
+    p4 = plot(time, getValsToPerc('totalLabel_PB'), '-', 'Color', [1 1 1]*0, LineWidth=lw, DisplayName='$\hat{M}_{tot}$');
+    legend(interpreter = "latex", Orientation="vertical", Location="northeast", AutoUpdate='off');
+    legend([p1 p2 p3 p4], ...
+    {'$M_{S}$', '$M_{D}$', '$M_{tot}$', '$\hat{M}_{tot}$'}, ...
+     'Location', 'northeast', Interpreter='latex');
+else
+    p1 = plot(time, getValsToPerc('SRXLabel.y'), ':', 'Color', [1 1 1]*0, LineWidth=lw, DisplayName='$M_{SRX}$');
+    p2 = plot(time, getValsToPerc('DRXLabel.y'), '-.', 'Color', [1 1 1]*0, LineWidth=lw, DisplayName='$M_{DRX}$');
+    p3 = plot(time, getValsToPerc('totalLabel.y'), '-', 'Color', [1 1 1]*0, LineWidth=lw, DisplayName='$M_{tot}$');
+    legend(interpreter = "latex", Orientation="vertical", Location="northeast", AutoUpdate='off');
+    legend([p1 p2 p3], ...
+    {'$M_{S}$', '$M_{D}$', '$M_{tot}$'}, ...
+     'Location', 'northeast', Interpreter='latex');
+end
 
 xlim(xl);ylim([0, 100])
 
-xlabel('$t$ (min)', Interpreter='latex');ylabel('Fluorescence (\% of max)', Interpreter='latex')
+xlabel('$t$ (min)', Interpreter='latex');ylabel('Fluorescence (\%)', Interpreter='latex')
 
 % plot([0 0], [0 max(getValsToPerc('totalLabel.y'))*1.1], 'k--', LineWidth=0.5, DisplayName="$t_0$");
 legend(interpreter = "latex", Orientation="vertical", Location="northeast", AutoUpdate='off');
@@ -249,9 +263,6 @@ tails = sum(time>0);
 % p4 = plot(tail(time, tails), tail(getValsToPerc('timeTable_ATPChase.y'), tails)*getVal('normFactor'), 'k:', LineWidth=lw*1.2, DisplayName="Fit eq. 1");
 
 
-l = legend([p1 p2 p3], ...
-    {'$M_{S}$', '$M_{D}$', '$M_{tot}$'}, ...
-     'Location', 'northeast', Interpreter='latex');
 % l.Position = l.Position + [0.03 0 0 0];
 % box on;
 ax = gca; xl = ax.XLim;        yl = ax.YLim;
@@ -276,7 +287,7 @@ p1 = plot(tail(time, Lxfit), tail(getValsToPerc('totalLabelNorm'), Lxfit),  'k-'
 % plot(xfit*time_conv, fitResult4(xfit)*100);
 % legend('Walklate et al., Fig 1A', '$I_{sim}$', interpreter='latex' )
 
-xlabel('$t$ (min)', Interpreter='latex');ylabel('Fluorescence (\% of max)', Interpreter='latex')
+xlabel('$t$ (min)', Interpreter='latex');ylabel('Fluorescence (\%)', Interpreter='latex')
 
 xlim([0 10])
 
@@ -304,7 +315,7 @@ valAt10min = @(str) tail(head(dymget(dl, str), iAt10min), 1);
 % bars = [fitResult1.b, fitResult1.b/(fitResult1.b + fitResult1.a), fitResult2.b/(fitResult2.a+fitResult2.b), fitResult3.b/(fitResult3.a + fitResult3.b), valAt10min('SRX_fraction'), valAt10min('SRX.pop')]*100;
 
 bar_cats = ["$SRX_C$ (Eq. 1)", "$SRX_C$ (Eq. 2)", "$P_{S}$"];
-bar_cats = ["(Eq. 1)", "(Eq. 2)", "$P_{S}$"];
+bar_cats = ["Eq. (1)", "Eq. (2)", "$P_{S}$"];
 bars = [fitResult1.b, fitResult2.b/(fitResult2.a+fitResult2.b), valAt10min('SRX.pop')]*100;
 
 x = categorical(bar_cats);

@@ -26,7 +26,24 @@ modelNames = {"mantATP.DataMatched.Walklate.ADPEffect.mantADPAffinity.mantADPAff
 modelNames = {"mantATP.DataMatched.Walklate.Photobleaching.XBCycling_Walklate_PB0005",
   "mantATP.DataMatched.Walklate.Photobleaching.XBCycling_Walklate_PB001",
   "mantATP.DataMatched.Walklate.Photobleaching.XBCycling_Walklate_PB002"};
-modelNames = {"mantATP.DataMatched.Walklate.ADPEffect.mantADPAffinity.XBCycling_Walklate_CalcADPDilMaxAffinity_Ki01"};
+modelNames = {"mantATP.DataMatched.Walklate.ADPEffect.mantADPAffinity.XBCycling_Walklate_CalcADPDilMaxAffinity_Ki01",
+              "mantATP.DataMatched.Walklate.ADPEffect.mantADPAffinity.XBCycling_Walklate_CalcADPDilMaxAffinity_Ki1",
+              "mantATP.DataMatched.Walklate.ADPEffect.mantADPAffinity.XBCycling_Walklate_CalcADPDilMaxAffinity_Ki10"};
+
+// single mixing
+modelNames = {"mantATP.DataMatched.Walklate.Fig1AReported.XBCycling_Walklate2022Fig1A", 
+  "mantATP.DataMatched.Walklate.ADPEffect.XBCycling_Walklate_CalcADPDil_kADP01",
+  "mantATP.DataMatched.Walklate.ADPEffect.XBCycling_Walklate_CalcADPDil_kADP05",
+  "mantATP.DataMatched.Walklate.ADPEffect.XBCycling_Walklate_CalcADPDil_kADP1",
+  "mantATP.DataMatched.Walklate.ADPEffect.XBCycling_Walklate_CalcADPDil_kADP10"
+  };
+
+// double mixing
+modelNames = {
+  "mantATP.DataMatched.Walklate.ADPEffect.DoubleMixing.XBCycling_Walklate_CalcADPDil_kADP1",
+  "mantATP.DataMatched.Walklate.ADPEffect.DoubleMixing.XBCycling_Walklate_CalcADPDil_kADP01",
+  "mantATP.DataMatched.Walklate.ADPEffect.DoubleMixing.XBCycling_Walklate_CalcADPDil_kADP05",
+  "mantATP.DataMatched.Walklate.ADPEffect.DoubleMixing.XBCycling_Walklate_CalcADPDil_kADP10"};
 
 for modelName in modelNames loop
   for i in {.2, .5, 1, 2, 5, 10, 30, 60.0000,  120.0000,  300.0000,  900.0000} loop  
@@ -41,7 +58,7 @@ for modelName in modelNames loop
     numberOfIntervals=1500,  
     method="cvode",
     tolerance=1e-6,
-      stopTime=1000, // or your desired simulation duration  
+      stopTime=600, 
       resultFile=filename, 
     initialNames = {"ageTime"},
       initialValues={i}  

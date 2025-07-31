@@ -33,7 +33,7 @@ modelName = 'XBCycling_Walklate2022Fig1A';
 
 data_src = ' (Walklate et al.)';
 
-labelPosVariant = 2;
+labelPosVariant = 1;
 markP_S = '*';
 markP_S = '';
 Figure2;
@@ -182,7 +182,7 @@ for i_rs = 1:length(s)
     srx_2(i_rs) = fitResult2.b/(fitResult2.a+fitResult2.b)*100;
     srx_pop(i_rs) = valAt10min('SRX.pop')*100;
 end
-
+%
 for i_rs = 1:length(s)
     cf(i_rs) = figure(100 + i_rs);
     axes(panelC(i_rs));cla reset;hold on;
@@ -199,7 +199,7 @@ for i_rs = 1:length(s)
             'FontSize', 12);
     end
     
-    
+    xlim([0.5, 6.5])
     set(panelC(i_rs), 'XTickLabel', xax, 'XTick', 1:length(s), 'TickLabelInterpreter', 'latex');
     xlabel('$P_{A2,0}$ (\%)', Interpreter='latex');
     ylabel('SRX fraction (\%)', Interpreter='latex');
@@ -218,9 +218,9 @@ end
 %% Plot PB sweep
 
 % cf = figure(4);
-
+clear;
 data_src = ' (Walklate et al.)';
-labelPosVariant = 1;
+labelPosVariant = 2;
 markP_S = '';
 
 s = {"0", "0001", "0005","001","002","005"};
@@ -230,14 +230,16 @@ clear srx_pop srx_2 PB;
 for i_pb = 1:length(s)
     figure(100 + i_pb);clf;
     modelName = ['XBCycling_Walklate_PB' char(s{i_pb})];
+    plotPhotobleaching = true;
     Figure2;
+    plotPhotobleaching = false;
     panelC(i_pb) = ax3;
     srx_2(i_pb) = fitResult2.b/(fitResult2.a+fitResult2.b)*100;
     srx_pop(i_pb) = valAt10min('SRX.pop')*100;
     PB(i_pb) = valAt10min('photobleaching')*100;
     k_PB(i_pb) = getVal('k_pb'); %s-1
 end
-%%
+%
 for i_pb = 1:length(s)
     cf(i_pb) = figure(100 + i_pb);
     axes(panelC(i_pb));cla reset;hold on;
@@ -259,17 +261,17 @@ for i_pb = 1:length(s)
             'FontSize', 10);
     end
     
-    % Create LaTeX-formatted tick labels
+    %% Create LaTeX-formatted tick labels
     xtick_labels = arrayfun(@(val) ...
     conditionalLabel(val), 1./k_PB, 'UniformOutput', false);
     xtick_labels = 1./k_PB;
 
 
-    % xtick_labels(k_PB == 0) = {'0'};
+    % xtick_labels(k_PB == 0) = {'Inf'};
 
     % Apply to axis (assuming panelC is your axis handle)
 set(panelC(i_pb), 'XTickLabel', xtick_labels, 'XTick', 1:length(s), 'TickLabelInterpreter', 'latex');
-    xlabel('$T_{pb}$ (s)', Interpreter='latex');
+    xlabel('$\tau_{pb}$ (s)', Interpreter='latex');
     ylabel('SRX fraction');
     xlim([0.5, length(s) + 0.5]);
 
@@ -291,15 +293,17 @@ data_src = ' (Walklate et al.)';
 labelPosVariant = 1;
 markP_S = '';
 
-s = {"01", "1","10","100"};
+s = {"01", "05", "1","10"};%,"100"};
 % xax = cellfun(@(sx) str2num([sx]), s);
 
 clear srx_pop srx_2 C_ADP;
 for i_ADP = 1:length(s)
     figure(100 + i_ADP);clf;
     modelName = ['XBCycling_Walklate_CalcADPDil_kADP' char(s{i_ADP})];
+    modelName = ['mantATP.DataMatched.Walklate.ADPEffect.DoubleMixing.XBCycling_Walklate_CalcADPDil_kADP' char(s{i_ADP}) '_60000'];
     Figure2;
     panelC(i_ADP) = ax3;
+    panelD(i_ADP) = ax4;
     srx_2(i_ADP) = fitResult2.b/(fitResult2.a+fitResult2.b)*100;
     srx_pop(i_ADP) = valAt10min('SRX.pop')*100;
     C_ADP(i_ADP) = valAt10min('dilutionEffect.y')*1000; % uM
@@ -343,50 +347,56 @@ for i_ADP = 1:length(s)
     add_panel_labels(["(C)", "(D)", "(B)", "(A)"], 0, [], [-40, 5]);
 end
 
+% Plot 0.5 uM Ki ADP instead of panel C
+ageTimes = [.2, .5, 1, 2, 5, 10, 30, 60.0000,  120.0000,  300.0000,  900.0000];
+
+rigorFrac = 40;
+walklate1D = getWalklateData();
+
+figure(1001);clf;
+filenameFun = @(firstDim, secondDim) sprintf('../Modelica/mantATP.DataMatched.Walklate.Fig1AReported.XBCycling_Walklate2022Fig1A_%d.mat', firstDim);  
+outS(1) = load_sim_results(ageTimes*1000, [10], filenameFun);
+filenameFun = @(firstDim, secondDim) sprintf('../Modelica/mantATP.DataMatched.Walklate.ADPEffect.DoubleMixing.XBCycling_Walklate_CalcADPDil_kADP05_%d.mat', firstDim);  
+outS(2) = load_sim_results(ageTimes*1000, [10], filenameFun);
+% filenameFun = @(firstDim, secondDim) sprintf('../Modelica/mantATP.DataMatched.Walklate.ADPEffect.DoubleMixing.XBCycling_Walklate_CalcADPDil_kADP1_%d.mat', firstDim);  
+% outS(3) = load_sim_results(ageTimes*1000, [10], filenameFun);
+%
+i_ADP = 2;
+figure(100 + i_ADP);
+axes(panelC(i_ADP));cla reset;
+%
+semilogx(ageTimes, outS(1).fit2_B(:, 1)*100, 'k:', LineWidth=lw, MarkerSize=ms);
+hold on;
+semilogx(ageTimes, outS(2).fit2_B(:, 1)*100, 'k-', LineWidth=lw, MarkerSize=ms);
+
+set(gca,'ColorOrderIndex',1)
+semilogx(ageTimes, outS(1).SRX_pop*100, ':', Color = [1 1 1]*0.8, LineWidth=lw, MarkerSize=ms);
+semilogx(ageTimes, outS(2).SRX_pop*100, '-', Color = [1 1 1]*0.8, LineWidth=lw, MarkerSize=ms);
+% semilogx(ageTimes, outS(3).SRX_pop*100, '--', Color = [1 1 1]*0.8, LineWidth=lw, MarkerSize=ms);
+
+xticks(ageTimes([1, 3, 6, 8, 10,11]));
+set(gca, "TickLabelInterpreter", "latex", "FontSize", 12, "FontUnits", 'points');
+
+text(0.2, outS(1).SRX_pop(2)*100 + 1, '$P_S$, no ADP effect', Interpreter='latex', HorizontalAlignment='left', VerticalAlignment='bottom')
+text(0.2, outS(2).SRX_pop(2)*100 + 1, '$P_S$, $K_i$ = 0.5$\mu$M', Interpreter='latex', HorizontalAlignment='left', VerticalAlignment='bottom')
+
+text(400, outS(1).SRX_pop(2)*100 + 1, ['$SRX_{Est}$,' newline 'no ADP effect~~~'], Interpreter='latex', HorizontalAlignment='right', VerticalAlignment='bottom')
+text(80, outS(2).fit2_B(9, 1)*100 - 1, ['~~~$SRX_{Est}$,' newline '$K_i$ = 0.5$\mu$M'], Interpreter='latex', HorizontalAlignment='left', VerticalAlignment='top')
+
+walklate1D = getWalklateData();
+errorbar(walklate1D.AgeTime, walklate1D.SRX, walklate1D.SD, 'ks-', LineWidth=lw/2, MarkerSize=8);
+
+ylabel('SRX fraction (\%)', Interpreter='latex', FontSize=12, FontUnits='points');
+xlabel('$T_{incubation}$ (s)', Interpreter='latex', FontSize=12, FontUnits='points');
+ylim([0, 53]);
 if saveFigs
     selFig = 2;
     saveas(cf(selFig), "../figures/Figure7.fig")
     saveas(cf(selFig), "../figures/Figure7.png")
 end
 
-%% retrieve all simulations from DYmola
 
-figure(4);clf;
-% nexttile;hold on; 
-% List of filenames based on the suffixes used in your Dymola runs  
-% Incubation time with mATP
-ageTimes = [.2, .5, 1, 2, 5, 10, 30, 60, 120, 300, 600, 1200];
-ageTimes = [.2, .5, 1, 2, 5, 10, 30, 60, 120, 240, 300, 400, 450, 500, 600, 1200];
-ageTimes = [.2, .5, 1, 2, 5, 10, 30, 60, 120, 300, 600, 900, 1200, 3600];
-ageTimes = [.2, .5, 1, 2, 5, 10, 30, 60, 120, 300, 600, 900];
-ageTimes = [.2, .5, 1, 2, 5, 10, 30, 60, 120, 300, 600, 900, 1200, 3600];
-ageTimes = [0.2000,   60.0000,  120.0000,  300.0000,  900.0000];
-ageTimes = [.2, .5, 1, 2, 5, 10, 30, 60.0000,  120.0000,  300.0000,  900.0000];
-ageTimes = [.2, .5, 1, 2, 5, 10, 30, 60.0000];
 
-ageTimesSubSel = [1 8 9 10 12];
-ageTimesSubSel = 1:length(ageTimes);
-
-rigorFrac = [0, 20, 40, 60, 80, 95];
-rigorFrac = [0, 40, 80, 95];
-rigorFrac = [40];
-
-k_adp = [0];
-k_adp = [0.0100, 0.0215, 0.0464, 0.1000, 0.2154, 0.4642, 1.0000, 2.1544, 4.6416, 10.0000, 100, 1000];
-k_adp = [0.0100, 0.1000, 0.2154, 0.4642, 1.0000, 2.1544, 4.6416, 10.0000];
-k_adp = [0.1000, 0.2154, 0.5, 1.0000, 10.0000];
-k_adp = [0.1000, 0.1143, 0.1286, 0.1429, 0.1571, 0.1714, 0.1857, 0.2000, 0.2055, 0.2111, 0.2169, 0.2228, 0.2289, 0.2352, 0.2417, 0.2483, 0.2551, 0.2621, 0.2693, 0.2766, 0.2842, 0.2920, 0.3000];
-% k_adp = [0.0200, 0.0229, 0.0257, 0.0286, 0.0314, 0.0343, 0.0371, 0.0400];
-rigorFrac = k_adp;
-
-% filename = sprintf('../Modelica/mantATP.LabelLib.Figures.DefaultW_%dA2_%d.mat', ageTimes(i)*1000, rigorFrac(j));  
-% filename = sprintf('../Modelica/mantATP.LabelLib.Figures.Walklate_PB_%dA2_%d.mat', ageTimes(i)*1000, rigorFrac(j));  
-% filename = sprintf('../Modelica/mantATP.LabelLib.Figures.Walklate_CalcMantADP_%dA2_%d.mat', ageTimes(i)*1000, rigorFrac(j));  
-% filename = sprintf('../Modelica/mantATP.LabelLib.Experiments.XBCycling_Walklate_CalcADPDil_%dA2_40kAdp_%g.mat', ageTimes(i)*1000, k_adp(j));  
-% filename = sprintf('../Modelica/mantATP.LabelLib.Experiments.XBCycling_Walklate_CalcADPDilAffinity_%dA2_40kAdp_%g.mat', ageTimes(i)*1000, k_adp(j));  
-
-filenameFun = @(firstDim, secondDim) sprintf('../Modelica/mantATP.LabelLib.Experiments.XBCycling_Walklate_CalcADPDil_%dA2_40kAdp_%g.mat', firstDim, secondDim);
-outS = load_sim_results(ageTimes*1000, rigorFrac, filenameFun);
 %% Figure n. 4: age-time-sweep
 clear;
 clf;
@@ -402,10 +412,11 @@ walklate1D = getWalklateData();
 
 filenameFun = @(firstDim, secondDim) sprintf('../Modelica/mantATP.LabelLib.Figures.DefaultW_%dA2_%d.mat', firstDim, secondDim);
 filenameFun = @(firstDim, secondDim) sprintf('../Modelica/mantATP.LabelLib.Figures.DefaultW_%dA2_%d.mat', firstDim, secondDim);
-filenameFun = @(firstDim, secondDim) sprintf('../Modelica/mantATP.LabelLib.Figures.DefaultW_%dA2_%d.mat', firstDim, secondDim);
+filenameFun = @(firstDim, secondDim) sprintf('../Modelica/mantATP.Figures.DefaultW_%dA2_%d.mat', firstDim, secondDim);
 % filenameFun = @(firstDim, secondDim) sprintf('../Modelica/mantATP.LabelLib.Experiments.XBCycling_Walklate_CalcADPDil_kADP02_%dA2_%d.mat', firstDim, secondDim);
 outS = load_sim_results(ageTimes*1000, rigorFrac, filenameFun);
 %% just plot Fig 4
+
 cf = figure(5);clf;
 aspect = 2;
 % aspect = 1.0;
@@ -413,7 +424,7 @@ figscale = 1.0;
 cf.Position = [300 60 figscale*7.2*96 figscale*7.2*96/aspect];
 
 % tiledlayout(3, 2, 'TileSpacing','loose', 'Padding','compact')
-tiledlayout(1, 2, 'TileSpacing','compact', 'Padding','compact')
+tiledlayout(1, 2, 'TileSpacing','tight', 'Padding','compact')
 lw = 1.5;
 ms = 8;
 
@@ -481,7 +492,6 @@ text(0.5, 98, 'Estimated $DRX$', FontSize=12, HorizontalAlignment='left', Vertic
 text(120, outS.fit2_A(9)*100, '(model)', FontSize=12, HorizontalAlignment='left', VerticalAlignment='bottom', Interpreter='latex')
 text(0.7, walklate1D.DRX(3) - walklate1D.SD_1(3) - 5 , '(Walklate 2022)', FontSize=12, HorizontalAlignment='left', VerticalAlignment='top', Interpreter='latex')
 
-fontsize(12, "points")
 
 % %% Panel B - rigor fraction
 % nexttile(5);
@@ -512,15 +522,105 @@ fontsize(12, "points")
 % xlabel('mant-ATP incubation time (s)', Interpreter='latex');ylabel('Max $M_{tot}$ (\% of max)', Interpreter='latex')
 % hLegend = legend(string(fliplr(rigorFrac)), Location="best");
 % hLegend.Title.String = 'A2_{0}'; % Set the title string
-
-add_panel_labels(["(B)", "(A)"], 0, [], [-42.5, -10]);
-
+fontsize(12, "points")
+% add_panel_labels(["(B)", "(A)"], 0, [], [-43, -1]);
+panel_labels = add_panel_labels(["(B)", "(A)"], 0, [], [-30, -10]);
+% fontsize(12, "points")
+panel_labels{1}.HorizontalAlignment = "right";
+panel_labels{2}.HorizontalAlignment = "right";
+panel_labels{2}.Position = panel_labels{2}.Position + [-0.01 0 0 0];
 if exist('saveFigs') && saveFigs
     saveas(gcf, "../figures/Figure4.fig")
     saveas(gcf, "../figures/Figure4.png")
 end
 
-fontsize(12, "points")
+return;
+%% UNUSED THRASH BELOW
+%% tEST THE rigor incubation time 
+% cf = figure(4);
+
+data_src = ' (Walklate et al.)';
+labelPosVariant = 1;
+markP_S = '';
+
+s = {'60', '120', '300', '600'};
+xax = cellfun(@(sx) str2num([sx]), s);
+
+clear srx_pop srx_2 PB;
+for i_rs = 1:length(s)
+    figure(100 + i_rs);
+    modelName = ['Walklate_RigorFor' s{i_rs} 's'];
+    Figure2;
+    panelC(i_rs) = ax3;
+    srx_2(i_rs) = fitResult2.b/(fitResult2.a+fitResult2.b)*100;
+    srx_pop(i_rs) = valAt10min('SRX.pop')*100;
+end
+%
+for i_rs = 1:length(s)
+    cf(i_rs) = figure(100 + i_rs);
+    axes(panelC(i_rs));cla reset;hold on;
+    bar(srx_pop, 'FaceColor',[1 1 1]*0.8); ylabel('SRX estimation (\%)', Interpreter='latex')
+    
+    srx_fake = nan(size(srx_pop)); srx_fake(i_rs) = srx_pop(i_rs);
+    b = bar(srx_fake, 'FaceColor',[1 1 1]*0.6); ylabel('SRX estimation (\%)', Interpreter='latex')
+    
+    for j_rs = 1:length(srx_pop)
+        text(j_rs, srx_pop(j_rs) + 0.01, sprintf('%.0f', srx_pop(j_rs)), ...
+            'HorizontalAlignment', 'center', ...
+            'VerticalAlignment', 'bottom', ...
+            'Interpreter', 'latex', ...
+            'FontSize', 12);
+    end
+    
+    xlim([0.5, 6.5])
+    set(panelC(i_rs), 'XTickLabel', xax, 'XTick', 1:length(s), 'TickLabelInterpreter', 'latex');
+    xlabel('Duration of rigor incubation (s)', Interpreter='latex');
+    ylabel('SRX fraction (\%)', Interpreter='latex');
+
+    fontsize(12, 'points')
+    add_panel_labels(["(C)", "(D)", "(B)", "(A)"], 0, [], [-40, 5]);
+
+end
+
+
+%% retrieve all simulations from DYmola
+
+figure(4);clf;
+% nexttile;hold on; 
+% List of filenames based on the suffixes used in your Dymola runs  
+% Incubation time with mATP
+ageTimes = [.2, .5, 1, 2, 5, 10, 30, 60, 120, 300, 600, 1200];
+ageTimes = [.2, .5, 1, 2, 5, 10, 30, 60, 120, 240, 300, 400, 450, 500, 600, 1200];
+ageTimes = [.2, .5, 1, 2, 5, 10, 30, 60, 120, 300, 600, 900, 1200, 3600];
+ageTimes = [.2, .5, 1, 2, 5, 10, 30, 60, 120, 300, 600, 900];
+ageTimes = [.2, .5, 1, 2, 5, 10, 30, 60, 120, 300, 600, 900, 1200, 3600];
+ageTimes = [0.2000,   60.0000,  120.0000,  300.0000,  900.0000];
+ageTimes = [.2, .5, 1, 2, 5, 10, 30, 60.0000,  120.0000,  300.0000,  900.0000];
+ageTimes = [.2, .5, 1, 2, 5, 10, 30, 60.0000];
+
+ageTimesSubSel = [1 8 9 10 12];
+ageTimesSubSel = 1:length(ageTimes);
+
+rigorFrac = [0, 20, 40, 60, 80, 95];
+rigorFrac = [0, 40, 80, 95];
+rigorFrac = [40];
+
+k_adp = [0];
+k_adp = [0.0100, 0.0215, 0.0464, 0.1000, 0.2154, 0.4642, 1.0000, 2.1544, 4.6416, 10.0000, 100, 1000];
+k_adp = [0.0100, 0.1000, 0.2154, 0.4642, 1.0000, 2.1544, 4.6416, 10.0000];
+k_adp = [0.1000, 0.2154, 0.5, 1.0000, 10.0000];
+k_adp = [0.1000, 0.1143, 0.1286, 0.1429, 0.1571, 0.1714, 0.1857, 0.2000, 0.2055, 0.2111, 0.2169, 0.2228, 0.2289, 0.2352, 0.2417, 0.2483, 0.2551, 0.2621, 0.2693, 0.2766, 0.2842, 0.2920, 0.3000];
+% k_adp = [0.0200, 0.0229, 0.0257, 0.0286, 0.0314, 0.0343, 0.0371, 0.0400];
+rigorFrac = k_adp;
+
+% filename = sprintf('../Modelica/mantATP.LabelLib.Figures.DefaultW_%dA2_%d.mat', ageTimes(i)*1000, rigorFrac(j));  
+% filename = sprintf('../Modelica/mantATP.LabelLib.Figures.Walklate_PB_%dA2_%d.mat', ageTimes(i)*1000, rigorFrac(j));  
+% filename = sprintf('../Modelica/mantATP.LabelLib.Figures.Walklate_CalcMantADP_%dA2_%d.mat', ageTimes(i)*1000, rigorFrac(j));  
+% filename = sprintf('../Modelica/mantATP.LabelLib.Experiments.XBCycling_Walklate_CalcADPDil_%dA2_40kAdp_%g.mat', ageTimes(i)*1000, k_adp(j));  
+% filename = sprintf('../Modelica/mantATP.LabelLib.Experiments.XBCycling_Walklate_CalcADPDilAffinity_%dA2_40kAdp_%g.mat', ageTimes(i)*1000, k_adp(j));  
+
+filenameFun = @(firstDim, secondDim) sprintf('../Modelica/mantATP.LabelLib.Experiments.XBCycling_Walklate_CalcADPDil_%dA2_40kAdp_%g.mat', firstDim, secondDim);
+outS = load_sim_results(ageTimes*1000, rigorFrac, filenameFun);
 %% plot fig 5
 clear;clf;
 def_aux;
@@ -701,17 +801,40 @@ walklate1D = getWalklateData();
 % outS(3) = load_sim_results(ageTimes*1000, [10], filenameFun);
 
 
-filenameFun = @(firstDim, secondDim) sprintf('../Modelica/mantATP.DataMatched.Walklate.ADPEffect.mantADPAffinity.XBCycling_Walklate_CalcADPDilMaxAffinity_Ki01_%d.mat', firstDim);  
-outS(1) = load_sim_results(ageTimes*1000, [10], filenameFun);
-filenameFun = @(firstDim, secondDim) sprintf('../Modelica/mantATP.DataMatched.Walklate.ADPEffect.mantADPAffinity.XBCycling_Walklate_CalcADPDilMaxAffinity_Ki1_%d.mat', firstDim);  
-outS(2) = load_sim_results(ageTimes*1000, [10], filenameFun);
-filenameFun = @(firstDim, secondDim) sprintf('../Modelica/mantATP.DataMatched.Walklate.ADPEffect.mantADPAffinity.XBCycling_Walklate_CalcADPDilMaxAffinity_Ki10_%d.mat', firstDim);  
-outS(3) = load_sim_results(ageTimes*1000, [10], filenameFun);
+% filenameFun = @(firstDim, secondDim) sprintf('../Modelica/mantATP.DataMatched.Walklate.ADPEffect.mantADPAffinity.XBCycling_Walklate_CalcADPDilMaxAffinity_Ki01_%d.mat', firstDim);  
+% outS(1) = load_sim_results(ageTimes*1000, [10], filenameFun);
+% filenameFun = @(firstDim, secondDim) sprintf('../Modelica/mantATP.DataMatched.Walklate.ADPEffect.mantADPAffinity.XBCycling_Walklate_CalcADPDilMaxAffinity_Ki1_%d.mat', firstDim);  
+% outS(2) = load_sim_results(ageTimes*1000, [10], filenameFun);
+% filenameFun = @(firstDim, secondDim) sprintf('../Modelica/mantATP.DataMatched.Walklate.ADPEffect.mantADPAffinity.XBCycling_Walklate_CalcADPDilMaxAffinity_Ki10_%d.mat', firstDim);  
+% outS(3) = load_sim_results(ageTimes*1000, [10], filenameFun);
 
+% single dilution
+% filenameFun = @(firstDim, secondDim) sprintf('../Modelica/mantATP.DataMatched.Walklate.ADPEffect.XBCycling_Walklate_CalcADPDil_kADP01_%d.mat', firstDim);  
+% outS(1) = load_sim_results(ageTimes*1000, [10], filenameFun);
+% filenameFun = @(firstDim, secondDim) sprintf('../Modelica/mantATP.DataMatched.Walklate.ADPEffect.XBCycling_Walklate_CalcADPDil_kADP05_%d.mat', firstDim);  
+% outS(2) = load_sim_results(ageTimes*1000, [10], filenameFun);
+% filenameFun = @(firstDim, secondDim) sprintf('../Modelica/mantATP.DataMatched.Walklate.ADPEffect.XBCycling_Walklate_CalcADPDil_kADP1_%d.mat', firstDim);  
+% outS(3) = load_sim_results(ageTimes*1000, [10], filenameFun);
+% filenameFun = @(firstDim, secondDim) sprintf('../Modelica/mantATP.DataMatched.Walklate.ADPEffect.XBCycling_Walklate_CalcADPDil_kADP10_%d.mat', firstDim);  
+% outS(4) = load_sim_results(ageTimes*1000, [10], filenameFun);
+% filenameFun = @(firstDim, secondDim) sprintf('../Modelica/mantATP.DataMatched.Walklate.Fig1AReported.XBCycling_Walklate2022Fig1A_%d.mat', firstDim);  
+% outS(5) = load_sim_results(ageTimes*1000, [10], filenameFun);
+
+% double dilution
+filenameFun = @(firstDim, secondDim) sprintf('../Modelica/mantATP.DataMatched.Walklate.ADPEffect.DoubleMixing.XBCycling_Walklate_CalcADPDil_kADP01_%d.mat', firstDim);  
+outS(1) = load_sim_results(ageTimes*1000, [10], filenameFun);
+filenameFun = @(firstDim, secondDim) sprintf('../Modelica/mantATP.DataMatched.Walklate.ADPEffect.DoubleMixing.XBCycling_Walklate_CalcADPDil_kADP05_%d.mat', firstDim);  
+outS(2) = load_sim_results(ageTimes*1000, [10], filenameFun);
+filenameFun = @(firstDim, secondDim) sprintf('../Modelica/mantATP.DataMatched.Walklate.ADPEffect.DoubleMixing.XBCycling_Walklate_CalcADPDil_kADP1_%d.mat', firstDim);  
+outS(3) = load_sim_results(ageTimes*1000, [10], filenameFun);
+filenameFun = @(firstDim, secondDim) sprintf('../Modelica/mantATP.DataMatched.Walklate.ADPEffect.DoubleMixing.XBCycling_Walklate_CalcADPDil_kADP10_%d.mat', firstDim);  
+outS(4) = load_sim_results(ageTimes*1000, [10], filenameFun);
+filenameFun = @(firstDim, secondDim) sprintf('../Modelica/mantATP.DataMatched.Walklate.Fig1AReported.XBCycling_Walklate2022Fig1A_%d.mat', firstDim);  
+outS(5) = load_sim_results(ageTimes*1000, [10], filenameFun);
 
 %%
 figure(211);clf;
-outZ = outS(1);
+outZ = outS(4);
 semilogx(ageTimes, outZ.fit2_T1, ageTimes, outZ.fit2_T2);
 hold on;
 xlabel('incubation time (s)');ylabel('Time concstant (s)')
@@ -733,21 +856,29 @@ legend('T1', 'T2', 'rmse * 1e6')
 % 
 figure(232);clf;
 lw = 1;
-semilogx(ageTimes, outS(1).fit2_B(:, 1)*100, 's-', LineWidth=lw, MarkerSize=ms);
-hold on;
-semilogx(ageTimes, outS(2).fit2_B(:, 1)*100, 's-', LineWidth=lw, MarkerSize=ms);
-semilogx(ageTimes, outS(3).fit2_B(:, 1)*100, 's-', LineWidth=lw, MarkerSize=ms);
+leg_S = [];
+for i = 1:length(outS)
+    semilogx(ageTimes, outS(i).fit2_B(:, 1)*100, 's-', LineWidth=lw, MarkerSize=ms);
+    % leg_S{length(leg_S) + 1} = "C_2, Ki = 0.1 uM"
+    hold on;
+end
+% semilogx(ageTimes, outS(2).fit2_B(:, 1)*100, 's-', LineWidth=lw, MarkerSize=ms);
+% semilogx(ageTimes, outS(3).fit2_B(:, 1)*100, 's-', LineWidth=lw, MarkerSize=ms);
 % semilogx(ageTimes, outS(4).fit2_B(:, 1)*100, 's-', LineWidth=lw, MarkerSize=ms);
 
 set(gca,'ColorOrderIndex',1)
-semilogx(ageTimes, outS(1).SRX_pop*100, 'x--', LineWidth=lw, MarkerSize=ms);
-semilogx(ageTimes, outS(2).SRX_pop*100, 'x--', LineWidth=lw, MarkerSize=ms);
-semilogx(ageTimes, outS(3).SRX_pop*100, 'x--', LineWidth=lw, MarkerSize=ms);
+for i = 1:length(outS)
+semilogx(ageTimes, outS(i).SRX_pop*100, 'x--', LineWidth=lw, MarkerSize=ms);
+% semilogx(ageTimes, outS(2).SRX_pop*100, 'x--', LineWidth=lw, MarkerSize=ms);
+% semilogx(ageTimes, outS(3).SRX_pop*100, 'x--', LineWidth=lw, MarkerSize=ms);
+end
 
 set(gca,'ColorOrderIndex',1)
-semilogx(ageTimes, outS(1).SRX_popAt0*100, '+:', LineWidth=lw, MarkerSize=ms);
-semilogx(ageTimes, outS(2).SRX_popAt0*100, '+:', LineWidth=lw, MarkerSize=ms);
-semilogx(ageTimes, outS(3).SRX_popAt0*100, '+:', LineWidth=lw, MarkerSize=ms);
+for i = 1:length(outS)
+% semilogx(ageTimes, outS(i).SRX_popAt0*100, '+:', LineWidth=lw, MarkerSize=ms);
+% semilogx(ageTimes, outS(2).SRX_popAt0*100, '+:', LineWidth=lw, MarkerSize=ms);
+% semilogx(ageTimes, outS(3).SRX_popAt0*100, '+:', LineWidth=lw, MarkerSize=ms);
+end
 
 % semilogx(ageTimes, outS(4).fit2_B(:, 1)*100, 's-', LineWidth=lw, MarkerSize=ms);
 xticks(ageTimes)
@@ -755,9 +886,8 @@ xticks(ageTimes)
 walklate1D = getWalklateData();
 errorbar(walklate1D.AgeTime, walklate1D.SRX, walklate1D.SD, 's-', LineWidth=lw, MarkerSize=8);
 
-legend('C_2, Ki = 0.1 uM','C_2, Ki = 1 uM','C_2, Ki = 10 uM',...
-    'SRX @ 10m','SRX @ 10m','SRX @ 10m', ...
-    'SRX @ 0','SRX @ 0','SRX @ 0', ...
+legend('C_2, Ki = 0.1 uM','C_2, Ki = 0.5 uM','C_2, Ki = 1 uM','Ki = 10 uM','Ki = Inf',...
+    'SRX @ 10m','SRX @ 10m','SRX @ 10m','SRX @ 10m',...
     'Data Walklate, Fig 1D', Location='northwest');
 xlabel('Incubation time');
 ylabel('Fraction (%)')
@@ -955,7 +1085,7 @@ function walklate1D = getWalklateData()
               'VariableNames', {'AgeTime','SRX','SD','DRX','SD_1'});
 end
 
-function add_panel_labels(labelList, shrinkPixels, skipLabel, shift)
+function panel_labels = add_panel_labels(labelList, shrinkPixels, skipLabel, shift)
     % Adds panel labels (A, B, C, ...) to current figure's axes or tiles
     % labelList: optional cell array of custom labels {'A','B','C',...}
     % shrinkPixels: vertical space (in pixels) to subtract from each axis for label
@@ -995,6 +1125,7 @@ function add_panel_labels(labelList, shrinkPixels, skipLabel, shift)
 
     % Convert pixel height to normalized units
     shrinkNorm = shrinkPixels / figHeight;
+    panel_labels = {};
 
     for i = 1:length(allAxes)
         ax = allAxes(i);
@@ -1011,7 +1142,7 @@ function add_panel_labels(labelList, shrinkPixels, skipLabel, shift)
             labelHeightNorm = shrinkPixels / figHeight;
             labelBox = [newPos(1) - 10 / figWidth + shift(1)/figWidth, newPos(2) + newPos(4) + shift(2)/figHeight, 0.03, labelHeightNorm];
 
-            annotation('textbox', labelBox, ...
+            panel_labels{i} = annotation('textbox', labelBox, ...
                 'String', labelList{i}, ...
                 'FontWeight', 'bold', ...
                 'FontSize', 14, ...
