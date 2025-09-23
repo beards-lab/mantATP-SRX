@@ -55,6 +55,7 @@ datafile = '../Modelica/DefaultH.mat';
 % datafile = '../Modelica/Walklate_80.mat';
 % datafile = '../Modelica/XBCycling_Walklate_PB002.mat';
 % datafile = '../Modelica/XBCycling_Walklate_CalcADPDil_kADP1.mat';
+% datafile = '../Modelica/XBCyclingAlternative_A2_80.mat';
 
 dl = dymload(datafile);
 

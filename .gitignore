@@ -16,3 +16,5 @@ Modelica/request
 Modelica/status
 Modelica/OptimizationBestModel.mo
 Modelica/OptimizationLastRunModel.mo
+Modelica/stop
+/data

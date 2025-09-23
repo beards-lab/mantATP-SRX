@@ -38,7 +38,7 @@ tab = readtable("data/ATP_control.csv");
 % tab = readtable("data/ATP_Mava.csv");
 
 % save as mat
-save('data/tables.mat', 'tab', '-mat')
+% save('data/tables.mat', 'tab', '-mat')
 % save("data/ATP_control.mat", "tab")
 
 tab_i = 1;
