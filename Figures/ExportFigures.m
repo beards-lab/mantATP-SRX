@@ -24,6 +24,7 @@ end
 figure(3)
 modelName = 'DefaultW';
 modelName = 'XBCycling_Walklate2022Fig1A';
+modelName = 'DefaultWSrxD';
 % modelName = 'XBCycling_Walklate_CalcADPDil_kADP01_fixedDil';
 % modelName = 'XBCycling_Walklate_CalcADPDil_kADP10_fixedDil';
 % modelName = 'XBCycling_Walklate_CalcADPDil_kADP01_fixedDil';
@@ -56,6 +57,8 @@ datafile = '../Modelica/DefaultH.mat';
 % datafile = '../Modelica/XBCycling_Walklate_PB002.mat';
 % datafile = '../Modelica/XBCycling_Walklate_CalcADPDil_kADP1.mat';
 % datafile = '../Modelica/XBCyclingAlternative_A2_80.mat';
+datafile = '../Modelica/DefaultW.mat';
+datafile = '../Modelica/DefaultWSrxD.mat';
 
 dl = dymload(datafile);
 
@@ -168,6 +171,8 @@ disp(kinetic_table);
 % cf = figure(4);
 
 data_src = ' (Walklate et al.)';
+baseModelName = 'Walklate_A2%s';
+baseModelName = 'WalklateSrxD_A2%s_optimized';
 labelPosVariant = 1;
 markP_S = '';
 
@@ -177,7 +182,7 @@ xax = cellfun(@(sx) str2num([sx]), s);
 clear srx_pop srx_2 PB;
 for i_rs = 1:length(s)
     figure(100 + i_rs);
-    modelName = ['Walklate_A2' s{i_rs}];
+    modelName = sprintf(baseModelName, s{i_rs});
     Figure2;
     panelC(i_rs) = ax3;
     srx_2(i_rs) = fitResult2.b/(fitResult2.a+fitResult2.b)*100;
@@ -414,6 +419,8 @@ walklate1D = getWalklateData();
 filenameFun = @(firstDim, secondDim) sprintf('../Modelica/mantATP.LabelLib.Figures.DefaultW_%dA2_%d.mat', firstDim, secondDim);
 filenameFun = @(firstDim, secondDim) sprintf('../Modelica/mantATP.LabelLib.Figures.DefaultW_%dA2_%d.mat', firstDim, secondDim);
 filenameFun = @(firstDim, secondDim) sprintf('../Modelica/mantATP.Figures.DefaultW_%dA2_%d.mat', firstDim, secondDim);
+% alternative model
+filenameFun = @(firstDim, secondDim) sprintf('../Modelica/mantATP.Figures.DefaultWSrxD_%dA2_%d.mat', firstDim, secondDim);
 % filenameFun = @(firstDim, secondDim) sprintf('../Modelica/mantATP.LabelLib.Experiments.XBCycling_Walklate_CalcADPDil_kADP02_%dA2_%d.mat', firstDim, secondDim);
 outS = load_sim_results(ageTimes*1000, rigorFrac, filenameFun);
 %% just plot Fig 4
