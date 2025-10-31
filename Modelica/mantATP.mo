@@ -405,7 +405,7 @@ package mantATP
 
       model XBCycling
         "Default model parametrization to fit Hooijman 2011 mantATP chased by ATP."
-        extends Configurations.XBCyclingSrxT;
+        extends Configurations.XBCycling_SrxT;
       end XBCycling;
 
       package RigorFraction
@@ -579,7 +579,7 @@ package mantATP
         model XBCyclingSrxD_A2_0
           "Optimized model parameters of mantATP.DataMatched.Hooijman.Experiments.XBCyclingAlternative_fudgeInit"
           extends
-            Configurations.XBCyclingSrxD(
+            Configurations.XBCycling_SrxD(
             tune_a=1.0067836787801121,
             tune_b=0.8453168893408061,
             tune_c=1.017840538354438,
@@ -707,7 +707,7 @@ package mantATP
         model XBCyclingSrxD_A2_80
           "Optimized model parameters of mantATP.DataMatched.Hooijman.Experiments.XBCyclingAlternative_fudgeInit"
           extends
-            Configurations.XBCyclingSrxD(
+            Configurations.XBCycling_SrxD(
             tune_a=0.9995342401118589,
             tune_b=0.7463909821686898,
             tune_c=1.025962629043154,
@@ -922,7 +922,7 @@ package mantATP
 
         model XBCyclingSrxT_kHmant_40
           "Optimized model parameters of mantATP.Experiments.XBCyclingSrxT"
-          extends mantATP.Configurations.XBCyclingSrxT(
+          extends mantATP.Configurations.XBCycling_SrxT(
             tune_a=0.5114406952562761,
             tune_b=0.0459675155023775,
             tune_c=1.0858304945896236,
@@ -1191,7 +1191,7 @@ package mantATP
 
         model XBCyclingSrxD_Walklate2022Fig1A
           "Additional model parametrization to fit Walklate 2022 fig 1A"
-          extends Configurations.XBCyclingSrxD(
+          extends Configurations.XBCycling_SrxD(
             rho=0,
             tune_a=0.5637507976074201,
             tune_b=0.5024787422559087,
@@ -3139,7 +3139,7 @@ package mantATP
 
         model XBCyclingSrxTD_Walklate2022Fig1A
           "Additional model parametrization to fit Walklate 2022 fig 1A"
-          extends Configurations.XBCyclingSrxD(
+          extends Configurations.XBCycling_SrxD(
             rho=0,
             tune_a=0.5637507976074201,
             tune_b=0.5024787422559087,
@@ -3271,46 +3271,8 @@ package mantATP
     end DefaultWSrxD;
   end Figures;
 
-  package Diffusion
-
-
-    model Unnamed
-      parameter Integer N = 10 "Number of radial compartments";
-      parameter Real R = 0.01 "Radius [m]";
-      parameter Real D=1e-10 "Diffusion coefficient [m^2/s]"
-        annotation (Evaluate=false);
-      parameter Real ATP_ext = 5e-3 "ATP concentration at boundary";
-      parameter Real ProdRate=1e-7 "ATP production rate per volume"
-        annotation (Evaluate=false);
-      parameter Real pi = Modelica.Constants.pi;
-      parameter Real dr = R / N;
-      parameter Real[:] r = { (i - 0.5)*dr for i in 1:N};
-      parameter Real[:] V = { pi * ((i*dr)^2 - ((i-1)*dr)^2) * 1.0 for i in 1:N};
-      parameter Real[:] A = { 2 * pi * r[i] * 1.0 for i in 1:N};
-      Real C[N](start=fill(ATP_ext/2, N)) "ATP concentration in each layer";
-    equation
-      for i in 1:N loop
-        der(C[i]) = (
-          (if i == 1 then 0 else D * A[i-1] * (C[i-1] - C[i]) / dr)
-          +
-          (if i == N then D * A[i] * (ATP_ext - C[i]) / dr else D * A[i] * (C[i+1] - C[i]) / dr)
-          +
-          ProdRate * V[i])      / V[i];
-      end for;
-      annotation (Icon(coordinateSystem(preserveAspectRatio=false)), Diagram(
-            coordinateSystem(preserveAspectRatio=false)));
-                                                                                   // 1m height assumed
-                                                                  // surface area between compartments
-
-      // Diffusion and production in each layer
-
-
-    end Unnamed;
-  end Diffusion;
-
   package Configurations
-    model XBCyclingSrxT
-      "Default model parametrization to fit Hooijman 2011 mantATP chased by ATP."
+    model XBCycling "Default base class"
 
       extends Modelica.Icons.Example;
       Modelica.Blocks.Sources.RealExpression rateDRXDOut(y=if time > -ageTime
@@ -3350,25 +3312,15 @@ package mantATP
     public
       parameter Real k=0.016666666666666666;
       Bodylight.Population.LabeledPopulation.Components.StateCompartment SRX(
-          pop_start=1e-6, nPorts=2)
+          pop_start=1e-6)
         annotation (Placement(transformation(extent={{-60,40},{-40,60}})));
       Bodylight.Population.LabeledPopulation.Components.StateCompartment DRX_T(
-          pop_start=max(1e-6, 1 - A2.pop_start - SRX.pop_start - DRX_D.pop_start),
-          nPorts=5)
+          pop_start=max(1e-6, 1 - A2.pop_start - SRX.pop_start - DRX_D.pop_start), nPorts=
+            3)
         annotation (Placement(transformation(extent={{-60,-40},{-40,-20}})));
       Bodylight.Population.LabeledPopulation.Components.StateCompartment DRX_D(
           pop_start=max(1e-6, 0.95 - A2.pop_start), nPorts=2)
         annotation (Placement(transformation(extent={{60,-40},{40,-20}})));
-      Bodylight.Population.LabeledPopulation.Components.StateTransition k_srx_m(k
-          =0.014*tune_a) annotation (Placement(transformation(
-            extent={{-10,-10},{10,10}},
-            rotation=270,
-            origin={-30,20})));
-      Bodylight.Population.LabeledPopulation.Components.StateTransition k_srx_p(k
-          =48.5*tune_b) annotation (Placement(transformation(
-            extent={{10,-10},{-10,10}},
-            rotation=270,
-            origin={-20,20})));
       Bodylight.Population.LabeledPopulation.Components.StateTransition kH(
         k=80,
         allowReverse=true,
@@ -3414,32 +3366,8 @@ package mantATP
 
       connect(rateDRXDOut.y, kH_m.rateInput) annotation (Line(points={{15,-10},
               {14,-10},{14,-28},{10,-28}}, color={0,0,127}));
-      connect(SRX.lpop[1], k_srx_m.lpop_a) annotation (Line(
-          points={{-40.2,40.15},{-30,40.15},{-30,30}},
-          color={107,45,134},
-          thickness=1));
-      connect(k_srx_m.lpop_b, DRX_T.lpop[1]) annotation (Line(
-          points={{-30,10},{-30,-40},{-40.2,-40}},
-          color={107,45,134},
-          thickness=1));
-      connect(k_srx_p.lpop_b, SRX.lpop[2]) annotation (Line(
-          points={{-20,30},{-20,40},{-40.2,40},{-40.2,40.65}},
-          color={107,45,134},
-          thickness=1));
-      connect(k_srx_p.lpop_a, DRX_T.lpop[2]) annotation (Line(
-          points={{-20,10},{-20,4},{-30,4},{-30,-39.8},{-40.2,-39.8}},
-          color={107,45,134},
-          thickness=1));
-      connect(DRX_T.lpop[3], kH.lpop_a) annotation (Line(
-          points={{-40.2,-39.6},{-40.2,-40},{-20,-40},{-20,-46},{-10,-46}},
-          color={107,45,134},
-          thickness=1));
       connect(kH.lpop_b, DRX_D.lpop[1]) annotation (Line(
           points={{10,-46},{24,-46},{24,-39.85},{40.2,-39.85}},
-          color={107,45,134},
-          thickness=1));
-      connect(kH_m.lpop_b, DRX_T.lpop[4]) annotation (Line(
-          points={{-10,-32},{-20,-32},{-20,-39.4},{-40.2,-39.4}},
           color={107,45,134},
           thickness=1));
       connect(kH_m.lpop_a, DRX_D.lpop[2]) annotation (Line(
@@ -3448,10 +3376,6 @@ package mantATP
           thickness=1));
       connect(k2.lpop_a, A2.lpop[1]) annotation (Line(
           points={{-32,-76},{-32,-100},{-40.2,-100},{-40.2,-99.6}},
-          color={107,45,134},
-          thickness=1));
-      connect(k2.lpop_b, DRX_T.lpop[5]) annotation (Line(
-          points={{-32,-56},{-32,-40},{-40.2,-40},{-40.2,-39.2}},
           color={107,45,134},
           thickness=1));
       connect(labelDRX_D.y, kH_m.labelInput) annotation (Line(points={{-3,-10},{0,-10},
@@ -3464,53 +3388,93 @@ package mantATP
             points={{-39,90},{-38,90.4},{3.2,90.4}}, color={0,0,127}));
       connect(sqDiffIntegrator.u2, totalLabelNorm_expr.y) annotation (Line(
             points={{3.2,85.6},{-10,85.6},{-10,78},{-13,78}}, color={0,0,127}));
+      connect(DRX_T.lpop[1], kH.lpop_a) annotation (Line(
+          points={{-40.2,-39.9333},{-40.2,-40},{-16,-40},{-16,-46},{-10,-46}},
+          color={107,45,134},
+          thickness=1));
+      connect(DRX_T.lpop[2], kH_m.lpop_b) annotation (Line(
+          points={{-40.2,-39.6},{-16,-39.6},{-16,-32},{-10,-32}},
+          color={107,45,134},
+          thickness=1));
+      connect(DRX_T.lpop[3], k2.lpop_b) annotation (Line(
+          points={{-40.2,-39.2667},{-40.2,-40},{-32,-40},{-32,-56}},
+          color={107,45,134},
+          thickness=1));
       annotation (Documentation(info="<html><p>This class was automatically generated by the Optimization Library. It includes an inherited class with optimized tuner values. More information is found in the text layer of the class.</p></html>"));
 
-    end XBCyclingSrxT;
+    end XBCycling;
 
-    model XBCycling_SrxD
-      "Alternative configuration, where a separate SRX_ADP state exists and transitions to DRX_ADP"
-      import mantATP;
-      extends mantATP.DataMatched.Hooijman.XBCycling(
-        DRX_D(nPorts=3),
-        k_srx_m(k=kmsr),
-        SRX(nPorts=3),
-        SRXLabel(y=SRX.labelAmount + SRX_D.labelAmount),
-        tune_a=0.4389320387284864,
-        tune_b=0.08804382574240988,
-        tune_c=1.0150553374423377);
-      Bodylight.Population.LabeledPopulation.Components.StateTransition k_srx_m1(k(
-            displayUnit="s-1") = kmsr)
-                     annotation (Placement(transformation(
+    model XBCycling_SrxT
+      "Default model parametrization to fit Hooijman 2011 mantATP chased by ATP."
+
+      extends XBCycling(SRX(nPorts=2), DRX_T(nPorts=5));
+    //  parameter Real offset=0 "Offsets of output signals";
+      Bodylight.Population.LabeledPopulation.Components.StateTransition k_srx_m(k
+          =0.014*tune_a) annotation (Placement(transformation(
             extent={{-10,-10},{10,10}},
             rotation=270,
-            origin={40,10})));
-      parameter Bodylight.Types.PopulationChange kmsr=0.014*tune_a;
-      Bodylight.Population.LabeledPopulation.Components.StateCompartment SRX_D(pop_start
-          =1e-6, nPorts=2)
-        annotation (Placement(transformation(extent={{60,40},{40,60}})));
-      Bodylight.Population.LabeledPopulation.Components.StateTransition kH_srx(
-        k=80,
-        allowReverse=true,
-        useRateOutput=true)
-        annotation (Placement(transformation(extent={{-6,30},{14,50}})));
+            origin={-32,20})));
+      Bodylight.Population.LabeledPopulation.Components.StateTransition k_srx_p(k
+          =48.5*tune_b) annotation (Placement(transformation(
+            extent={{10,-10},{-10,10}},
+            rotation=270,
+            origin={-22,20})));
     equation
-      connect(k_srx_m1.lpop_b, DRX_D.lpop[3]) annotation (Line(
-          points={{40,0},{40,-40},{40.2,-40},{40.2,-39.6}},
+      connect(k_srx_m.lpop_a, SRX.lpop[1]) annotation (Line(
+          points={{-32,30},{-32,40.4},{-40.2,40.4}},
           color={107,45,134},
           thickness=1));
-      connect(SRX.lpop[3], kH_srx.lpop_a) annotation (Line(
-          points={{-40.2,40.4},{-40.2,40},{-6,40}},
+      connect(k_srx_p.lpop_b, SRX.lpop[2]) annotation (Line(
+          points={{-22,30},{-22,40.4},{-40.2,40.4}},
           color={107,45,134},
           thickness=1));
-      connect(kH_srx.lpop_b, SRX_D.lpop[1]) annotation (Line(
-          points={{14,40},{36,40},{36,40.15},{40.2,40.15}},
+      connect(k_srx_m.lpop_b, DRX_T.lpop[4]) annotation (Line(
+          points={{-32,10},{-32,-39.6},{-40.2,-39.6}},
           color={107,45,134},
           thickness=1));
-      connect(k_srx_m1.lpop_a, SRX_D.lpop[2]) annotation (Line(
-          points={{40,20},{40,40.65},{40.2,40.65}},
+      connect(k_srx_p.lpop_a, DRX_T.lpop[5]) annotation (Line(
+          points={{-22,10},{-22,0},{-32,0},{-32,-39.6},{-40.2,-39.6}},
           color={107,45,134},
           thickness=1));
+      annotation (Documentation(info="<html><p>This class was automatically generated by the Optimization Library. It includes an inherited class with optimized tuner values. More information is found in the text layer of the class.</p></html>"));
+
+    end XBCycling_SrxT;
+
+    model XBCycling_SrxD
+      "Default model parametrization to fit Hooijman 2011 mantATP chased by ATP."
+
+      extends XBCycling(
+        DRX_D(nPorts=4),
+        SRX(nPorts=2),
+        tune_a=1.0072940309413374,
+        tune_b=0.7909243959419637,
+        tune_c=1.0249458388976362);
+    Bodylight.Population.LabeledPopulation.Components.StateTransition k_srx_m(k=0.014*tune_a*0.523781) annotation (Placement(transformation(extent={{-10,-10},{10,10}}, rotation=270, origin={28,20})));
+    Bodylight.Population.LabeledPopulation.Components.StateTransition k_srx_p(k=48.5*tune_b*9.27277E-05) annotation (Placement(transformation(extent={{10,-10},{-10,10}}, rotation=270, origin={38,20})));
+    equation
+
+      connect(k_srx_p.lpop_a, DRX_D.lpop[3]) annotation (Line(
+          points={{38,10},{38,-39.6},{40.2,-39.6}},
+          color={107,45,134},
+          thickness=1));
+      connect(k_srx_m.lpop_b, DRX_D.lpop[4]) annotation (Line(
+          points={{28,10},{28,4},{38,4},{38,-39.6},{40.2,-39.6}},
+          color={107,45,134},
+          thickness=1));
+      connect(k_srx_m.lpop_a, SRX.lpop[1]) annotation (Line(
+          points={{28,30},{28,40.4},{-40.2,40.4}},
+          color={107,45,134},
+          thickness=1));
+      connect(k_srx_p.lpop_b, SRX.lpop[2]) annotation (Line(
+          points={{38,30},{38,40},{28,40},{28,40.4},{-40.2,40.4}},
+          color={107,45,134},
+          thickness=1));
+      annotation (Documentation(info="<html><p>This class was automatically generated by the Optimization Library. It includes an inherited class with optimized tuner values. More information is found in the text layer of the class.</p></html>"),
+          experiment(
+          StartTime=-600,
+          StopTime=600,
+          __Dymola_Algorithm="Dassl"));
+
     end XBCycling_SrxD;
 
     model XBCycling_Srx2DrxD
@@ -3539,175 +3503,70 @@ package mantATP
           thickness=1));
     end XBCycling_Srx2DrxD;
 
-    model XBCyclingSrxD
-      "Default model parametrization to fit Hooijman 2011 mantATP chased by ATP."
-
-      extends Modelica.Icons.Example;
-      Modelica.Blocks.Sources.RealExpression rateDRXDOut(y=if time > -ageTime
-             then 0.066*tune_c else 0)
-        annotation (Placement(transformation(extent={{36,-20},{16,0}})));
-    //  parameter Real offset=0 "Offsets of output signals";
-      replaceable Data.TimeTable_ATPChaseHooijman2011 timeTable_ATPChase(offset=1
-             - 0.66 - 0.27)
-        constrainedby Data.ATPChaseData
-        annotation (Placement(transformation(extent={{-60,80},{-40,100}})));
-      Bodylight.Blocks.Math.SqDiffIntegrator sqDiffIntegrator
-        annotation (Placement(transformation(extent={{4,84},{12,92}})));
-      Modelica.Blocks.Sources.RealExpression totalLabelNorm_expr(y=if time > 0
-             then totalLabelNorm else timeTable_ATPChase.y)
-        annotation (Placement(transformation(extent={{-34,68},{-14,88}})));
-      parameter Real tune_a=0.5237808289148986;
-      parameter Real tune_b=0.09272767278883189;
-      parameter Real tune_c=1.081950535876404;
-      Bodylight.Population.LabeledPopulation.Components.StateTransition k2(
-        k=50,
-        useRateInput=true,
-        useDynamicFlowLabeling=true) annotation (Placement(transformation(
-            extent={{-10,-10},{10,10}},
-            rotation=90,
-            origin={-32,-66})));
-      Modelica.Blocks.Sources.RealExpression rateA2Out(y=if time > -ageTime and
-            A2.pop > 1e-6 then k2.k else 0)
-        annotation (Placement(transformation(extent={{10,-94},{-10,-74}})));
-      Modelica.Blocks.Sources.RealExpression labelA2Out(y=1)
-        annotation (Placement(transformation(extent={{10,-74},{-10,-58}})));
-      parameter Bodylight.Types.Concentration CmantATP=0.25;
-      parameter Bodylight.Types.Concentration CATP=4
-        "Unlabeled ATP concentration";
-      Modelica.Blocks.Sources.RealExpression labelDRX_D(y=if time > 0 then rho
-             elseif time < 0 and time > -ageTime then 1 else 0)
-        annotation (Placement(transformation(extent={{-24,-20},{-4,0}})));
-    public
-      parameter Real k=0.016666666666666666;
-      Bodylight.Population.LabeledPopulation.Components.StateCompartment SRX(
-          pop_start=1e-6, nPorts=2)
-        annotation (Placement(transformation(extent={{-60,40},{-40,60}})));
-      Bodylight.Population.LabeledPopulation.Components.StateCompartment DRX_T(
-          pop_start=max(1e-6, 1 - A2.pop_start - SRX.pop_start - DRX_D.pop_start),
-          nPorts=3)
-        annotation (Placement(transformation(extent={{-60,-40},{-40,-20}})));
-      Bodylight.Population.LabeledPopulation.Components.StateCompartment DRX_D(
-          pop_start=max(1e-6, 0.95 - A2.pop_start), nPorts=4)
-        annotation (Placement(transformation(extent={{60,-40},{40,-20}})));
-      Bodylight.Population.LabeledPopulation.Components.StateTransition k_srx_m(k=0.014*
-            tune_a*0.523781)
-                         annotation (Placement(transformation(
+    model XBCycling_SrxTD
+      "Alternative configuration, where a separate SRX_ADP state exists and transitions to DRX_ADP"
+      import mantATP;
+      extends XBCycling(
+        DRX_D(nPorts=3),
+        SRXLabel(y=SRX.labelAmount + SRX_D.labelAmount),
+        tune_a=0.4389320387284864,
+        tune_b=0.08804382574240988,
+        tune_c=1.0150553374423377,
+        DRX_T(nPorts=4),
+        SRX(nPorts=2)  );
+      Bodylight.Population.LabeledPopulation.Components.StateTransition k_srx_m(k(
+            displayUnit="s-1") = kmsr) annotation (Placement(transformation(
             extent={{-10,-10},{10,10}},
             rotation=270,
-            origin={28,20})));
-      Bodylight.Population.LabeledPopulation.Components.StateTransition k_srx_p(k=48.5*
-            tune_b*9.27277E-05)
-                        annotation (Placement(transformation(
-            extent={{10,-10},{-10,10}},
-            rotation=270,
-            origin={38,20})));
-      Bodylight.Population.LabeledPopulation.Components.StateTransition kH(
+            origin={40,10})));
+      parameter Bodylight.Types.PopulationChange kmsr=0.014*tune_a;
+      Bodylight.Population.LabeledPopulation.Components.StateCompartment SRX_D(pop_start
+          =1e-6, nPorts=2)
+        annotation (Placement(transformation(extent={{60,40},{40,60}})));
+      Bodylight.Population.LabeledPopulation.Components.StateTransition kH_srx(
         k=80,
         allowReverse=true,
-        useRateOutput=false)
-        annotation (Placement(transformation(extent={{-10,-36},{10,-56}})));
-      Bodylight.Population.LabeledPopulation.Components.StateTransition kH_m(
-        k=0.066*tune_c,
-        allowReverse=true,
-        useRateOutput=false,
-        useDynamicFlowLabeling=true,
-        useRateInput=true) annotation (Placement(transformation(
-            extent={{-10,-10},{10,10}},
-            rotation=180,
-            origin={0,-32})));
-      Bodylight.Population.LabeledPopulation.Components.StateCompartment A2(
-          pop_start=0.4, nPorts=1) "Attached state"
-        annotation (Placement(transformation(extent={{-60,-100},{-40,-80}})));
-      parameter Modelica.Units.SI.Time ageTime(displayUnit="s")=120;
-      Modelica.Blocks.Sources.RealExpression totalLabel(y=SRXLabel.y + DRXLabel.y +
-            A2.labelAmount)
-        annotation (Placement(transformation(extent={{-100,80},{-80,100}})));
-      Modelica.Blocks.Sources.RealExpression SRXLabel(y=SRX.labelAmount)
-        annotation (Placement(transformation(extent={{-100,60},{-80,80}})));
-      Modelica.Blocks.Sources.RealExpression DRXLabel(y=DRX_D.labelAmount + DRX_T.labelAmount)
-        annotation (Placement(transformation(extent={{-100,40},{-80,60}})));
-      Real totalLabelNorm "Label normalized to chase onset";
-      Real normFactor(start=1);
-      Real SRX_fraction(start=0);
-      Real photobleaching(start=1) "Photobleaching decay starts with aging";
-      parameter Real k_pb=0;
-      Real totalLabel_PB=totalLabel.y*photobleaching
-        "Total label including photobleaching";
-      parameter Real background=0;
-      parameter Real rho=0*CmantATP/CATP;
-      parameter Real photobleachingTime = -ageTime;
+        useRateOutput=true)
+        annotation (Placement(transformation(extent={{-6,30},{14,50}})));
+      Bodylight.Population.LabeledPopulation.Components.StateTransition k_srx_p(k=48.5*
+            tune_b)     annotation (Placement(transformation(
+            extent={{10,-10},{-10,10}},
+            rotation=270,
+            origin={-34,10})));
     equation
-      der(photobleaching) = if time > photobleachingTime then -photobleaching*k_pb else 0;
-      totalLabelNorm = totalLabel_PB/normFactor + timeTable_ATPChase.offset;
-      when time >= 0 then
-        normFactor = (totalLabel_PB + background)/(timeTable_ATPChase.maxScale - timeTable_ATPChase.offset);
-        SRX_fraction = SRXLabel.y/totalLabel.y;
-      end when;
+      connect(k_srx_m.lpop_b, DRX_D.lpop[3]) annotation (Line(
+          points={{40,0},{40,-40},{40.2,-40},{40.2,-39.6}},
+          color={107,45,134},
+          thickness=1));
+      connect(kH_srx.lpop_b, SRX_D.lpop[1]) annotation (Line(
+          points={{14,40},{36,40},{36,40.15},{40.2,40.15}},
+          color={107,45,134},
+          thickness=1));
+      connect(k_srx_m.lpop_a, SRX_D.lpop[2]) annotation (Line(
+          points={{40,20},{40,40.65},{40.2,40.65}},
+          color={107,45,134},
+          thickness=1));
+      connect(k_srx_p.lpop_a, DRX_T.lpop[4]) annotation (Line(
+          points={{-34,0},{-34,-40},{-40.2,-40},{-40.2,-39.6}},
+          color={107,45,134},
+          thickness=1));
+      connect(SRX.lpop[1], k_srx_p.lpop_b) annotation (Line(
+          points={{-40.2,40.4},{-34,40.4},{-34,20}},
+          color={107,45,134},
+          thickness=1));
+      connect(SRX.lpop[2], kH_srx.lpop_a) annotation (Line(
+          points={{-40.2,40.4},{-40.2,40},{-6,40}},
+          color={107,45,134},
+          thickness=1));
+    end XBCycling_SrxTD;
 
-      connect(rateDRXDOut.y, kH_m.rateInput) annotation (Line(points={{15,-10},
-              {14,-10},{14,-28},{10,-28}}, color={0,0,127}));
-      connect(SRX.lpop[1], k_srx_m.lpop_a) annotation (Line(
-          points={{-40.2,40.15},{28,40.15},{28,30}},
-          color={107,45,134},
-          thickness=1));
-      connect(k_srx_p.lpop_b, SRX.lpop[2]) annotation (Line(
-          points={{38,30},{38,40},{-40.2,40},{-40.2,40.65}},
-          color={107,45,134},
-          thickness=1));
-      connect(DRX_T.lpop[1], kH.lpop_a) annotation (Line(
-          points={{-40.2,-39.9333},{-40.2,-40},{-20,-40},{-20,-46},{-10,-46}},
-          color={107,45,134},
-          thickness=1));
-      connect(kH.lpop_b, DRX_D.lpop[1]) annotation (Line(
-          points={{10,-46},{24,-46},{24,-39.975},{40.2,-39.975}},
-          color={107,45,134},
-          thickness=1));
-      connect(kH_m.lpop_b, DRX_T.lpop[2]) annotation (Line(
-          points={{-10,-32},{-20,-32},{-20,-39.6},{-40.2,-39.6}},
-          color={107,45,134},
-          thickness=1));
-      connect(kH_m.lpop_a, DRX_D.lpop[2]) annotation (Line(
-          points={{10,-32},{24,-32},{24,-39.725},{40.2,-39.725}},
-          color={107,45,134},
-          thickness=1));
-      connect(k2.lpop_a, A2.lpop[1]) annotation (Line(
-          points={{-32,-76},{-32,-100},{-40.2,-100},{-40.2,-99.6}},
-          color={107,45,134},
-          thickness=1));
-      connect(k2.lpop_b, DRX_T.lpop[3]) annotation (Line(
-          points={{-32,-56},{-32,-40},{-40.2,-40},{-40.2,-39.2667}},
-          color={107,45,134},
-          thickness=1));
-      connect(labelDRX_D.y, kH_m.labelInput) annotation (Line(points={{-3,-10},{0,-10},
-              {0,-24}},                     color={0,0,127}));
-      connect(labelA2Out.y, k2.labelInput)
-        annotation (Line(points={{-11,-66},{-24,-66}}, color={0,0,127}));
-      connect(k2.rateInput, rateA2Out.y) annotation (Line(points={{-28,-76},{-28,-84},
-              {-11,-84}}, color={0,0,127}));
-      connect(timeTable_ATPChase.y, sqDiffIntegrator.u1) annotation (Line(
-            points={{-39,90},{-38,90.4},{3.2,90.4}}, color={0,0,127}));
-      connect(sqDiffIntegrator.u2, totalLabelNorm_expr.y) annotation (Line(
-            points={{3.2,85.6},{-10,85.6},{-10,78},{-13,78}}, color={0,0,127}));
-      connect(k_srx_p.lpop_a, DRX_D.lpop[3]) annotation (Line(
-          points={{38,10},{38,4},{34,4},{34,-40},{40.2,-40},{40.2,-39.475}},
-          color={107,45,134},
-          thickness=1));
-      connect(k_srx_m.lpop_b, DRX_D.lpop[4]) annotation (Line(
-          points={{28,10},{28,4},{34,4},{34,-39.225},{40.2,-39.225}},
-          color={107,45,134},
-          thickness=1));
-      annotation (Documentation(info="<html><p>This class was automatically generated by the Optimization Library. It includes an inherited class with optimized tuner values. More information is found in the text layer of the class.</p></html>"),
-          experiment(
-          StartTime=-600,
-          StopTime=600,
-          __Dymola_Algorithm="Dassl"));
-
-    end XBCyclingSrxD;
   end Configurations;
 
   package Experiments
     model XBCyclingSrxD_kHmant_40
-      extends Configurations.XBCyclingSrxD(kH(useRateInput=true),
+      "Testing different hydrolysis rates for mant- and dark ATPs"
+      extends Configurations.XBCycling_SrxD(
+                                           kH(useRateInput=true),
         DRX_D(nPorts=5),
         DRX_T(nPorts=4),
         tune_a=1.0070454586754463,
@@ -3743,30 +3602,45 @@ package mantATP
           thickness=1));
     end XBCyclingSrxD_kHmant_40;
 
-    model XBCyclingSrxT_MinOn
-      "Some minimal MyoII can't enter the SRX OFF state"
-      extends Configurations.XBCyclingSrxT(
-        k_srx_p(useRateInput=true),
-        tune_a=0.5237691067410988,
-        tune_b=0.09902239908159749,
-        tune_c=1.0802470424770516);
-      parameter Real minDRX=0.05
-        "A minimal fraction of DRX which do not enter the SRX at all";
-      Modelica.Blocks.Sources.RealExpression RateLimited_k_srx_p(y=k_srx_p.k*
-            max(1 - minDRX/(DRX_T.pop + DRX_D.pop), 0))
-        "There is at least minDRX active non-SRX myosins in both DRX states - simplified k_srx_p.k*(DRX_T.pop - minDRX*DRX_T.pop/(DRX_T.pop + DRX_D.pop))/DRX_T.pop"
-        annotation (Placement(transformation(extent={{-60,-10},{-40,10}})));
+    model SrxTD_mAdpAffinity
+      "Testing how 10x mant-ADP affinity skews the results"
+      extends Configurations.XBCycling_SrxTD(
+        DRX_T(nPorts=6),
+        DRX_D(nPorts=4),
+        rateDRXDOut(y=if time > -ageTime then 0.066*tune_c*(1 - DRX_D.label)
+               else 0),
+        kH(k(displayUnit="s-1") = 20));
+      Bodylight.Population.LabeledPopulation.Components.StateTransition kH_m_MANT(
+        k=0.066*tune_c,
+        allowReverse=true,
+        useRateOutput=false,
+        useDynamicFlowLabeling=true,
+        useRateInput=true) annotation (Placement(transformation(
+            extent={{-10,-10},{10,10}},
+            rotation=180,
+            origin={0,6})));
+      Modelica.Blocks.Sources.RealExpression rateDRXDOut1(y=if time > -ageTime
+             then 0.066*tune_c*(DRX_D.label)/k_mantAff else 0)
+        annotation (Placement(transformation(extent={{36,14},{16,34}})));
+      parameter Real k_mantAff=10 "affinity multiplicator";
     equation
-      connect(RateLimited_k_srx_p.y, k_srx_p.rateInput) annotation (Line(points
-            ={{-39,0},{-28,0},{-28,6},{-24,6},{-24,10}}, color={0,0,127}));
-      annotation (experiment(
-          StartTime=-600,
-          StopTime=600,
-          __Dymola_NumberOfIntervals=1500,
-          __Dymola_Algorithm="Dassl"));
-    end XBCyclingSrxT_MinOn;
+      connect(kH_m_MANT.lpop_b, DRX_T.lpop[6]) annotation (Line(
+          points={{-10,6},{-16,6},{-16,-39.6},{-40.2,-39.6}},
+          color={107,45,134},
+          thickness=1));
+      connect(kH_m_MANT.lpop_a, DRX_D.lpop[4]) annotation (Line(
+          points={{10,6},{24,6},{24,-39.35},{40.2,-39.35},{40.2,-39.6}},
+          color={107,45,134},
+          thickness=1));
+      connect(labelDRX_D.y, kH_m.labelInput)
+        annotation (Line(points={{-3,-10},{0,-10},{0,-24}}, color={0,0,127}));
+      connect(labelDRX_D.y, kH_m_MANT.labelInput)
+        annotation (Line(points={{-3,-10},{0,-10},{0,14}}, color={0,0,127}));
+      connect(rateDRXDOut1.y, kH_m_MANT.rateInput) annotation (Line(points={{15,
+              24},{16,24},{16,10},{10,10}}, color={0,0,127}));
+    end SrxTD_mAdpAffinity;
 
-    model TestInactive "Testing the permanent active fraction of DRX"
+    model TestMinimalAlwaysOn "Testing the permanent active fraction of DRX"
       Bodylight.Population.LabeledPopulation.Components.StateCompartment SRX(pop_start
           =1e-9, nPorts=2)
         annotation (Placement(transformation(extent={{-44,48},{-24,68}})));
@@ -3852,7 +3726,34 @@ package mantATP
           StopTime=10,
           __Dymola_NumberOfIntervals=1500,
           __Dymola_Algorithm="Dassl"));
-    end TestInactive;
+    end TestMinimalAlwaysOn;
+
+    model XBCyclingSrxT_MinOn
+      "Some minimal MyoII can't enter the SRX OFF state"
+      extends Configurations.XBCycling_SrxT(
+        k_srx_p(useRateInput=true));
+      parameter Real minDRX=0.05
+        "A minimal fraction of DRX which do not enter the SRX at all";
+      Modelica.Blocks.Sources.RealExpression RateLimited_k_srx_p(y=k_srx_p.k*max(1 -
+            minDRX/(DRX_T.pop + DRX_D.pop), 0))
+        "There is at least minDRX active non-SRX myosins in both DRX states - simplified k_srx_p.k*(DRX_T.pop - minDRX*DRX_T.pop/(DRX_T.pop + DRX_D.pop))/DRX_T.pop"
+        annotation (Placement(transformation(extent={{-60,-10},{-40,10}})));
+    equation
+      connect(RateLimited_k_srx_p.y, k_srx_p.rateInput) annotation (Line(points={{-39,
+              0},{-28,0},{-28,6},{-24,6},{-24,10}}, color={0,0,127}));
+      annotation (experiment(
+          StartTime=-600,
+          StopTime=600,
+          __Dymola_NumberOfIntervals=1500,
+          __Dymola_Algorithm="Dassl"));
+    end XBCyclingSrxT_MinOn;
+
+    model XBCyclingSrxT_MinOn_opt "A slight change to fit exactly"
+      extends XBCyclingSrxT_MinOn(
+        tune_a=0.5237691067410988,
+        tune_b=0.09902239908159749,
+        tune_c=1.0802470424770516);
+    end XBCyclingSrxT_MinOn_opt;
 
     model XBCyclingSrxT_MinOn_Active
       extends XBCyclingSrxT_MinOn(DRX_D(nPorts=3), A2(nPorts=2));
@@ -3873,6 +3774,181 @@ package mantATP
           color={107,45,134},
           thickness=1));
     end XBCyclingSrxT_MinOn_Active;
+
+    model XBCycling_SrxTD_Active
+      extends Configurations.XBCycling_SrxTD(
+        A2(nPorts=2),
+        DRX_D(nPorts=4),
+        k_srx_p(useRateInput=true));
+      Bodylight.Population.LabeledPopulation.Components.StateTransition ka(
+        k(displayUnit="s-1") = 20,
+        allowReverse=true,
+        useRateOutput=false) annotation (Placement(transformation(
+            extent={{-10,10},{10,-10}},
+            rotation=180,
+            origin={30,-90})));
+      Modelica.Blocks.Sources.RealExpression RateLimited_k_srx_p(y=k_srx_p.k*
+            max(1 - minDRX/(DRX_T.pop + DRX_D.pop + A2.pop), 0))
+        "There is at least minDRX active non-SRX myosins in both DRX states - simplified k_srx_p.k*(DRX_T.pop - minDRX*DRX_T.pop/(DRX_T.pop + DRX_D.pop))/DRX_T.pop"
+        annotation (Placement(transformation(extent={{-82,-18},{-62,2}})));
+      parameter Real minDRX=0.05 "Minimal amount of never SRX";
+    equation
+      connect(ka.lpop_b, A2.lpop[2]) annotation (Line(
+          points={{20,-90},{-6,-90},{-6,-100},{-40.2,-100},{-40.2,-99.6}},
+          color={107,45,134},
+          thickness=1));
+      connect(ka.lpop_a, DRX_D.lpop[4]) annotation (Line(
+          points={{40,-90},{44,-90},{44,-44},{40.2,-44},{40.2,-39.6}},
+          color={107,45,134},
+          thickness=1));
+      connect(RateLimited_k_srx_p.y, k_srx_p.rateInput) annotation (Line(points={{-61,-8},
+              {-50,-8},{-50,-2},{-26,-2},{-26,10}}, color={0,0,127}));
+    end XBCycling_SrxTD_Active;
+
+    model SrxTD_SlowerK2
+      extends Configurations.XBCycling_SrxTD(k2(k(displayUnit="s-1") = 17));
+    end SrxTD_SlowerK2;
+
+    package Diffusion
+
+      model Unnamed
+        parameter Integer N = 10 "Number of radial compartments";
+        parameter Real R = 0.01 "Radius [m]";
+        parameter Real D=1e-10 "Diffusion coefficient [m^2/s]"
+          annotation (Evaluate=false);
+        parameter Real ATP_ext = 5e-3 "ATP concentration at boundary";
+        parameter Real ProdRate=1e-7 "ATP production rate per volume"
+          annotation (Evaluate=false);
+        parameter Real pi = Modelica.Constants.pi;
+        parameter Real dr = R / N;
+        parameter Real[:] r = { (i - 0.5)*dr for i in 1:N};
+        parameter Real[:] V = { pi * ((i*dr)^2 - ((i-1)*dr)^2) * 1.0 for i in 1:N};
+        parameter Real[:] A = { 2 * pi * r[i] * 1.0 for i in 1:N};
+        Real C[N](start=fill(ATP_ext/2, N)) "ATP concentration in each layer";
+      equation
+        for i in 1:N loop
+          der(C[i]) = (
+            (if i == 1 then 0 else D * A[i-1] * (C[i-1] - C[i]) / dr)
+            +
+            (if i == N then D * A[i] * (ATP_ext - C[i]) / dr else D * A[i] * (C[i+1] - C[i]) / dr)
+            +
+            ProdRate * V[i])      / V[i];
+        end for;
+        annotation (Icon(coordinateSystem(preserveAspectRatio=false)), Diagram(
+              coordinateSystem(preserveAspectRatio=false)));
+                                                                                     // 1m height assumed
+                                                                    // surface area between compartments
+
+        // Diffusion and production in each layer
+
+      end Unnamed;
+    end Diffusion;
+
+    model SrxTD_slowerkH
+      extends Configurations.XBCycling_SrxTD(
+        kH(k(displayUnit="s-1") = k_h),
+        tune_a=0.4967568535801701,
+        tune_b=0.023250848587955675,
+        tune_c=1.0845101785047804,
+        kH_srx(k(displayUnit="s-1") = k_h));
+      parameter Bodylight.Types.PopulationChange k_h(displayUnit="s-1") = 20;
+    end SrxTD_slowerkH;
+
+    model SrxTD_reversekH "With reverse hydrolysis enabled"
+      extends Configurations.XBCycling_SrxTD(
+        DRX_T(nPorts=6),
+        DRX_D(nPorts=4),
+        tune_a=0.5248844775533099,
+        tune_b=0.0009526757598301765,
+        tune_c=1.107347763780688,
+        kH(k(displayUnit="s-1") = k_h),
+        kH_srx(k=k_h));
+      Bodylight.Population.LabeledPopulation.Components.StateTransition kH1(
+        k(displayUnit="s-1") = 1.6,
+        allowReverse=true,
+        useRateOutput=false,
+        useDynamicFlowLabeling=false)
+        annotation (Placement(transformation(extent={{-10,-10},{10,10}},
+            rotation=180,
+            origin={0,-54})));
+      parameter Bodylight.Types.PopulationChange k_h(displayUnit="1/s") = 20
+        "hydrolysis rate";
+    equation
+      connect(kH1.lpop_b, DRX_T.lpop[6]) annotation (Line(
+          points={{-10,-54},{-16,-54},{-16,-40},{-40.2,-40},{-40.2,-39.6}},
+          color={107,45,134},
+          thickness=1));
+      connect(kH1.lpop_a, DRX_D.lpop[4]) annotation (Line(
+          points={{10,-54},{24,-54},{24,-39.85},{40.2,-39.85},{40.2,-39.6}},
+          color={107,45,134},
+          thickness=1));
+    end SrxTD_reversekH;
+
+    model SrxTD_AllAtOnce
+      extends SrxTD_reversekH(
+        DRX_D(nPorts=5),
+        A2(nPorts=2),
+        k_srx_p(useRateInput=true),
+        k2(k(displayUnit="s-1") = 17),
+        tune_a=0.5243902483781083,
+        tune_b=0.0012605541381524063,
+        tune_c=1.0931381560819462);
+      Bodylight.Population.LabeledPopulation.Components.StateTransition ka(
+        k(displayUnit="s-1") = 20,
+        allowReverse=true,
+        useRateOutput=false,
+        disableTransition=true)
+                             annotation (Placement(transformation(
+            extent={{-10,10},{10,-10}},
+            rotation=180,
+            origin={40,-92})));
+      Modelica.Blocks.Sources.RealExpression RateLimited_k_srx_p(y=k_srx_p.k*
+            max(1 - minDRX/(DRX_T.pop + DRX_D.pop), 0))
+        "There is at least minDRX active non-SRX myosins in both DRX states - simplified k_srx_p.k*(DRX_T.pop - minDRX*DRX_T.pop/(DRX_T.pop + DRX_D.pop))/DRX_T.pop"
+        annotation (Placement(transformation(extent={{-76,-14},{-56,6}})));
+      parameter Real minDRX=0.05;
+    equation
+      connect(ka.lpop_a, DRX_D.lpop[5]) annotation (Line(
+          points={{50,-92},{54,-92},{54,-44},{40.2,-44},{40.2,-39.6}},
+          color={107,45,134},
+          thickness=1));
+      connect(ka.lpop_b, A2.lpop[2]) annotation (Line(
+          points={{30,-92},{16,-92},{16,-100},{-40.2,-100},{-40.2,-99.6}},
+          color={107,45,134},
+          thickness=1));
+      connect(RateLimited_k_srx_p.y, k_srx_p.rateInput) annotation (Line(points={{-55,-4},
+              {-44,-4},{-44,2},{-26,2},{-26,10}},   color={0,0,127}));
+    end SrxTD_AllAtOnce;
+
+    model SrxTD_reversekH_fast "With reverse hydrolysis enabled"
+      extends Configurations.XBCycling_SrxTD(
+        DRX_T(nPorts=6),
+        DRX_D(nPorts=4),
+        tune_a=0.5248844775533099,
+        tune_b=0.0009526757598301765,
+        tune_c=1.107347763780688,
+        kH(k(displayUnit="s-1") = k_h),
+        kH_srx(k=k_h));
+      Bodylight.Population.LabeledPopulation.Components.StateTransition kH1(
+        k(displayUnit="s-1") = 16,
+        allowReverse=true,
+        useRateOutput=false,
+        useDynamicFlowLabeling=false)
+        annotation (Placement(transformation(extent={{-10,-10},{10,10}},
+            rotation=180,
+            origin={0,-54})));
+      parameter Bodylight.Types.PopulationChange k_h(displayUnit="1/s") = 200
+        "hydrolysis rate";
+    equation
+      connect(kH1.lpop_b, DRX_T.lpop[6]) annotation (Line(
+          points={{-10,-54},{-16,-54},{-16,-40},{-40.2,-40},{-40.2,-39.6}},
+          color={107,45,134},
+          thickness=1));
+      connect(kH1.lpop_a, DRX_D.lpop[4]) annotation (Line(
+          points={{10,-54},{24,-54},{24,-39.85},{40.2,-39.85},{40.2,-39.6}},
+          color={107,45,134},
+          thickness=1));
+    end SrxTD_reversekH_fast;
   end Experiments;
   annotation (uses(Modelica(version="4.0.0"), Bodylight(version="1.0")));
 end mantATP;
