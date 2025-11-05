@@ -54,8 +54,8 @@ function outputStruct = load_sim_results(ageTimes, rigorFrac, filenameFun)
                 Mtot{i, j} = tail(dymget(dl, 'totalLabel.y'), timeSinceInc);
         
                 SRX_labelFraction(i, j) = tail(dymget(dl, 'SRX_fraction'), 1);
-                SRX_pop(i, j) = tail(dymget(dl, 'SRX.pop'), 1);
-                SRX_popAt0(i, j) = head(tail(dymget(dl, 'SRX.pop'), timeSinceChase), 1);
+                SRX_pop(i, j) = tail(dymget(dl, 'SRXpop'), 1);
+                SRX_popAt0(i, j) = head(tail(dymget(dl, 'SRXpop'), timeSinceChase), 1);
                 DRX_pop(i, j) = tail(dymget(dl, 'DRX_D.pop'), 1) + tail(dymget(dl, 'DRX_T.pop'), 1);
                 maxLabel(i, j) = tail(dymget(dl, 'normFactor'), 1);
                 

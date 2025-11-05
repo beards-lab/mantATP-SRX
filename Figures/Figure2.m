@@ -96,7 +96,7 @@ rng = time > xl(1) & time < 10;
 clip = @(A) A(rng);
 
 lw = 2.5;
-p1 = plot(clip(time), clip(getValsToPerc('SRX.pop')), '-', 'Color', [0 0 0], LineWidth=lw, DisplayName='$P_{SRX}$');
+p1 = plot(clip(time), clip(getValsToPerc('SRXpop')), '-', 'Color', [0 0 0], LineWidth=lw, DisplayName='$P_{SRX}$');
 p2 = plot(clip(time), clip(getValsToPerc('DRX_T.pop'))*1000, ':', 'Color', [0 0 0], LineWidth=lw, DisplayName='$P_{DRX_{ATP}}$x10$^3$');
 p3 = plot(clip(time), clip(getValsToPerc('DRX_D.pop')), '--', 'Color', [1 1 1]*0, LineWidth=lw, DisplayName='$P_{DRX_{ADP}}$');
 p4 = plot(clip(time), clip(getValsToPerc('A2.pop')), '-', 'Color', [1 1 1]*0.5, LineWidth=lw, DisplayName='$P_{A2}$');
@@ -132,12 +132,12 @@ text(x_marker/2, 103, 'Incubation', FontSize=12, Rotation=r, Interpreter='latex'
 text(4, 103, 'Chase', FontSize=12, Rotation=r, Interpreter='latex')
 
 if labelPosVariant == 1
-    text(10 - hd, tail(getValsToPerc('SRX.pop'), 1) - vd, '$P_{S}$', FontSize=12, HorizontalAlignment='right', VerticalAlignment='top', Interpreter='latex')
+    text(10 - hd, tail(getValsToPerc('SRXpop'), 1) - vd, '$P_{S}$', FontSize=12, HorizontalAlignment='right', VerticalAlignment='top', Interpreter='latex')
     text(10 - hd, tail(getValsToPerc('DRX_T.pop'), 1)*1000 - vd, '$P_{D_{T}}$x10$^3$', FontSize=12, HorizontalAlignment='right', VerticalAlignment='top', Interpreter='latex')
     text(10 - hd, tail(getValsToPerc('DRX_D.pop'), 1) + vd, '$P_{D_{D}}$', FontSize=12, HorizontalAlignment='right', VerticalAlignment='bottom', Interpreter='latex')
     text(5 - hd, tail(getValsToPerc('A2.pop'), 1) + vd, '$P_{A2}$', FontSize=12, HorizontalAlignment='right', VerticalAlignment='bottom', Interpreter='latex')
 elseif labelPosVariant == 2
-    text(10 - hd, tail(getValsToPerc('SRX.pop'), 1) + 2*vd, '$P_{S}$', FontSize=12, HorizontalAlignment='right', VerticalAlignment='bottom', Interpreter='latex')
+    text(10 - hd, tail(getValsToPerc('SRXpop'), 1) + 2*vd, '$P_{S}$', FontSize=12, HorizontalAlignment='right', VerticalAlignment='bottom', Interpreter='latex')
     text(10 - hd, tail(getValsToPerc('DRX_T.pop'), 1)*1000 + vd, '$P_{D_{T}}$x10$^3$', FontSize=12, HorizontalAlignment='right', VerticalAlignment='bottom', Interpreter='latex')
     text(10 - hd, tail(getValsToPerc('DRX_D.pop'), 1) + vd, '$P_{D_{D}}$', FontSize=12, HorizontalAlignment='right', VerticalAlignment='top', Interpreter='latex')
     text(5 - hd, tail(getValsToPerc('A2.pop'), 1) + vd, '$P_{A2}$', FontSize=12, HorizontalAlignment='right', VerticalAlignment='bottom', Interpreter='latex')
@@ -316,7 +316,7 @@ valAt10min = @(str) tail(head(dymget(dl, str), iAt10min), 1);
 
 bar_cats = ["$SRX_C$ (Eq. 1)", "$SRX_C$ (Eq. 2)", "$P_{S}$"];
 bar_cats = ["Eq. (1)", "Eq. (2)", "$P_{S}$"];
-bars = [fitResult1.b, fitResult2.b/(fitResult2.a+fitResult2.b), valAt10min('SRX.pop')]*100;
+bars = [fitResult1.b, fitResult2.b/(fitResult2.a+fitResult2.b), valAt10min('SRXpop')]*100;
 
 x = categorical(bar_cats);
 x = reordercats(x, bar_cats);
@@ -325,7 +325,7 @@ bar(x, bars, 'FaceColor',[1 1 1]*0.8); ylabel('SRX estimation (\%)', Interpreter
 ax = gca;  ax.TickLabelInterpreter = 'latex';  
 fontsize(12, 'points')
 
-% ylim([0 10*ceil(max(bars+3)/10)])
+ylim([0 10*ceil(max(bars+3)/10)])
 
 % Add value labels atop each bar
 for i = 1:length(bars)
