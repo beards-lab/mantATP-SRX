@@ -37,6 +37,8 @@ xl = [-3, 10]*60*time_conv;
 % Coordinates for the marker
 x_marker = -agetime(1)*time_conv;
 
+SRXpop = getValsToPerc('SRXpop');
+DRXpop = getValsToPerc('DRX_D.pop') + getValsToPerc('DRX_T.pop');
 %% pre-allocate axes
 % cf = clf;
 tiledlayout(2, 2, 'TileSpacing','compact', 'Padding', 'compact')
@@ -96,10 +98,12 @@ rng = time > xl(1) & time < 10;
 clip = @(A) A(rng);
 
 lw = 2.5;
-p1 = plot(clip(time), clip(getValsToPerc('SRXpop')), '-', 'Color', [0 0 0], LineWidth=lw, DisplayName='$P_{SRX}$');
-p2 = plot(clip(time), clip(getValsToPerc('DRX_T.pop'))*1000, ':', 'Color', [0 0 0], LineWidth=lw, DisplayName='$P_{DRX_{ATP}}$x10$^3$');
-p3 = plot(clip(time), clip(getValsToPerc('DRX_D.pop')), '--', 'Color', [1 1 1]*0, LineWidth=lw, DisplayName='$P_{DRX_{ADP}}$');
+p1 = plot(clip(time), clip(SRXpop), ':', 'Color', [0 0 0], LineWidth=lw, DisplayName='$P_{SRX}$');
+% p2 = plot(clip(time), clip(getValsToPerc('DRX_T.pop'))*1000, ':', 'Color', [0 0 0], LineWidth=lw, DisplayName='$P_{DRX_{ATP}}$x10$^3$');
+p3 = plot(clip(time), clip(DRXpop), '--', 'Color', [1 1 1]*0, LineWidth=lw, DisplayName='$P_{DRX_{ADP}}$');
 p4 = plot(clip(time), clip(getValsToPerc('A2.pop')), '-', 'Color', [1 1 1]*0.5, LineWidth=lw, DisplayName='$P_{A2}$');
+% p4 = plot(clip(time), clip(getValsToPerc('SRX.pop')), '-', 'Color', [1 1 1]*0.5, LineWidth=lw, DisplayName='$P_{A2}$');
+% p4 = plot(clip(time), clip(getValsToPerc('DRX_T.pop')), '-', 'Color', [1 1 1]*0.5, LineWidth=lw, DisplayName='$P_{A2}$');
 % plot([time(1) time(end)], max(getValsToPerc('SRX_fraction'))*[1 1], ':', LineWidth=2, DisplayName='Slow-phase')
 
 
@@ -132,15 +136,17 @@ text(x_marker/2, 103, 'Incubation', FontSize=12, Rotation=r, Interpreter='latex'
 text(4, 103, 'Chase', FontSize=12, Rotation=r, Interpreter='latex')
 
 if labelPosVariant == 1
-    text(10 - hd, tail(getValsToPerc('SRXpop'), 1) - vd, '$P_{S}$', FontSize=12, HorizontalAlignment='right', VerticalAlignment='top', Interpreter='latex')
-    text(10 - hd, tail(getValsToPerc('DRX_T.pop'), 1)*1000 - vd, '$P_{D_{T}}$x10$^3$', FontSize=12, HorizontalAlignment='right', VerticalAlignment='top', Interpreter='latex')
-    text(10 - hd, tail(getValsToPerc('DRX_D.pop'), 1) + vd, '$P_{D_{D}}$', FontSize=12, HorizontalAlignment='right', VerticalAlignment='bottom', Interpreter='latex')
-    text(5 - hd, tail(getValsToPerc('A2.pop'), 1) + vd, '$P_{A2}$', FontSize=12, HorizontalAlignment='right', VerticalAlignment='bottom', Interpreter='latex')
+    text(10 - hd, tail(SRXpop, 1) - vd, '$SRX_{pred}$', FontSize=12, HorizontalAlignment='right', VerticalAlignment='top', Interpreter='latex')
+    % text(10 - hd, tail(getValsToPerc('DRX_T.pop'), 1)*1000 - vd, '$P_{D_{T}}$x10$^3$', FontSize=12, HorizontalAlignment='right', VerticalAlignment='top', Interpreter='latex')
+    text(10 - hd, tail(DRXpop, 1) + vd, '$DRX_{pred}$', FontSize=12, HorizontalAlignment='right', VerticalAlignment='bottom', Interpreter='latex')
+    text(5 - hd, tail(getValsToPerc('A2.pop'), 1) + vd, '$P_{R}$', FontSize=12, HorizontalAlignment='right', VerticalAlignment='bottom', Interpreter='latex')
 elseif labelPosVariant == 2
-    text(10 - hd, tail(getValsToPerc('SRXpop'), 1) + 2*vd, '$P_{S}$', FontSize=12, HorizontalAlignment='right', VerticalAlignment='bottom', Interpreter='latex')
-    text(10 - hd, tail(getValsToPerc('DRX_T.pop'), 1)*1000 + vd, '$P_{D_{T}}$x10$^3$', FontSize=12, HorizontalAlignment='right', VerticalAlignment='bottom', Interpreter='latex')
-    text(10 - hd, tail(getValsToPerc('DRX_D.pop'), 1) + vd, '$P_{D_{D}}$', FontSize=12, HorizontalAlignment='right', VerticalAlignment='top', Interpreter='latex')
-    text(5 - hd, tail(getValsToPerc('A2.pop'), 1) + vd, '$P_{A2}$', FontSize=12, HorizontalAlignment='right', VerticalAlignment='bottom', Interpreter='latex')
+    t_textpos = 2;
+    i_textypos = find(time > t_textpos, 1);
+    text(2 - hd, SRXpop(i_textypos) - vd, '$SRX_{pred}$', FontSize=12, HorizontalAlignment='left', VerticalAlignment='top', Interpreter='latex')
+    % text(10 - hd, tail(getValsToPerc('DRX_T.pop'), 1)*1000 + vd, '$P_{D_{T}}$x10$^3$', FontSize=12, HorizontalAlignment='right', VerticalAlignment='bottom', Interpreter='latex')
+    text(2 - hd, DRXpop(i_textypos) + vd, '$DRX_{pred}$', FontSize=12, HorizontalAlignment='left', VerticalAlignment='bottom', Interpreter='latex')
+    text(5 - hd, tail(getValsToPerc('A2.pop'), 1) + vd, '$P_{R}$', FontSize=12, HorizontalAlignment='right', VerticalAlignment='bottom', Interpreter='latex')
 end
 
 % quiver(x_marker, 95, 0 - x_marker, 0, 'Color', 'k', 'LineWidth', 3, 'MaxHeadSize', 4);
@@ -173,20 +179,20 @@ fill([x_marker 0 0 x_marker], [0 0 100 100], color_incubation, 'EdgeColor', 'non
 
 if exist('plotPhotobleaching', 'var') && plotPhotobleaching
     p1 = plot(time, getValsToPerc('SRXLabel.y'), ':', 'Color', [1 1 1]*0.5, LineWidth=lw, DisplayName='$M_{SRX}$');
-    p2 = plot(time, getValsToPerc('DRXLabel.y'), '-.', 'Color', [1 1 1]*0.5, LineWidth=lw, DisplayName='$M_{DRX}$');
+    p2 = plot(time, getValsToPerc('DRXLabel.y'), '--', 'Color', [1 1 1]*0.5, LineWidth=lw, DisplayName='$M_{DRX}$');
     p3 = plot(time, getValsToPerc('totalLabel.y'), '-', 'Color', [1 1 1]*0.5, LineWidth=lw, DisplayName='$M_{tot}$');
     p4 = plot(time, getValsToPerc('totalLabel_PB'), '-', 'Color', [1 1 1]*0, LineWidth=lw, DisplayName='$\hat{M}_{tot}$');
     legend(interpreter = "latex", Orientation="vertical", Location="northeast", AutoUpdate='off');
     legend([p1 p2 p3 p4], ...
-    {'$M_{S}$', '$M_{D}$', '$M_{tot}$', '$\hat{M}_{tot}$'}, ...
+    {'$M_{S_T}+M_{S_D}$', '$M_{D_T} + M_{D_D}$', '$M_{tot}$', '$\hat{M}_{tot}$'}, ...
      'Location', 'northeast', Interpreter='latex');
 else
     p1 = plot(time, getValsToPerc('SRXLabel.y'), ':', 'Color', [1 1 1]*0, LineWidth=lw, DisplayName='$M_{SRX}$');
-    p2 = plot(time, getValsToPerc('DRXLabel.y'), '-.', 'Color', [1 1 1]*0, LineWidth=lw, DisplayName='$M_{DRX}$');
+    p2 = plot(time, getValsToPerc('DRXLabel.y'), '--', 'Color', [1 1 1]*0, LineWidth=lw, DisplayName='$M_{DRX}$');
     p3 = plot(time, getValsToPerc('totalLabel.y'), '-', 'Color', [1 1 1]*0, LineWidth=lw, DisplayName='$M_{tot}$');
     legend(interpreter = "latex", Orientation="vertical", Location="northeast", AutoUpdate='off');
     legend([p1 p2 p3], ...
-    {'$M_{S}$', '$M_{D}$', '$M_{tot}$'}, ...
+    {'$M_{S_T}+M_{S_D}$', '$M_{D_T} + M_{D_D}$', '$M_{tot}$'}, ...
      'Location', 'northeast', Interpreter='latex');
 end
 
@@ -315,7 +321,7 @@ valAt10min = @(str) tail(head(dymget(dl, str), iAt10min), 1);
 % bars = [fitResult1.b, fitResult1.b/(fitResult1.b + fitResult1.a), fitResult2.b/(fitResult2.a+fitResult2.b), fitResult3.b/(fitResult3.a + fitResult3.b), valAt10min('SRX_fraction'), valAt10min('SRX.pop')]*100;
 
 bar_cats = ["$SRX_C$ (Eq. 1)", "$SRX_C$ (Eq. 2)", "$P_{S}$"];
-bar_cats = ["Eq. (1)", "Eq. (2)", "$P_{S}$"];
+bar_cats = ["Eq. (1)", "Eq. (2)", "$SRX_{pred}$"];
 bars = [fitResult1.b, fitResult2.b/(fitResult2.a+fitResult2.b), valAt10min('SRXpop')]*100;
 
 x = categorical(bar_cats);

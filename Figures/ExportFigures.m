@@ -58,7 +58,7 @@ datafile = '../Modelica/DefaultH.mat';
 % datafile = '../Modelica/XBCycling_Walklate_CalcADPDil_kADP1.mat';
 % datafile = '../Modelica/XBCyclingAlternative_A2_80.mat';
 datafile = '../Modelica/DefaultW.mat';
-datafile = '../Modelica/DefaultWSrxD.mat';
+% datafile = '../Modelica/DefaultWSrxD.mat';
 
 dl = dymload(datafile);
 
@@ -224,7 +224,7 @@ end
 %% Plot PB sweep
 
 % cf = figure(4);
-clear;
+% clear;
 data_src = ' (Walklate et al.)';
 labelPosVariant = 2;
 markP_S = '';
@@ -366,10 +366,11 @@ filenameFun = @(firstDim, secondDim) sprintf('../Modelica/mantATP.Figures.Defaul
 outS(1) = load_sim_results(ageTimes*1000, [10], filenameFun);
 % filenameFun = @(firstDim, secondDim) sprintf('../Modelica/mantATP.DataMatched.Walklate.ADPEffect.DoubleMixing.XBCycling_Walklate_CalcADPDil_kADP05_%d.mat', firstDim);  
 % outS(2) = load_sim_results(ageTimes*1000, [10], filenameFun);
-filenameFun = @(firstDim, secondDim) sprintf('../Modelica/mantATP.DataMatched.Walklate.ADPEffect.SRX_TDR_L.DoubleMixing.XBCycling_Walklate_CalcADPDil_kADP05_%d.mat', firstDim);  
+% filenameFun = @(firstDim, secondDim) sprintf('../Modelica/mantATP.DataMatched.Walklate.ADPEffect.SRX_TDR_L.DoubleMixing.XBCycling_Walklate_CalcADPDil_kADP05_%d.mat', firstDim);  
+filenameFun = @(firstDim, secondDim) sprintf('../Modelica/mantATP.DataMatched.Walklate.ADPEffect.SRX_TDR_L.DoubleMixing.XBCycling_Walklate_CalcADPDil_kADP01_%d.mat', firstDim);  
 outS(2) = load_sim_results(ageTimes*1000, [10], filenameFun);
 %%
-i_ADP = 2;
+i_ADP = 1;
 figure(100 + i_ADP);
 axes(panelC(i_ADP));cla reset;
 %
@@ -385,11 +386,11 @@ semilogx(ageTimes, outS(2).SRX_pop*100, '-', Color = [1 1 1]*0.8, LineWidth=lw, 
 xticks(ageTimes([1, 3, 6, 8, 10,11]));
 set(gca, "TickLabelInterpreter", "latex", "FontSize", 12, "FontUnits", 'points');
 
-text(0.2, outS(1).SRX_pop(2)*100 + 1, '$P_S$, no ADP effect', Interpreter='latex', HorizontalAlignment='left', VerticalAlignment='bottom', Color = [1 1 1]*0.2)
-text(3, outS(2).SRX_pop(2)*100 + 1, '$P_S$, $K_i$ = 0.5$\mu$M', Interpreter='latex', HorizontalAlignment='left', VerticalAlignment='bottom', Color = [1 1 1]*0.2)
+text(1, outS(1).SRX_pop(2)*100 + 1, '$P_S$, no ADP effect', Interpreter='latex', HorizontalAlignment='left', VerticalAlignment='bottom', Color = [1 1 1]*0.2)
+text(3, outS(2).SRX_pop(2)*100 + 1, '$P_S$, $K_i$ = 0.1$\mu$M', Interpreter='latex', HorizontalAlignment='left', VerticalAlignment='bottom', Color = [1 1 1]*0.2)
 
 text(600, outS(1).SRX_pop(2)*100 + 8, ['$SRX_{Est}$,' newline 'no ADP effect~~~'], Interpreter='latex', HorizontalAlignment='right', VerticalAlignment='bottom')
-text(80, outS(2).fit2_B(9, 1)*100 - 1, ['~~~$SRX_{Est}$,' newline '$K_i$ = 0.5$\mu$M'], Interpreter='latex', HorizontalAlignment='left', VerticalAlignment='top')
+text(80, outS(2).fit2_B(9, 1)*100 - 3, ['~~~$SRX_{Est}$,' newline '$K_i$ = 0.1$\mu$M'], Interpreter='latex', HorizontalAlignment='left', VerticalAlignment='top')
 
 walklate1D = getWalklateData();
 errorbar(walklate1D.AgeTime, walklate1D.SRX, walklate1D.SD, 'ks-', LineWidth=lw/2, MarkerSize=8);
@@ -398,7 +399,7 @@ ylabel('SRX fraction (\%)', Interpreter='latex', FontSize=12, FontUnits='points'
 xlabel('$T_{incubation}$ (s)', Interpreter='latex', FontSize=12, FontUnits='points');
 ylim([0, 53]);
 if saveFigs
-    selFig = 2;
+    selFig = 1;
     saveas(cf(selFig), "../figures/Figure7.fig")
     saveas(cf(selFig), "../figures/Figure7.png")
 end
@@ -406,7 +407,7 @@ end
 
 
 %% Figure n. 4: age-time-sweep
-clear;
+clear -saveFigs;
 clf;
 def_aux;
 saveFigs = false;
@@ -422,7 +423,7 @@ walklate1D = getWalklateData();
 filenameFun = @(firstDim, secondDim) sprintf('../Modelica/mantATP.LabelLib.Figures.DefaultW_%dA2_%d.mat', firstDim, secondDim);
 filenameFun = @(firstDim, secondDim) sprintf('../Modelica/mantATP.LabelLib.Figures.DefaultW_%dA2_%d.mat', firstDim, secondDim);
 filenameFun = @(firstDim, secondDim) sprintf('../Modelica/mantATP.Figures.DefaultW_%dA2_%d.mat', firstDim, secondDim);
-filenameFun = @(firstDim, secondDim) sprintf('../Modelica/mantATP.Figures.DefaultW_slow_%dA2_%d.mat', firstDim, secondDim);
+% filenameFun = @(firstDim, secondDim) sprintf('../Modelica/mantATP.Figures.DefaultW_slow_%dA2_%d.mat', firstDim, secondDim);
 % filenameFun = @(firstDim, secondDim) sprintf('../Modelica/mantATP.DataMatched.Walklate.Photobleaching.SRX_TDR_L.XBCycling_Walklate_PB005_%dA2_%d.mat', firstDim, secondDim);
 % alternative model
 % filenameFun = @(firstDim, secondDim) sprintf('../Modelica/mantATP.Figures.DefaultWSrxD_%dA2_%d.mat', firstDim, secondDim);
@@ -458,7 +459,7 @@ ax2 = nexttile(1);
 selectedPlots = [3 7];
 pl = gobjects(1, numel(selectedPlots));  % preallocate plot handles
 pls = cell(1, numel(selectedPlots));     % preallocate legend strings
-linestyles = {'k:', 'k-.', 'k--', 'k-.'};
+linestyles = {'k:', 'k-', 'k--', 'k-.'};
 
 ax2.TickLabelInterpreter = 'latex';
 
@@ -468,7 +469,7 @@ for i = 1:numel(selectedPlots)
     pls{i} = sprintf('$M_{tot}$, $T_{incubation}$ = %gs', ageTimes(sp));
 end
 legend(pl, pls, 'Interpreter', 'latex');
-xlim([-1, 10]);ylim([0, 100])
+xlim([-1, 5]);ylim([0, 100])
 xlabel('$t$ (min)', Interpreter='latex');ylabel('Fluorescence (\% of max)', Interpreter='latex')
 
 
@@ -496,12 +497,12 @@ xticks([0.2, 1, 10, 60, 900])
 
 vd = 2;
 % text(3600, outS.SRX_pop(end)*100 - vd, '$P_{S}$ (Model)', FontSize=12, HorizontalAlignment='right', VerticalAlignment='top', Interpreter='latex')
-text(0.5, 2, 'Estimated $SRX$', FontSize=12, HorizontalAlignment='left', VerticalAlignment='bottom', Interpreter='latex')
+text(0.5, 2, '$SRX_{est}$', FontSize=12, HorizontalAlignment='left', VerticalAlignment='bottom', Interpreter='latex')
 text(120, outS.fit2_B(9)*100, '(model)', FontSize=12, HorizontalAlignment='left', VerticalAlignment='top', Interpreter='latex')
 text(0.7, walklate1D.SRX(3) + walklate1D.SD(3) + 5, '(Walklate 2022)', FontSize=12, HorizontalAlignment='left', VerticalAlignment='bottom', Interpreter='latex')
 
 % text(2, outS.DRX_pop(end)*100 + vd, '$P_{D_D} + P_{D_T}$ (Model)', FontSize=12, HorizontalAlignment='left', VerticalAlignment='bottom', Interpreter='latex')
-text(0.5, 98, 'Estimated $DRX$', FontSize=12, HorizontalAlignment='left', VerticalAlignment='top', Interpreter='latex')
+text(0.5, 98, '$DRX_{est}$', FontSize=12, HorizontalAlignment='left', VerticalAlignment='top', Interpreter='latex')
 text(120, outS.fit2_A(9)*100, '(model)', FontSize=12, HorizontalAlignment='left', VerticalAlignment='bottom', Interpreter='latex')
 text(0.7, walklate1D.DRX(3) - walklate1D.SD_1(3) - 5 , '(Walklate 2022)', FontSize=12, HorizontalAlignment='left', VerticalAlignment='top', Interpreter='latex')
 

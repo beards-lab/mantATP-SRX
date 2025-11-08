@@ -7,6 +7,8 @@ modelName = "mantATP.LabelLib.Figures.Walklate_CalcMantADP";
 modelName = "mantATP.LabelLib.Figures.Walklate_CalcADP";
 modelName = "mantATP.LabelLib.Figures.DefaultH";
 modelName = "mantATP.Figures.DefaultW";
+modelName = "mantATP.Figures.Walklate_PB005";
+modelName = "mantATP.Figures.DefaultW_slow";
 // modelName = "mantATP.Figures.DefaultWSrxD";
 // modelName = "mantATP.LabelLib.Experiments.XBCycling_Walklate_CalcADPDil_kADP02";
 

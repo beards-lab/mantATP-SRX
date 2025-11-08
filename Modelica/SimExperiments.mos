@@ -1,4 +1,4 @@
-﻿path := "mantATP.DataMatched.Walklate.RigorFraction";
+﻿path := "mantATP.DataMatched.Walklate.RigorFraction.SRX_TDR_L";
 modelPattern = "Walklate_A2";
 
 for i in {0, 20, 40, 60, 80, 100} loop  
@@ -6,12 +6,12 @@ for i in {0, 20, 40, 60, 80, 100} loop
   modelName = modelPattern + String(integer(i));
   simulateModel(
     path + "." + modelName,
-    startTime=-300,
+    startTime=-600,
     stopTime=1000,
     resultFile=modelName);
 end for;
 
-path := "mantATP.DataMatched.Walklate.Photobleaching";
+path := "mantATP.DataMatched.Walklate.Photobleaching.SRX_TDR_L";
 modelPattern = "XBCycling_Walklate_PB";
 
 for i in {"0", "0001", "0005","001","002","005","01"} loop  
@@ -19,21 +19,21 @@ for i in {"0", "0001", "0005","001","002","005","01"} loop
   modelName = modelPattern + i;
   simulateModel(
     path + "." + modelName,
-    startTime=-300,
+    startTime=-600,
     stopTime=1000,
     resultFile=modelName);
 end for;
 
 
-path := "mantATP.DataMatched.Walklate.ADPEffect";
+path := "mantATP.DataMatched.Walklate.ADPEffect.SRX_TDR_L";
 modelPattern = "XBCycling_Walklate_CalcADPDil_kADP";
 
-for i in {"01", "02", "1","10","100"} loop  
+for i in {"01", "05", "1","10","100"} loop  
   // Generate filename suffix  
   modelName = modelPattern + i;
   simulateModel(
     path + "." + modelName,
-    startTime=-300,
+    startTime=-600,
     stopTime=1000,
     resultFile=modelName);
 end for;
