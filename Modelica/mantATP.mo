@@ -405,7 +405,7 @@ package mantATP
 
       model Baseline
         "Default model parametrization to fit Hooijman 2011 mantATP chased by ATP."
-        extends Configurations.XBLeaking_SrxTD_reversekH;
+        extends Configurations.XBLeaking_SrxTD_reversekH_slowkH;
       end Baseline;
 
       model XBCycling_SrxT
@@ -1249,7 +1249,7 @@ package mantATP
 
         model XBLeakingSrxTD_RevkH_Walklate2022Fig1A
           "Additional model parametrization to fit Walklate 2022 fig 1A"
-          extends Configurations.XBLeaking_SrxTD_reversekH(
+          extends Configurations.XBLeaking_SrxTD_reversekH_slowkH(
             ageTime=60.0,
             redeclare Data.TimeTable_ATPChaseWalklate1A timeTable_ATPChase,
             tune_a=0.004683371559309896,
@@ -4439,7 +4439,7 @@ package mantATP
     end XBLeaking_SrxTD_reversekH_revSRXD;
 
     model XBLeaking_SrxTD_reversekH_slowkH
-      extends XBLeaking_SrxTD_reversekH(kH(k=20));
+      extends XBLeaking_SrxTD_reversekH(kH(k=18));
     end XBLeaking_SrxTD_reversekH_slowkH;
 
     model XBLeaking_SrxTD_reversekH_Rbalanced

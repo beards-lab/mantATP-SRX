@@ -3,6 +3,7 @@ addpath('c:\Program Files\Dymola 2025x\Mfiles\dymtools\')
 
 def_aux;
 saveFigs = false;
+saveFigs = true;
 %%
 
 cf = figure(2);
@@ -51,14 +52,16 @@ end
 
 %% Output the table of kinetic params
 
-datafile = '../Modelica/DefaultH.mat';
 % datafile = '../Modelica/XBCycling_Walklate2022Fig1A.mat';
-% datafile = '../Modelica/Walklate_80.mat';
 % datafile = '../Modelica/XBCycling_Walklate_PB002.mat';
 % datafile = '../Modelica/XBCycling_Walklate_CalcADPDil_kADP1.mat';
-% datafile = '../Modelica/XBCyclingAlternative_A2_80.mat';
-datafile = '../Modelica/DefaultW.mat';
+% datafile = '../Modelica/Walklate_A240.mat';
+
+datafile = '../Modelica/DefaultH.mat';
+% datafile = '../Modelica/DefaultW.mat';
 % datafile = '../Modelica/DefaultWSrxD.mat';
+% datafile = '../Modelica/XBCycling_Walklate_PB005';
+% datafile = '../Modelica/XBCycling_Walklate_CalcADPDil_kADP01';
 
 dl = dymload(datafile);
 
@@ -67,17 +70,18 @@ getVals = @(s) dymget(dl, s);
 getVal = @(s) tail(getVals(s), 1);
 
 % Get all values first to determine the correct size  
-values = [getVal('kH.rate');   
-          getVal('kH_m.rate');   
-          getVal('k_srx_p.rate');  
-          getVal('k_srx_m.rate');             
+values = [getVal('kH.k');
+          getVal('k_mH.k');
+          getVal('k_leak.k');   
+          getVal('k_srx_p.k');  
+          getVal('k_srx_m.k');             
           head(getVals('A2.pop'), 1);
           getVal('ageTime')
           ];  
 
 % Now create matching params and units arrays  
-params = {'k_H', 'k_DRX_D', 'k_SRX_P', 'k_SRX_M', 'P_A2', 'ageTime'};  % Note the transpose  
-units = {'s-1'; 's-1'; 's-1'; 's-1'; '1'; 's'};  % Must match number of rows  
+params = {'k_H', 'k_mH', 'k_leak', 'k_SRX_P', 'k_SRX_M', 'P_A2', 'ageTime'};  % Note the transpose  
+units = {'s-1'; 's-1'; 's-1'; 's-1'; 's-1'; '1'; 's'};  % Must match number of rows  
 
 kinetic_table = table(values, units, ...  
                     'RowNames', params, ...  
@@ -86,7 +90,7 @@ kinetic_table = table(values, units, ...
 % Display with title  
 disp('Cardiac Myosin Kinetic Parameters:');  
 disp(kinetic_table);  
-
+values
 
 
 %% is there a significant trend in the walklate data?
@@ -207,7 +211,7 @@ for i_rs = 1:length(s)
     
     xlim([0.5, 6.5])
     set(panelC(i_rs), 'XTickLabel', xax, 'XTick', 1:length(s), 'TickLabelInterpreter', 'latex');
-    xlabel('$P_{A2,0}$ (\%)', Interpreter='latex');
+    xlabel('$P_{R,0}$ (\%)', Interpreter='latex');
     ylabel('SRX fraction (\%)', Interpreter='latex');
 
     fontsize(12, 'points')
@@ -386,8 +390,8 @@ semilogx(ageTimes, outS(2).SRX_pop*100, '-', Color = [1 1 1]*0.8, LineWidth=lw, 
 xticks(ageTimes([1, 3, 6, 8, 10,11]));
 set(gca, "TickLabelInterpreter", "latex", "FontSize", 12, "FontUnits", 'points');
 
-text(1, outS(1).SRX_pop(2)*100 + 1, '$P_S$, no ADP effect', Interpreter='latex', HorizontalAlignment='left', VerticalAlignment='bottom', Color = [1 1 1]*0.2)
-text(3, outS(2).SRX_pop(2)*100 + 1, '$P_S$, $K_i$ = 0.1$\mu$M', Interpreter='latex', HorizontalAlignment='left', VerticalAlignment='bottom', Color = [1 1 1]*0.2)
+text(0.8, outS(1).SRX_pop(2)*100 + 1, '$SRX_{pred}$, no ADP effect', Interpreter='latex', HorizontalAlignment='left', VerticalAlignment='bottom', Color = [1 1 1]*0.2)
+text(0.8, outS(2).SRX_pop(2)*100 + 1, '$SRX_{pred}$, $K_i$ = 0.1$\mu$M', Interpreter='latex', HorizontalAlignment='left', VerticalAlignment='bottom', Color = [1 1 1]*0.2)
 
 text(600, outS(1).SRX_pop(2)*100 + 8, ['$SRX_{Est}$,' newline 'no ADP effect~~~'], Interpreter='latex', HorizontalAlignment='right', VerticalAlignment='bottom')
 text(80, outS(2).fit2_B(9, 1)*100 - 3, ['~~~$SRX_{Est}$,' newline '$K_i$ = 0.1$\mu$M'], Interpreter='latex', HorizontalAlignment='left', VerticalAlignment='top')
@@ -402,6 +406,9 @@ if saveFigs
     selFig = 1;
     saveas(cf(selFig), "../figures/Figure7.fig")
     saveas(cf(selFig), "../figures/Figure7.png")
+    % saveas(gcf, "../figures/Figure7.fig")
+    % saveas(gcf, "../figures/Figure7.png")
+
 end
 
 

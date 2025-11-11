@@ -220,6 +220,8 @@ Lxfit = sum(xfit > 1e-3);
 xfit = tail(xfit, Lxfit);
 yfit = tail(getVals('totalLabel.y'), Lxfit);
 label = tail(getVals('totalLabelNorm_expr.y'), Lxfit);
+% label = tail(getVals('timeTable_ATPChase.y'), Lxfit);
+yfit = label;
 
 % scale
 yma = max(yfit);
@@ -229,7 +231,7 @@ yfit_minmax = (yfit-ymi)/(yma -ymi);
 yfit = yfit/yma;
 
 % Define the model as a sum of two exponential decays
-model1 = fittype('1 - a*(1 - exp(-t/t1)) - b*(1 - exp(-t/t2)) + o', ...
+model1 = fittype('1 - a*(1 - exp(-t/t1)) - b*(1 - exp(-t/t2)) + 0*o', ...
                 'independent', 't', ...
                 'coefficients', {'a', 'b', 't1', 't2', 'o'});
 
@@ -241,8 +243,8 @@ model2 = fittype('a*(exp(-t/t1)) + b*(exp(-t/t2)) + o', ...
 opts = fitoptions('StartPoint', [0.5, 0.5, 14, 140, 0], 'Method', 'NonlinearLeastSquares','Lower',[0 0, 0, 0, 0],'Upper',[1, 1, 100, 1000, 100]);
 opts2 = fitoptions('StartPoint', [0.5, 0.5, 14, 140, 0], 'Method', 'NonlinearLeastSquares','Lower',[0 0, 0, 0, -1],'Upper',[1, 1, 100, 1000, 1]);
 % Perform the fit
-[fitResult1, gof] = fit(xfit, yfit, model1, opts);
-[fitResult2, gof2] = fit(xfit, tail(label, Lxfit), model2, opts2);
+[fitResult1, gof] = fit(xfit, label, model1, opts);
+[fitResult2, gof2] = fit(xfit, label, model2, opts2);
 [fitResult3, gof3] = fit(xfit, tail(getVals('timeTable_ATPChase.y'), Lxfit), model2, opts2);
 % [fitResult4, gof4] = fit(xfit, tail(getVals('totalLabelNorm'), Lxfit), model2, opts2);
 
