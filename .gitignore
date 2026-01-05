@@ -14,7 +14,6 @@ dsmodel.c
 _fmu/
 Modelica/request
 Modelica/status
-Modelica/OptimizationBestModel.mo
-Modelica/OptimizationLastRunModel.mo
+Modelica/*Optimization*
 Modelica/stop
 /data

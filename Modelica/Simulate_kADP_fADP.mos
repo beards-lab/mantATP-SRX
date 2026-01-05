@@ -46,7 +46,7 @@ modelNames = {
   "mantATP.DataMatched.Walklate.ADPEffect.DoubleMixing.XBCycling_Walklate_CalcADPDil_kADP10"};
 
 modelNames = {
-  "mantATP.DataMatched.Walklate.ADPEffect.SRX_TDR_L.DoubleMixing.XBCycling_Walklate_CalcADPDil_kADP05"}
+  "mantATP.DataMatched.Walklate.ADPEffect.SRX_TDR_L.DoubleMixing.XBCycling_Walklate_CalcADPDil_kADP01"}
 
 for modelName in modelNames loop
   for i in {.2, .5, 1, 2, 5, 10, 30, 60.0000,  120.0000,  300.0000,  900.0000} loop  

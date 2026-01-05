@@ -1852,11 +1852,11 @@ package mantATP
 
         model XBCycling_Walklate_PB0001
           "Optimized model parameters of mantATP.LabelLib.Experiments.XBCycling_Walklate_PB0001"
-          extends mantATP.DataMatched.Walklate.Fig1AReported.XBCyclingSrxT_Walklate2022Fig1A(
+          extends mantATP.DataMatched.Walklate.Fig1AReported.XBLeakingSrxTD_RevkH_Walklate2022Fig1A(
             k_pb=0.0001,
-            tune_a=0.0045431560196614595,
-            tune_b=0.025831403088867184,
-            tune_c=0.026468807688368054
+            tune_a=0.004595690171875,
+            tune_b=0.024786035531249997,
+            tune_c=0.027080891000000003
                                      );
 
           /* Automatically generated at Tue Jun 24 16:49:04 2025 */
@@ -1979,11 +1979,11 @@ package mantATP
         model XBCycling_Walklate_PB0005
           "Testing exponential photobleaching, can fit perfectly"
           import mantATP;
-          extends mantATP.DataMatched.Walklate.Fig1AReported.XBCyclingSrxT_Walklate2022Fig1A(
+          extends mantATP.DataMatched.Walklate.Fig1AReported.XBLeakingSrxTD_RevkH_Walklate2022Fig1A(
             k_pb=0.0005,
-            tune_a=0.004347082256901042,
-            tune_b=0.028462192027777777,
-            tune_c=0.026821858972608026
+            tune_a=0.00400472573828125,
+            tune_b=0.02407253279861111,
+            tune_c=0.026242099629629628
                                     );
           annotation (experiment(
               StartTime=-1600,
@@ -1995,12 +1995,11 @@ package mantATP
         model XBCycling_Walklate_PB001
           "Testing exponential photobleaching, can fit perfectly"
           import mantATP;
-          extends mantATP.DataMatched.Walklate.Fig1AReported.XBCyclingSrxT_Walklate2022Fig1A(
+          extends mantATP.DataMatched.Walklate.Fig1AReported.XBLeakingSrxTD_RevkH_Walklate2022Fig1A(
             k_pb=0.001,
-            tune_a=0.0034482208502929685,
-            tune_b=0.026323000878341673,
-            tune_c=0.02557650683984375
-                                    );
+            tune_a=0.003428535415527344,
+            tune_b=0.024443803115885416,
+            tune_c=0.025780197625   );
           annotation (experiment(
               StartTime=-1600,
               StopTime=1500,
@@ -2011,11 +2010,11 @@ package mantATP
         model XBCycling_Walklate_PB002
           "Testing exponential photobleaching, can fit perfectly"
           import mantATP;
-          extends mantATP.DataMatched.Walklate.Fig1AReported.XBCyclingSrxT_Walklate2022Fig1A(
+          extends mantATP.DataMatched.Walklate.Fig1AReported.XBLeakingSrxTD_RevkH_Walklate2022Fig1A(
             k_pb=0.002,
-            tune_a=0.0023661900000000002,
-            tune_b=0.027698037515625,
-            tune_c=0.024701616739583335
+            tune_a=0.0022912788144531264,
+            tune_b=0.025675771863161678,
+            tune_c=0.024900292077808178
                                     );
           annotation (experiment(
               StartTime=-1600,
